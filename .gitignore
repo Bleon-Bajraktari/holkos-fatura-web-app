@@ -29,6 +29,7 @@ wheels/
 *.swp
 *.swo
 *~
+.history/
 
 # Exports
 exports/*.pdf
