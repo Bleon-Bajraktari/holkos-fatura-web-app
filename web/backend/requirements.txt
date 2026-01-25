@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pymysql
+sqlalchemy
+python-multipart
+jinja2
+reportlab
+python-dotenv
+cryptography

@@ -1,0 +1,84 @@
+"""
+Skript për setup të databazës
+Ekzekuto këtë skript për të krijuar databazën dhe tabelat
+"""
+import mysql.connector
+from mysql.connector import Error
+import os
+from config.database import DatabaseConfig
+
+def create_database():
+    """Krijon databazën dhe tabelat"""
+    config = DatabaseConfig()
+    try:
+        # Lidhu me MySQL (pa databazë specifike)
+        connection = mysql.connector.connect(
+            host=config.host,
+            port=config.port,
+            user=config.user,
+            password=config.password
+        )
+        
+        if connection.is_connected():
+            cursor = connection.cursor()
+            
+            # Krijo databazën
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {config.database}")
+            print(f"✓ Databaza '{config.database}' u krijua ose ekzistonte tashmë")
+            
+            # Përdor databazën
+            cursor.execute(f"USE {config.database}")
+            
+            # Lexo dhe ekzekuto skemën
+            schema_path = os.path.join(os.path.dirname(__file__), "sql", "schema.sql")
+            if os.path.exists(schema_path):
+                with open(schema_path, 'r', encoding='utf-8') as f:
+                    schema_sql = f.read()
+                    # Ekzekuto çdo komandë veç e veç
+                    for statement in schema_sql.split(';'):
+                        if statement.strip():
+                            try:
+                                cursor.execute(statement)
+                            except Error as e:
+                                if "already exists" not in str(e).lower():
+                                    print(f"Vërejtje: {e}")
+                
+                connection.commit()
+                connection.commit()
+                print("✓ Tabelat u krijuan me sukses")
+                
+                # UPDATE: Shto kolona të reja nëse nuk ekzistojnë (Për Database Existing)
+                try:
+                    # SMTP për Kompaninë
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_server VARCHAR(255) DEFAULT 'smtp.gmail.com'")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_port INT DEFAULT 587")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(255)")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_password VARCHAR(255)")
+                    
+                    # Email për Klientët
+                    cursor.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(255)")
+                    connection.commit()
+                    print("✓ Përditësimi i strukturës (Updates) u bë me sukses")
+                except Error as e:
+                    print(f"info: Përditësimi i strukturës u anashkalua ose dështoi: {e}")
+
+            else:
+                print(f"✗ Skema nuk u gjet në: {schema_path}")
+            
+            cursor.close()
+            connection.close()
+            print("\n✓ Setup i databazës u përfundua me sukses!")
+            print("Tani mund të ekzekutosh aplikacionin me: python main.py")
+            
+    except Error as e:
+        print(f"✗ Gabim: {e}")
+        print("\nJu lutem sigurohuni që:")
+        print("1. MySQL është i startuar në xampp")
+        print("2. Credentials në config/database.py janë të sakta")
+        print("3. MySQL user ka të drejta për të krijuar databaza")
+
+if __name__ == "__main__":
+    print("Setup i databazës për Holkos Fatura")
+    print("=" * 40)
+    create_database()
+

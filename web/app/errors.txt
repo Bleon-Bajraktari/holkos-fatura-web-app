@@ -1,0 +1,2 @@
+﻿src/pages/OfferForm.tsx(3,10): error TS6133: 'Plus' is declared but its value is never read.
+src/pages/OfferForm.tsx(495,37): error TS6133: 'idx' is declared but its value is never read.

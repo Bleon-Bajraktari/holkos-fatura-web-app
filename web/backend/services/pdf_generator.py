@@ -1,0 +1,644 @@
+import os
+import tempfile
+import atexit
+from decimal import Decimal
+from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from reportlab.lib import colors
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle,
+    Paragraph, Spacer, Image
+)
+from PIL import Image as PILImage
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+
+# We'll use absolute paths or relative to the backend project
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
+os.makedirs(EXPORTS_DIR, exist_ok=True)
+
+class WebPDFGenerator:
+    def __init__(self):
+        self.styles = getSampleStyleSheet()
+        self.setup_styles()
+    
+    def setup_styles(self):
+        """Konfiguron stilet për PDF sipas desktop app"""
+        self.title_style = ParagraphStyle(
+            "title", fontSize=24, alignment=TA_CENTER, fontName="Helvetica-Bold"
+        )
+        self.subtitle_style = ParagraphStyle(
+            "subtitle", fontSize=13, alignment=TA_CENTER, fontName="Helvetica"
+        )
+        self.bold_style = ParagraphStyle(
+            "bold", fontSize=11, fontName="Helvetica-Bold"
+        )
+        self.normal_style = ParagraphStyle(
+            "normal", fontSize=11
+        )
+        self.right_style = ParagraphStyle(
+            "right", fontSize=11, alignment=TA_RIGHT
+        )
+        self.note_style = ParagraphStyle(
+            "note", fontSize=10, fontName="Helvetica-Oblique", alignment=TA_LEFT, leftIndent=0
+        )
+
+    def format_number(self, number, with_currency=False):
+        """Formaton numrin me hapesire si separator dhe presje per decimale"""
+        if isinstance(number, (Decimal, float)):
+            formatted = f"{float(number):,.2f}".replace(",", " ").replace(".", ",")
+            return f"{formatted} €" if with_currency else formatted
+        return str(number)
+
+    def format_date(self, date_obj):
+        if date_obj:
+            if isinstance(date_obj, str):
+                try:
+                    date_obj = datetime.strptime(date_obj, '%Y-%m-%d').date()
+                except: pass
+            return date_obj.strftime("%d.%m.%Y")
+        return ""
+
+    def process_logo(self, logo_path, logo_height=32*mm):
+        """Perpunon logon duke hequr pjeset e bardha (portuar nga desktop)"""
+        resolved_path = logo_path
+        if logo_path and not os.path.isabs(logo_path):
+            candidate = os.path.join(BASE_DIR, logo_path)
+            if os.path.exists(candidate):
+                resolved_path = candidate
+            else:
+                repo_candidate = os.path.abspath(os.path.join(BASE_DIR, "..", logo_path))
+                if os.path.exists(repo_candidate):
+                    resolved_path = repo_candidate
+
+        if not resolved_path or not os.path.exists(resolved_path):
+            fallback_path = os.path.abspath(os.path.join(BASE_DIR, "..", "assets", "images", "logo.png"))
+            if os.path.exists(fallback_path):
+                resolved_path = fallback_path
+            else:
+                return None, 0
+
+        try:
+            pil_img = PILImage.open(resolved_path)
+            if pil_img.mode != 'RGBA':
+                pil_img = pil_img.convert('RGBA')
+            
+            bbox = pil_img.getbbox()
+            if not bbox or bbox == (0, 0, pil_img.width, pil_img.height):
+                rgb_img = pil_img.convert('RGB')
+                width, height = rgb_img.size
+                left, top, right, bottom = width, height, 0, 0
+                found_content = False
+                for y in range(height):
+                    for x in range(width):
+                        r, g, b = rgb_img.getpixel((x, y))
+                        if not (r >= 250 and g >= 250 and b >= 250):
+                            top = y
+                            found_content = True
+                            break
+                    if found_content: break
+                
+                if found_content:
+                    found_content = False
+                    for y in range(height - 1, top - 1, -1):
+                        for x in range(width):
+                            r, g, b = rgb_img.getpixel((x, y))
+                            if not (r >= 250 and g >= 250 and b >= 250):
+                                bottom = y
+                                found_content = True
+                                break
+                        if found_content: break
+                    left = width
+                    right = 0
+                    for y in range(top, bottom + 1):
+                        for x in range(width):
+                            r, g, b = rgb_img.getpixel((x, y))
+                            if not (r >= 250 and g >= 250 and b >= 250):
+                                left = min(left, x)
+                                right = max(right, x)
+                    if left < width and right >= left:
+                        bbox = (left, top, right + 1, bottom + 1)
+                        pil_img = pil_img.crop(bbox)
+            elif bbox:
+                pil_img = pil_img.crop(bbox)
+            
+            img_width, img_height = pil_img.size
+            aspect_ratio = img_width / img_height
+            logo_width = logo_height * aspect_ratio
+            if logo_width > 50*mm:
+                logo_width = 50*mm
+                logo_height = logo_width / aspect_ratio
+            
+            temp_logo = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+            pil_img.save(temp_logo.name, 'PNG')
+            path = temp_logo.name
+            temp_logo.close()
+            
+            atexit.register(lambda: os.unlink(path) if os.path.exists(path) else None)
+            return Image(path, logo_width, logo_height), logo_height
+        except:
+            return None, 0
+
+    def generate_invoice_pdf(self, invoice, company, client):
+        filename = f"Fatura_{invoice.invoice_number.replace(' ', '_')}_{invoice.date.year if hasattr(invoice.date, 'year') else datetime.now().year}.pdf"
+        filepath = os.path.join(EXPORTS_DIR, filename)
+        
+        doc = SimpleDocTemplate(
+            filepath, pagesize=A4,
+            leftMargin=15*mm, rightMargin=15*mm, topMargin=12*mm, bottomMargin=12*mm
+        )
+        
+        story = []
+        
+        # Title
+        inv_num = invoice.invoice_number.upper()
+        if "NR." in inv_num: inv_num = inv_num.split("NR.")[-1].strip()
+        year = invoice.date.year if hasattr(invoice.date, 'year') else datetime.now().year
+        story.append(Paragraph(f"FATURË {inv_num}/{year}", self.title_style))
+        story.append(Spacer(1, 6*mm))
+        story.append(Paragraph(f"Data: {self.format_date(invoice.date)}", self.subtitle_style))
+        story.append(Spacer(1, 15*mm))
+        
+        # Header (Company & Client)
+        logo_img, logo_h = self.process_logo(company.logo_path)
+        company_data = [
+            [logo_img] if logo_img else [Paragraph(f"<b>{company.name}</b>", self.bold_style)],
+            [Paragraph("Fasada ventiluese", self.normal_style)],
+            [Paragraph(f"Tel: {company.phone}", self.normal_style)],
+            [Paragraph(company.email, self.normal_style)],
+            [Paragraph(company.address, self.normal_style)],
+            [Paragraph(f"Numër unik: {company.unique_number}", self.normal_style)],
+            [Paragraph(f"Numër fiskal: {company.fiscal_number}", self.normal_style)],
+            [Paragraph(f"<b>Llogaria: NLB {company.account_nib}</b>", self.bold_style)]
+        ]
+        company_table = Table(company_data, colWidths=[100*mm])
+        company_table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (0, 0), 10),
+        ]))
+
+        buyer_style = ParagraphStyle("buyer", fontSize=11, alignment=TA_RIGHT)
+        buyer_bold_style = ParagraphStyle("buyer_bold", fontSize=12, fontName="Helvetica-Bold", alignment=TA_RIGHT)
+        
+        buyer_data = [
+            [Spacer(1, logo_h if logo_h > 0 else 10*mm)],
+            [Paragraph("<b>BLERESI</b>", buyer_bold_style)],
+            [Paragraph(f"Emri: {client.name}", buyer_style)],
+            [Paragraph(f"Adresa: {client.address or ''}", buyer_style)],
+            [Paragraph(f"Numër unik: {client.unique_number or ''}", buyer_style)],
+        ]
+        buyer_table = Table(buyer_data, colWidths=[90*mm])
+        buyer_table.setStyle(TableStyle([
+            ("BOX", (0, 1), (-1, -1), 1, colors.black),
+            ("LINEBELOW", (0, 1), (-1, 1), 1, colors.black),
+            ("BACKGROUND", (0, 1), (-1, 1), colors.lightgrey),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 1), (-1, 1), 6),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 6),
+        ]))
+        
+        header_container = Table([[company_table, buyer_table]], colWidths=[100*mm, 90*mm])
+        header_container.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "TOP")]))
+        story.append(header_container)
+        story.append(Spacer(1, 12*mm))
+
+        # Payment Due Date
+        if invoice.payment_due_date:
+            due_data = [["AFATI I PAGESËS"], [self.format_date(invoice.payment_due_date)]]
+            due_table = Table(due_data, colWidths=[60*mm])
+            due_table.setStyle(TableStyle([
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 11),
+                ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]))
+            story.append(Table([[due_table]], colWidths=[180*mm], style=[('ALIGN', (0,0), (-1,-1), 'CENTER')]))
+            story.append(Spacer(1, 10*mm))
+        
+        # Items Table
+        items_data = [["PERSHKRIMI", "M²", "CMIMI", "NENTOTALI"]]
+        for item in invoice.items:
+            items_data.append([
+                item.description,
+                self.format_number(item.quantity),
+                self.format_number(item.unit_price, True),
+                self.format_number(item.quantity * item.unit_price, True)
+            ])
+        while len(items_data) < 6: items_data.append(["", "", "", ""])
+            
+        items_table = Table(items_data, colWidths=[85*mm, 25*mm, 35*mm, 40*mm])
+        items_table.setStyle(TableStyle([
+            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('ALIGN', (1,1), (-1,-1), 'RIGHT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('PADDING', (0,0), (-1,-1), 6),
+        ]))
+        story.append(items_table)
+        
+        # Totals
+        legal_p = ""
+        if invoice.vat_percentage == 0:
+            legal_p = Paragraph("<i>Ngarkesa e kundert, nenparagrafi 1.4.1 ose 1.4.2 i nenit 52 te ligjit per TVSH</i>", self.note_style)
+
+        totals_data = [
+            [legal_p, "TOTAL PA TVSH", self.format_number(invoice.subtotal, True)],
+            ["", "TVSH %", f"{float(invoice.vat_percentage):.2f}%"],
+            ["", "TVSH SHUMA", self.format_number(invoice.vat_amount, True)],
+            ["", "PER PAGESE", self.format_number(invoice.total, True)],
+        ]
+        totals_table = Table(totals_data, colWidths=[95*mm, 50*mm, 40*mm])
+        totals_table.setStyle(TableStyle([
+            ("GRID", (2, 0), (2, -1), 1, colors.black),
+            ("ALIGN", (1, 0), (2, -1), "RIGHT"),
+            ("SPAN", (0, 0), (0, 3)),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("FONTNAME", (1, 3), (2, 3), "Helvetica-Bold"),
+            ("FONTSIZE", (2, 3), (2, 3), 13),
+            ("PADDING", (0, 0), (-1, -1), 6),
+        ]))
+        story.append(totals_table)
+        story.append(Spacer(1, 35*mm))
+        
+        # Signatures
+        sig_data = [["Faturoi", "Pranoi"], ["____________________", "____________________"]]
+        sig_table = Table(sig_data, colWidths=[90*mm, 90*mm])
+        sig_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (0, -1), "LEFT"), ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("TOPPADDING", (0, 0), (-1, -1), 15),
+            ("LEFTPADDING", (0, 0), (0, -1), 30), ("RIGHTPADDING", (1, 0), (1, -1), 30),
+        ]))
+        story.append(sig_table)
+
+        doc.build(story)
+        return filepath
+
+    def generate_offer_pdf(self, offer, company, client, manual_font_size=None):
+        """Gjeneron PDF për një ofertë - identike me desktop app"""
+        import json
+        import tempfile
+        import atexit
+        from PIL import Image as PILImage
+        
+        filename = f"Oferta_{offer.offer_number.replace(' ', '_')}.pdf"
+        filepath = os.path.join(EXPORTS_DIR, filename)
+        
+        doc = SimpleDocTemplate(
+            filepath, pagesize=A4,
+            leftMargin=15*mm, rightMargin=15*mm, topMargin=12*mm, bottomMargin=12*mm
+        )
+        
+        story = []
+        
+        # -------------------------------
+        # HEADER (Standard Invoice Header)
+        # -------------------------------
+        logo_path = company.logo_path if company.logo_path and os.path.exists(company.logo_path) else None
+        if not logo_path:
+            # Try to find logo in images directory
+            images_dir = os.path.join(BASE_DIR, "assets", "images")
+            logo_path = os.path.join(images_dir, "logo.png") if os.path.exists(os.path.join(images_dir, "logo.png")) else None
+            
+        buyer_style = ParagraphStyle("buyer", fontSize=11, alignment=TA_RIGHT)
+        buyer_bold_style = ParagraphStyle("buyer_bold", fontSize=12, fontName="Helvetica-Bold", alignment=TA_RIGHT)
+        
+        company_data = []
+        logo_height = 32*mm
+        
+        if logo_path and os.path.exists(logo_path):
+            try:
+                pil_img = PILImage.open(logo_path)
+                if pil_img.mode != 'RGBA': pil_img = pil_img.convert('RGBA')
+                bbox = pil_img.getbbox()
+                if bbox: pil_img = pil_img.crop(bbox)
+                
+                img_width, img_height = pil_img.size
+                aspect_ratio = img_width / img_height
+                logo_width = logo_height * aspect_ratio
+                max_width = 50*mm
+                if logo_width > max_width:
+                    logo_width = max_width
+                    logo_height = logo_width / aspect_ratio
+                
+                temp_logo = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+                pil_img.save(temp_logo.name, 'PNG')
+                temp_logo_path = temp_logo.name
+                temp_logo.close()
+                logo = Image(temp_logo_path, logo_width, logo_height)
+                
+                def cleanup_temp_logo():
+                    try: 
+                        if os.path.exists(temp_logo_path): os.unlink(temp_logo_path)
+                    except: pass
+                atexit.register(cleanup_temp_logo)
+                
+                company_data.append([logo])
+            except Exception as e:
+                print(f"Gabim logo: {e}")
+                company_data.append([Paragraph(f"<b>{company.name}</b>", self.bold_style)])
+        else:
+            company_data.append([Paragraph(f"<b>{company.name}</b>", self.bold_style)])
+            
+        company_data += [
+            [Paragraph("Fasada ventiluese", self.normal_style)],
+            [Paragraph(f"Tel: {company.phone}", self.normal_style)],
+            [Paragraph(company.email, self.normal_style)],
+            [Paragraph(company.address, self.normal_style)],
+            [Paragraph(f"Numër unik: {company.unique_number}", self.normal_style)],
+            [Paragraph(f"Numër fiskal: {company.fiscal_number}", self.normal_style)],
+            [Paragraph(f"<b>Llogaria: NLB {company.account_nib}</b>", self.bold_style)]
+        ]
+        
+        company_table = Table(company_data, colWidths=[100*mm])
+        company_table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (0, 0), 10),
+        ]))
+        
+        buyer_data = [
+            [Spacer(1, logo_height)],
+            [Paragraph("<b>PERFITUESI</b>", buyer_bold_style)],
+            [Paragraph(f"Emri: {client.name}", buyer_style)],
+            [Paragraph(f"Adresa: {client.address or ''}", buyer_style)],
+            [Paragraph(f"Numër unik: {client.unique_number or ''}", buyer_style)],
+        ]
+        
+        buyer_table = Table(buyer_data, colWidths=[90*mm])
+        buyer_table.setStyle(TableStyle([
+            ("BOX", (0, 1), (-1, -1), 1, colors.black),
+            ("LINEBELOW", (0, 1), (-1, 1), 1, colors.black),
+            ("BACKGROUND", (0, 1), (-1, 1), colors.lightgrey),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 1), (-1, 1), 6),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 6),
+        ]))
+        
+        header_container = Table([[company_table, buyer_table]], colWidths=[100*mm, 90*mm])
+        header_container.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 0), (0, 0), "LEFT"),
+            ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+            ("LEFTPADDING", (0,0), (-1,-1), 0),
+            ("RIGHTPADDING", (0,0), (-1,-1), 0),
+        ]))
+        story.append(header_container)
+        story.append(Spacer(1, 12*mm))
+
+        # -------------------------------
+        # OFFER BODY (Titulli, Punimet, Totali, Shenimet)
+        # -------------------------------
+        
+        # Title and Date Row
+        title_text = offer.subject if offer.subject else "OFERTË"
+        date_text = f"Data: {self.format_date(offer.date)}" if offer.date else ""
+        
+        offer_title_style = ParagraphStyle(
+            "OfferTitle",
+            fontSize=15,
+            textColor=colors.black,
+            fontName="Helvetica-Bold",
+            leftIndent=0,
+            firstLineIndent=0,
+            spaceAfter=0
+        )
+        
+        offer_date_style = ParagraphStyle(
+            "OfferDate",
+            fontSize=12,
+            textColor=colors.black,
+            fontName="Helvetica",
+            alignment=TA_RIGHT,
+            leftIndent=0,
+            firstLineIndent=0,
+            spaceAfter=0
+        )
+        
+        title_para = Paragraph(title_text, offer_title_style)
+        date_para = Paragraph(date_text, offer_date_style)
+        
+        # Table with 2 columns: Title (Left) - Date (Right)
+        title_table = Table([[title_para, date_para]], colWidths=[140*mm, 50*mm])
+        title_table.setStyle(TableStyle([
+            ('LEFTPADDING', (0,0), (-1,-1), 0),
+            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+            ('TOPPADDING', (0,0), (-1,-1), 0),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+            ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
+            ('ALIGN', (0,0), (0,0), 'LEFT'),
+            ('ALIGN', (1,0), (1,0), 'RIGHT'),
+        ]))
+        story.append(title_table) 
+        
+        story.append(Spacer(1, 10*mm))
+        
+        if offer.items:
+            # Sort items by order_index
+            sorted_items = sorted(offer.items, key=lambda x: getattr(x, 'order_index', 0))
+            
+            # DYNAMIC SCALING: Detect content density
+            content_sample = " ".join([getattr(item, 'description', '') or '' for item in sorted_items])
+            total_len = len(content_sample)
+            count = len(sorted_items)
+            
+            # Decide base font
+            if manual_font_size and manual_font_size != "Auto":
+                try:
+                    base_font = float(manual_font_size)
+                    leading = base_font * 1.4
+                except:
+                    base_font, leading = 11.5, 16 
+            elif count < 7 and total_len < 400:
+                base_font, leading = 13.5, 19
+            elif count < 12 and total_len < 800:
+                base_font, leading = 11.5, 16
+            else:
+                base_font, leading = 10, 14
+            
+            # Specialized Styles
+            r_style = ParagraphStyle("RNormal", parent=self.normal_style, fontSize=base_font, leading=leading, leftIndent=0, firstLineIndent=0)
+            r_note = ParagraphStyle("RNote", parent=self.note_style, fontSize=base_font, leading=leading, leftIndent=0, firstLineIndent=0)
+            r_header = ParagraphStyle("RHead", parent=self.normal_style, fontSize=15, leading=18, fontName="Helvetica-Bold", textColor=colors.black, leftIndent=0, firstLineIndent=0)
+            r_calc = ParagraphStyle("RCalc", parent=self.right_style, fontSize=base_font, leading=leading, leftIndent=0, firstLineIndent=0)
+
+            # Pre-process items into flowables with metadata
+            render_items = []
+
+            for item in sorted_items:
+                row_type = getattr(item, 'row_type', 'item') or 'item'
+                
+                # Parse custom_attributes for border
+                custom_attr_raw = getattr(item, 'custom_attributes', None)
+                has_border = True  # Default
+                modules_list = []
+                
+                if custom_attr_raw:
+                    if isinstance(custom_attr_raw, str):
+                        try:
+                            custom_attr_raw = json.loads(custom_attr_raw)
+                        except:
+                            custom_attr_raw = None
+                    
+                    if isinstance(custom_attr_raw, dict):
+                        has_border = custom_attr_raw.get('has_border', True)
+                        modules_list = custom_attr_raw.get('modules', [])
+                    elif isinstance(custom_attr_raw, list):
+                        modules_list = custom_attr_raw
+                
+                flowable = None
+                
+                if row_type == 'header':
+                    desc_text = (getattr(item, 'description', '') or '').strip()
+                    if desc_text:
+                        data = [[Paragraph(desc_text, r_header)]]
+                        t = Table(data, colWidths=[190*mm])
+                        style_cmds = [
+                            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                            ('LEFTPADDING', (0,0), (-1,-1), 0),
+                            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                            ('TOPPADDING', (0,0), (-1,-1), 0),
+                            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+                        ]
+                        if has_border:
+                            style_cmds.extend([
+                                ('BOX', (0,0), (-1,-1), 1, colors.Color(0.85, 0.85, 0.85)),
+                                ('LEFTPADDING', (0,0), (-1,-1), 6),
+                                ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                                ('TOPPADDING', (0,0), (-1,-1), 6),
+                                ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+                                ('BACKGROUND', (0,0), (-1,-1), colors.Color(0.97, 0.97, 0.97))
+                            ])
+                        t.setStyle(TableStyle(style_cmds))
+                        flowable = t
+                
+                elif row_type == 'text':
+                    desc_text = (getattr(item, 'description', '') or '').strip()
+                    lines = desc_text.split('\n')
+                    paras = []
+                    for line in lines:
+                        if line.strip():
+                            paras.append(Paragraph(line, r_note if line.strip().startswith("*") else r_style))
+                    
+                    if paras:
+                        data = [[paras]]
+                        t = Table(data, colWidths=[190*mm])
+                        style_cmds = [
+                            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                            ('LEFTPADDING', (0,0), (-1,-1), 0),
+                            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                            ('TOPPADDING', (0,0), (-1,-1), 0),
+                            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+                        ]
+                        if has_border:
+                            style_cmds.extend([
+                                ('BOX', (0,0), (-1,-1), 1, colors.Color(0.85, 0.85, 0.85)),
+                                ('LEFTPADDING', (0,0), (-1,-1), 6),
+                                ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                                ('TOPPADDING', (0,0), (-1,-1), 4),
+                                ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+                            ])
+                        t.setStyle(TableStyle(style_cmds))
+                        flowable = t
+
+                else:  # ITEM
+                    desc_text = (getattr(item, 'description', '') or '').strip()
+                    
+                    # Calc Logic
+                    calc_segments = []
+                    has_any_val = False
+                    if isinstance(modules_list, list):
+                        has_any_val = any(str(attr.get('value', '')).strip() for attr in modules_list)
+                        if has_any_val:
+                            for idx, attr in enumerate(modules_list):
+                                v, u = str(attr.get('value', '')).strip(), str(attr.get('unit', '')).strip().replace("m2", "m²").replace("m3", "m³")
+                                if v:
+                                    if any(s.startswith("<b>") for s in calc_segments):
+                                        calc_segments.append("<font color='#666666'>x</font>")
+                                    calc_segments.append(f"<b>{v}</b> {u}")
+                                elif u:
+                                    calc_segments.append(u)
+                    
+                    formula_html = " ".join(calc_segments).strip() if has_any_val else ""
+                    
+                    data = None
+                    if desc_text and formula_html:
+                        data = [[Paragraph(desc_text, r_style), Paragraph(f"<font color='#666666'>=</font> {formula_html}", r_calc)]]
+                    elif desc_text:
+                        data = [[Paragraph(desc_text, r_style), ""]]
+                    elif formula_html:
+                        data = [["", Paragraph(f"<font color='#666666'>=</font> {formula_html}", r_calc)]]
+                    
+                    if data:
+                        t = Table(data, colWidths=[130*mm, 60*mm])
+                        style_cmds = [
+                            ('ALIGN', (0,0), (0,0), 'LEFT'),
+                            ('ALIGN', (1,0), (1,0), 'RIGHT'),
+                            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                            ('LEFTPADDING', (0,0), (-1,-1), 0),
+                            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                            ('TOPPADDING', (0,0), (-1,-1), 0),
+                            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+                        ]
+                        if has_border:
+                            style_cmds.extend([
+                                ('BOX', (0,0), (-1,-1), 1, colors.Color(0.85, 0.85, 0.85)),
+                                ('LEFTPADDING', (0,0), (-1,-1), 6),
+                                ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                                ('TOPPADDING', (0,0), (-1,-1), 4),
+                                ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+                            ])
+                        t.setStyle(TableStyle(style_cmds))
+                        flowable = t
+
+                if flowable:
+                    render_items.append({'obj': flowable, 'has_border': has_border})
+
+            # Append to story with smart spacing
+            for i, item in enumerate(render_items):
+                story.append(item['obj'])
+                
+                next_item = render_items[i+1] if i + 1 < len(render_items) else None
+                
+                if next_item and item['has_border'] and next_item['has_border']:
+                    pass  # No spacer when both have borders
+                else:
+                    story.append(Spacer(1, 6*mm))
+
+            story.append(Spacer(1, 5*mm))
+        
+        # -------------------------------
+        # SIGNATURES
+        # -------------------------------
+        story.append(Spacer(1, 20*mm))
+        signatures = [
+            ["Holkos", ""],
+            ["____________________", ""]
+        ]
+        signatures_table = Table(signatures, colWidths=[92.5*mm, 92.5*mm])
+        signatures_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (0, -1), "LEFT"),
+            ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("TOPPADDING", (0, 0), (-1, -1), 15),
+            ("LEFTPADDING", (0, 0), (0, -1), 50),  
+            ("RIGHTPADDING", (1, 0), (1, -1), 50), 
+        ]))
+        story.append(signatures_table)
+        
+        doc.build(story)
+        return filepath

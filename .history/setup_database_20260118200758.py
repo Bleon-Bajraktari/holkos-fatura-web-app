@@ -1,0 +1,122 @@
+"""
+Skript për setup të databazës
+Ekzekuto këtë skript për të krijuar databazën dhe tabelat
+"""
+import mysql.connector
+from mysql.connector import Error
+import os
+from config.database import DatabaseConfig
+from config.settings import SQL_DIR
+
+def create_database():
+    """Krijon databazën dhe tabelat"""
+    config = DatabaseConfig()
+    try:
+        # Lidhu me MySQL (pa databazë specifike)
+        connection = mysql.connector.connect(
+            host=config.host,
+            port=config.port,
+            user=config.user,
+            password=config.password
+        )
+        
+        if connection.is_connected():
+            cursor = connection.cursor()
+            
+            # Krijo databazën
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {config.database}")
+            print(f"✓ Databaza '{config.database}' u krijua ose ekzistonte tashmë")
+            
+            # Përdor databazën
+            cursor.execute(f"USE {config.database}")
+            
+            # Lexo dhe ekzekuto skemën
+            schema_path = os.path.join(SQL_DIR, "schema.sql")
+            if os.path.exists(schema_path):
+                with open(schema_path, 'r', encoding='utf-8') as f:
+                    schema_sql = f.read()
+                    # Ekzekuto çdo komandë veç e veç
+                    for statement in schema_sql.split(';'):
+                        if statement.strip():
+                            try:
+                                cursor.execute(statement)
+                            except Error as e:
+                                if "already exists" not in str(e).lower():
+                                    print(f"Vërejtje: {e}")
+                
+                connection.commit()
+                connection.commit()
+                print("✓ Tabelat u krijuan me sukses")
+                
+                # UPDATE: Shto kolona të reja nëse nuk ekzistojnë (Për Database Existing)
+                try:
+                    # SMTP për Kompaninë
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_server VARCHAR(255) DEFAULT 'smtp.gmail.com'")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_port INT DEFAULT 587")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(255)")
+                    cursor.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS smtp_password VARCHAR(255)")
+                    
+                    # Email për Klientët
+                    cursor.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(255)")
+                    
+                    # Statusi i Faturave (Pagesat)
+                    try:
+                        cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS status ENUM('draft', 'sent', 'paid') DEFAULT 'draft'")
+                    except:
+                        # Fallback për versione të vjetra MySQL që nuk suportojnë IF NOT EXISTS tek ADD COLUMN
+                        try: cursor.execute("ALTER TABLE invoices ADD COLUMN status ENUM('draft', 'sent', 'paid') DEFAULT 'draft'")
+                        except: pass
+
+                    # Përditësimet për Ofertat
+                    try:
+                        cursor.execute("ALTER TABLE offers ADD COLUMN IF NOT EXISTS subject VARCHAR(255) AFTER client_id")
+                    except:
+                        try: cursor.execute("ALTER TABLE offers ADD COLUMN subject VARCHAR(255) AFTER client_id")
+                        except: pass
+
+                    try:
+                        cursor.execute("ALTER TABLE offer_items ADD COLUMN IF NOT EXISTS row_type VARCHAR(20) DEFAULT 'item' AFTER subtotal")
+                        cursor.execute("ALTER TABLE offer_items ADD COLUMN IF NOT EXISTS custom_attributes TEXT AFTER row_type")
+                    except:
+                        try: 
+                            cursor.execute("ALTER TABLE offer_items ADD COLUMN row_type VARCHAR(20) DEFAULT 'item' AFTER subtotal")
+                            cursor.execute("ALTER TABLE offer_items ADD COLUMN custom_attributes TEXT AFTER row_type")
+                        except: pass
+
+                    connection.commit()
+                    print("✓ Përditësimi i strukturës (Updates) u bë me sukses")
+                    
+                    # UPDATE 2: Hiq UNIQUE constraint nga invoice_number për të lejuar duplikate sipas viteve
+                    try:
+                        cursor.execute("DROP INDEX invoice_number ON invoices")
+                        print("✓ U hoq indeksi UNIQUE nga invoice_number për të lejuar numërim vjetor")
+                    except Error as e:
+                        # Injoro nëse indeksi nuk ekziston më
+                        if "check that column/key exists" not in str(e).lower() and "cant drop" not in str(e).lower():
+                             # Mund të jetë që tashmë është hequr ose ka emër tjetër, por zakonisht është ok
+                             pass
+
+                    connection.commit()
+                except Error as e:
+                    print(f"info: Përditësimi i strukturës u anashkalua ose dështoi: {e}")
+
+            else:
+                print(f"✗ Skema nuk u gjet në: {schema_path}")
+            
+            cursor.close()
+            connection.close()
+            print("\n✓ Setup i databazës u përfundua me sukses!")
+            print("Tani mund të ekzekutosh aplikacionin me: python main.py")
+            
+    except Error as e:
+        print(f"✗ Gabim: {e}")
+        print("\nJu lutem sigurohuni që:")
+        print("1. MySQL është i startuar në xampp")
+        print("2. Credentials në config/database.py janë të sakta")
+        print("3. MySQL user ka të drejta për të krijuar databaza")
+
+if __name__ == "__main__":
+    print("Setup i databazës për Holkos Fatura")
+    print("=" * 40)
+    create_database()
+

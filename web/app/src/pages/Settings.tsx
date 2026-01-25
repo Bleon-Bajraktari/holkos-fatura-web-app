@@ -1,0 +1,315 @@
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft } from 'lucide-react'
+import { CompanyService, SettingsService } from '../services/api'
+
+const SettingsPage = () => {
+    const navigate = useNavigate()
+    const [company, setCompany] = useState<any>({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        unique_number: '',
+        fiscal_number: '',
+        account_nib: '',
+        smtp_server: 'smtp.gmail.com',
+        smtp_port: 587,
+        smtp_user: '',
+        smtp_password: ''
+    })
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [message, setMessage] = useState({ type: '', text: '' })
+    const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
+    const [logoUploading, setLogoUploading] = useState(false)
+
+    useEffect(() => {
+        Promise.all([
+            CompanyService.get().then(data => setCompany(data)),
+            SettingsService.getPaymentStatus().then(data => setPaymentStatusEnabled(data.enabled))
+        ])
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false))
+    }, [])
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSaving(true)
+        setMessage({ type: '', text: '' })
+        try {
+            await CompanyService.update(company)
+            await SettingsService.updatePaymentStatus(paymentStatusEnabled)
+            setMessage({ type: 'success', text: 'Të dhënat u ruajtën me sukses!' })
+        } catch (error) {
+            console.error(error)
+            setMessage({ type: 'error', text: 'Gabim gjatë ruajtjes!' })
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleLogoUpload = async (file: File) => {
+        if (!file) return
+        setLogoUploading(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const updated = await CompanyService.uploadLogo(file)
+            setCompany(updated)
+            setMessage({ type: 'success', text: 'Logo u ngarkua me sukses!' })
+        } catch (error) {
+            console.error(error)
+            setMessage({ type: 'error', text: 'Gabim gjatë ngarkimit të logos!' })
+        } finally {
+            setLogoUploading(false)
+        }
+    }
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
+
+    return (
+        <div className="p-4 sm:p-6 md:p-10 max-w-5xl mx-auto w-full pb-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Cilësimet</h1>
+                        <p className="text-sm text-slate-400 font-medium">Menaxhoni profilin e kompanisë suaj dhe sistemin</p>
+                    </div>
+                </div>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+                >
+                    <Save size={18} />
+                    <span>{saving ? 'Duke Ruajtur...' : 'Ruaj Ndryshimet'}</span>
+                </button>
+            </div>
+
+            {message.text && (
+                <div className={`mb-6 p-4 rounded-xl text-sm font-bold ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    {message.text}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Profile Section */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <Building2 size={20} className="text-blue-500" />
+                        Profili i Biznesit
+                    </h3>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Logo e Kompanisë</label>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) handleLogoUpload(file)
+                                    }}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-2.5 px-4 text-sm font-bold text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
+                                />
+                                <div className="text-xs text-slate-400 font-medium">
+                                    {logoUploading ? 'Duke ngarkuar...' : (company.logo_path ? `Logo: ${company.logo_path}` : 'Nuk ka logo')}
+                                </div>
+                            </div>
+                            {company.logo_path && (
+                                <div className="mt-3">
+                                    <img
+                                        src={`/${company.logo_path.replace(/^\/+/, '')}`}
+                                        alt="Logo"
+                                        className="h-14 w-auto rounded-lg border border-slate-200 bg-white p-1"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Emri i Kompanisë</label>
+                            <div className="relative">
+                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                <input
+                                    type="text"
+                                    value={company.name}
+                                    onChange={e => setCompany({ ...company, name: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Telefoni</label>
+                                <div className="relative">
+                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                    <input
+                                        type="text"
+                                        value={company.phone}
+                                        onChange={e => setCompany({ ...company, phone: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Email</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                    <input
+                                        type="email"
+                                        value={company.email}
+                                        onChange={e => setCompany({ ...company, email: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Adresa</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-3 text-slate-300" size={18} />
+                                <textarea
+                                    rows={2}
+                                    value={company.address}
+                                    onChange={e => setCompany({ ...company, address: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Fiscal Section */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <CreditCard size={20} className="text-blue-500" />
+                        Të dhënat Fiskale
+                    </h3>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Numri Unik</label>
+                                <div className="relative">
+                                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                    <input
+                                        type="text"
+                                        value={company.unique_number}
+                                        onChange={e => setCompany({ ...company, unique_number: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Numri Fiskal</label>
+                                <div className="relative">
+                                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                    <input
+                                        type="text"
+                                        value={company.fiscal_number}
+                                        onChange={e => setCompany({ ...company, fiscal_number: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Xhirollaria (NLB)</label>
+                            <div className="relative">
+                                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                <input
+                                    type="text"
+                                    value={company.account_nib}
+                                    onChange={e => setCompany({ ...company, account_nib: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SMTP Section */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6 lg:col-span-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <Server size={20} className="text-blue-500" />
+                        Konfigurimi i Email-it (SMTP)
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="lg:col-span-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Hosti SMTP</label>
+                            <input
+                                type="text"
+                                value={company.smtp_server}
+                                onChange={e => setCompany({ ...company, smtp_server: e.target.value })}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Porti</label>
+                            <input
+                                type="number"
+                                value={company.smtp_port}
+                                onChange={e => setCompany({ ...company, smtp_port: parseInt(e.target.value) || 587 })}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div className="hidden lg:block"></div>
+
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Përdoruesi SMTP</label>
+                            <input
+                                type="text"
+                                value={company.smtp_user}
+                                onChange={e => setCompany({ ...company, smtp_user: e.target.value })}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Fjalëkalimi SMTP</label>
+                            <div className="relative">
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                <input
+                                    type="password"
+                                    value={company.smtp_password}
+                                    onChange={e => setCompany({ ...company, smtp_password: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">Këto të dhëna do të përdoren për të dërguar faturat dhe ofertat direkt me email.</p>
+                </div>
+
+                {/* App Settings */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <Shield size={20} className="text-blue-500" />
+                        Cilësimet e Aplikacionit
+                    </h3>
+                    <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                        <input
+                            type="checkbox"
+                            checked={paymentStatusEnabled}
+                            onChange={(e) => setPaymentStatusEnabled(e.target.checked)}
+                            className="h-4 w-4"
+                        />
+                        Aktivizo Menaxhimin e Statusit (Paguar/Pa Paguar)
+                    </label>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default SettingsPage

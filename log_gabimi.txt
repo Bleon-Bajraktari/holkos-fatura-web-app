@@ -1,0 +1,1 @@
+Gabim: Nuk mund te lidhet me databazen. Sigurohu qe XAMPP/MySQL eshte i ndezur.
