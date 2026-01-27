@@ -18,13 +18,14 @@ import {
     FilePlus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CompanyService } from './services/api'
+import { CompanyService, DashboardService } from './services/api'
 import InvoicesPage from './pages/Invoices'
 import OffersPage from './pages/Offers'
 import ClientsPage from './pages/Clients'
 import SettingsPage from './pages/Settings'
 import TemplatesPage from './pages/Templates'
 import OfferForm from './pages/OfferForm'
+import NetworkStatus from './components/NetworkStatus'
 
 // Dashboard Component
 const Dashboard = () => {
@@ -34,8 +35,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await fetch('/api/dashboard/stats')
-                const data = await response.json()
+                const data = await DashboardService.getStats()
                 setStats(data)
             } catch (error) {
                 console.error('Error fetching stats:', error)
@@ -77,7 +77,7 @@ const Dashboard = () => {
                         <LayoutDashboard size={20} className="text-blue-500" />
                         Veprime të shpejta
                     </h3>
-                    
+
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {quickActions.map((action) => (
@@ -247,27 +247,49 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }, [location.pathname])
 
     useEffect(() => {
-        CompanyService.get().then(setCompany).catch(() => setCompany(null))
+        // Shiko në cache së pari për shpejtësi (PWA)
+        const cached = localStorage.getItem('company_cache')
+        if (cached) {
+            setCompany(JSON.parse(cached))
+        }
+
+        CompanyService.get()
+            .then(data => {
+                setCompany(data)
+                localStorage.setItem('company_cache', JSON.stringify(data))
+            })
+            .catch(() => {
+                if (!cached) setCompany(null)
+            })
     }, [])
 
     const logoUrl = company?.logo_path ? `/${company.logo_path.replace(/^\/+/, '')}` : ''
 
     useEffect(() => {
-        if (!logoUrl) return
+        const version = Date.now()
+        const updateLink = (rel: string, href: string) => {
+            // Gjej të gjitha link-et me këtë rel (p.sh. apple-touch-icon mund të ketë sizes)
+            const links = document.querySelectorAll(`link[rel="${rel}"], link[rel*="${rel}"]`)
+            links.forEach(link => {
+                (link as HTMLLinkElement).href = `${href}?v=${version}`
+            })
 
-        const setLink = (rel: string, href: string, sizes?: string) => {
-            let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null
-            if (!link) {
-                link = document.createElement('link')
+            // Nëse nuk ka link, krijo një të ri
+            if (links.length === 0) {
+                const link = document.createElement('link')
                 link.rel = rel
+                link.href = `${href}?v=${version}`
                 document.head.appendChild(link)
             }
-            link.href = href
-            if (sizes) link.sizes = sizes
         }
 
-        setLink('icon', logoUrl)
-        setLink('apple-touch-icon', logoUrl)
+        // Përditëso favicon me logo-n e kompanisë nëse ekziston
+        if (logoUrl) {
+            updateLink('icon', logoUrl)
+        }
+
+        // Gjithmonë përditëso apple-touch-icon me endpoint-in e backend-it
+        updateLink('apple-touch-icon', '/apple-touch-icon.png')
     }, [logoUrl])
 
     return (
@@ -325,18 +347,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                             className="fixed inset-y-0 left-0 w-72 bg-white z-50 p-6 shadow-2xl lg:hidden flex flex-col"
                         >
                             <div className="flex items-center justify-between mb-10">
-                            <div className="flex items-center gap-3">
-                                {logoUrl ? (
-                                    <img
-                                        src={logoUrl}
-                                        alt="Holkos"
-                                        className="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200 shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-200">H</div>
-                                )}
-                                <span className="text-xl font-bold tracking-tight">Holkos</span>
-                            </div>
+                                <div className="flex items-center gap-3">
+                                    {logoUrl ? (
+                                        <img
+                                            src={logoUrl}
+                                            alt="Holkos"
+                                            className="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200 shadow-sm"
+                                        />
+                                    ) : (
+                                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-200">H</div>
+                                    )}
+                                    <span className="text-xl font-bold tracking-tight">Holkos</span>
+                                </div>
                                 <button onClick={() => setSidebarOpen(false)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl"><X size={20} /></button>
                             </div>
                             <nav className="space-y-1.5 flex-1">
@@ -406,6 +428,7 @@ import InvoiceForm from './pages/InvoiceForm'
 function App() {
     return (
         <Router>
+            <NetworkStatus />
             <ScrollToTop />
             <Layout>
                 <Routes>

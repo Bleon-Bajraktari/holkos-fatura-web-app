@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft } from 'lucide-react'
+import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2 } from 'lucide-react'
 import { CompanyService, SettingsService } from '../services/api'
+import { db } from '../services/db'
 
 const SettingsPage = () => {
     const navigate = useNavigate()
@@ -56,6 +57,7 @@ const SettingsPage = () => {
         try {
             const updated = await CompanyService.uploadLogo(file)
             setCompany(updated)
+            localStorage.setItem('company_cache', JSON.stringify(updated));
             setMessage({ type: 'success', text: 'Logo u ngarkua me sukses!' })
         } catch (error) {
             console.error(error)
@@ -302,10 +304,46 @@ const SettingsPage = () => {
                             type="checkbox"
                             checked={paymentStatusEnabled}
                             onChange={(e) => setPaymentStatusEnabled(e.target.checked)}
-                            className="h-4 w-4"
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
                         />
                         Aktivizo Menaxhimin e Statusit (Paguar/Pa Paguar)
                     </label>
+                </div>
+
+                {/* PWA Performance & Cache Section */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2 border-dashed">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-1">
+                                <Server size={20} className="text-rose-500" />
+                                Memoria Lokale (PWA Backup)
+                            </h3>
+                            <p className="text-xs text-slate-400">Nëse shihni faturat e dublikuara ose të dhëna të vjetra offline, pastroni memorien lokale.</p>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                if (confirm('A jeni të sigurt? Kjo do të fshijë çdo të dhënë lokale dhe do t’i shkarkojë saktë nga Cloud.')) {
+                                    await db.invoices.clear();
+                                    await db.offers.clear();
+                                    await db.clients.clear();
+
+                                    // Pastrojmë të gjitha cache-et në localStorage
+                                    Object.keys(localStorage).forEach(key => {
+                                        if (key.startsWith('years_cache_') || key === 'company_cache') {
+                                            localStorage.removeItem(key);
+                                        }
+                                    });
+
+                                    alert('Memoria u pastrua me sukses! Tani hapni listat që të shkarkohen të dhënat e reja.');
+                                    window.location.reload();
+                                }
+                            }}
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-black hover:bg-rose-100 transition-all shadow-sm"
+                        >
+                            <Trash2 size={16} />
+                            PASTRO MEMORIEN (CACHE)
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

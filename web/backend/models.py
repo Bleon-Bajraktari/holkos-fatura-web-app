@@ -57,6 +57,7 @@ class Invoice(Base):
     total = Column(DECIMAL(10, 2), default=0.00)
     status = Column(String(20), default='draft')
     pdf_path = Column(String(500))
+    save_timestamp = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -89,6 +90,7 @@ class Offer(Base):
     vat_amount = Column(DECIMAL(10, 2), default=0.00)
     total = Column(DECIMAL(10, 2), default=0.00)
     pdf_path = Column(String(500))
+    save_timestamp = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

@@ -25,6 +25,10 @@ def update_db():
             print("Ensuring 'status' is VARCHAR(20)...")
             conn.execute(text("ALTER TABLE invoices MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'"))
         
+        if "save_timestamp" not in columns:
+            print("Adding 'save_timestamp' to invoices...")
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN save_timestamp DATETIME NULL"))
+        
         # Invoice Items table
         rows = conn.execute(text("SHOW COLUMNS FROM invoice_items")).fetchall()
         columns = [row[0] for row in rows]
@@ -44,6 +48,13 @@ def update_db():
         else:
             print("Ensuring 'unit' is VARCHAR(50) in offer_items...")
             conn.execute(text("ALTER TABLE offer_items MODIFY COLUMN unit VARCHAR(50)"))
+
+        # Offer table check
+        rows = conn.execute(text("SHOW COLUMNS FROM offers")).fetchall()
+        columns = [row[0] for row in rows]
+        if "save_timestamp" not in columns:
+            print("Adding 'save_timestamp' to offers...")
+            conn.execute(text("ALTER TABLE offers ADD COLUMN save_timestamp DATETIME NULL"))
 
         # Offers and OfferItems should have been created by create_all if они missing.
         

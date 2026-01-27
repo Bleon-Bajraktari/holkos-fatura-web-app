@@ -3,14 +3,20 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
-            // Silent fail to avoid blocking app startup if SW registration fails.
-        })
-    })
-}
+// SW registration handled by vite-plugin-pwa
+import { registerSW } from 'virtual:pwa-register'
 
+registerSW({
+    onNeedRefresh() {
+        if (confirm('Aplikacioni ka një përditësim të ri. A dëshironi ta rifreskoni?')) {
+            window.location.reload()
+        }
+    },
+    onOfflineReady() {
+        alert('HOLKOS: Sistemi u shkarkua saktë! Tani mund ta përdorni këtë aplikacion edhe pa internet (Offline).')
+        console.log('Aplikacioni është gati për përdorim offline!')
+    },
+})
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />

@@ -197,7 +197,8 @@ const InvoiceForm = () => {
                 })),
                 subtotal,
                 vat_amount: vatAmount,
-                total
+                total,
+                save_timestamp: new Date().toISOString()
             }
             let savedDoc;
             if (isEdit) {

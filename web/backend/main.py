@@ -11,6 +11,10 @@ import models, schemas, database, os
 from services.pdf_generator import WebPDFGenerator
 from services.email_service import WebEmailService
 
+# Initialize global services
+pdf_generator = WebPDFGenerator()
+email_service = WebEmailService()
+
 app = FastAPI(title="Holkos Fatura API")
 
 # CORS setup
@@ -127,33 +131,41 @@ def get_invoices(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+def _get_next_val(db: Session, year: int, doc_type: str = 'invoice'):
+    import re
+    from datetime import date
+    model = models.Invoice if doc_type == 'invoice' else models.Offer
+    
+    # Get last items of the year/period
+    query = db.query(model)
+    if doc_type == 'invoice':
+        query = query.filter(model.date >= date(year, 1, 1), model.date < date(year + 1, 1, 1))
+    
+    items = query.order_by(model.id.desc()).limit(20).all()
+    
+    max_val = 0
+    pattern = r'NR\.(\d+)' if doc_type == 'invoice' else r'NR\.(\d+)' # Assuming same pattern
+    
+    for item in items:
+        num_str = item.invoice_number if doc_type == 'invoice' else item.offer_number
+        try:
+            nums = re.findall(pattern, num_str.upper())
+            if nums:
+                val = int(nums[0])
+                if val > max_val: max_val = val
+        except: pass
+    return max_val + 1
+
 @app.get("/invoices/next-number")
 def get_next_invoice_number(db: Session = Depends(get_db)):
     from datetime import date
-    import re
     current_year = date.today().year
-    
-    # 1. Get prefix
     prefix = ""
     db_prefix = db.query(models.Setting).filter(models.Setting.setting_key == 'device_prefix').first()
     if db_prefix and db_prefix.setting_value:
         prefix = f"/{db_prefix.setting_value}"
-
-    # 2. Get last invoices of the year to find max sequence
-    recent_invoices = db.query(models.Invoice).filter(models.Invoice.date >= date(current_year, 1, 1)).order_by(models.Invoice.id.desc()).limit(10).all()
     
-    max_val = 0
-    for inv in recent_invoices:
-        try:
-            nums = re.findall(r'NR\.(\d+)', inv.invoice_number.upper())
-            if nums:
-                val = int(nums[0])
-                if val > max_val:
-                    max_val = val
-        except:
-            pass
-    
-    next_val = max_val + 1
+    next_val = _get_next_val(db, current_year, 'invoice')
     return {"next_number": f"FATURA NR.{next_val}{prefix}"}
 
 @app.get("/invoices/years")
@@ -178,11 +190,41 @@ def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)
         models.Invoice.date >= year_start,
         models.Invoice.date < year_end
     ).first()
+    
+    target_number = invoice.invoice_number
+    
     if existing:
-        raise HTTPException(status_code=400, detail=f"Fatura me numrin '{invoice.invoice_number}' ekziston për vitin {year}!")
+        # Conflict Resolution Logic: "Earlier one gets the number"
+        new_ts = invoice.save_timestamp or dt_date.today()
+        ext_ts = existing.save_timestamp or existing.created_at
+        
+        # Ensure comparison works (naive vs aware or datetime vs date)
+        if hasattr(new_ts, 'timestamp') and hasattr(ext_ts, 'timestamp'):
+             is_earlier = new_ts < ext_ts
+        else:
+             is_earlier = False # Fallback
+
+        if is_earlier:
+            # Shift existing one to next available
+            next_val = _get_next_val(db, year, 'invoice')
+            # Extract prefix from existing
+            import re
+            parts = re.split(r'NR\.\d+', existing.invoice_number)
+            prefix = parts[1] if len(parts) > 1 else ""
+            existing.invoice_number = f"FATURA NR.{next_val}{prefix}"
+            existing.pdf_path = None # Invalidate PDF
+            db.commit()
+        else:
+            # Adjust incoming one to next available
+            next_val = _get_next_val(db, year, 'invoice')
+            import re
+            parts = re.split(r'NR\.\d+', target_number)
+            prefix = parts[1] if len(parts) > 1 else ""
+            target_number = f"FATURA NR.{next_val}{prefix}"
 
     # Remove client_name if present (not in schema)
     invoice_data = invoice.dict(exclude={'items', 'client_name'})
+    invoice_data['invoice_number'] = target_number
     db_invoice = models.Invoice(**invoice_data)
     db.add(db_invoice)
     db.commit()
@@ -229,6 +271,9 @@ def update_invoice(invoice_id: int, invoice: schemas.InvoiceCreate, db: Session 
     invoice_data = invoice.dict(exclude={'items', 'client_name'})
     for key, value in invoice_data.items():
         setattr(db_invoice, key, value)
+    
+    # Invalidate PDF cache
+    db_invoice.pdf_path = None
     
     # Update items: Delete old and create new for simplicity
     db.query(models.InvoiceItem).filter(models.InvoiceItem.invoice_id == invoice_id).delete()
@@ -312,12 +357,11 @@ def bulk_email_invoices(req: schemas.BulkEmailRequest, db: Session = Depends(get
         else:
             raise HTTPException(status_code=400, detail="Zgjidhni një email për dërgimin e faturave.")
 
-    generator = WebPDFGenerator()
     pdf_paths = []
     for inv in ordered_invoices:
         pdf_path = inv.pdf_path
         if not pdf_path or not os.path.exists(pdf_path):
-            pdf_path = generator.generate_invoice_pdf(inv, db_company, inv.client)
+            pdf_path = pdf_generator.generate_invoice_pdf(inv, db_company, inv.client)
             inv.pdf_path = pdf_path
             db.commit()
         pdf_paths.append(pdf_path)
@@ -335,11 +379,23 @@ def get_invoice_pdf(invoice_id: int, db: Session = Depends(get_db)):
     if not db_invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
+    # Check if PDF already exists
+    if db_invoice.pdf_path:
+        if db_invoice.pdf_path.startswith(('http://', 'https://')):
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(db_invoice.pdf_path)
+        elif os.path.exists(db_invoice.pdf_path):
+            return FileResponse(
+                db_invoice.pdf_path,
+                media_type='application/pdf',
+                filename=os.path.basename(db_invoice.pdf_path),
+                headers={"Content-Disposition": f'inline; filename="{os.path.basename(db_invoice.pdf_path)}"'}
+            )
+
     db_company = db.query(models.Company).first()
     db_client = db.query(models.Client).filter(models.Client.id == db_invoice.client_id).first()
     
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_invoice_pdf(db_invoice, db_company, db_client)
+    pdf_path = pdf_generator.generate_invoice_pdf(db_invoice, db_company, db_client)
     db_invoice.pdf_path = pdf_path
     db.commit()
     
@@ -532,6 +588,9 @@ def update_offer(offer_id: int, offer: schemas.OfferCreate, db: Session = Depend
     for key, value in offer.dict(exclude={'items'}).items():
         setattr(db_offer, key, value)
     
+    # Invalidate PDF cache
+    db_offer.pdf_path = None
+    
     db.query(models.OfferItem).filter(models.OfferItem.offer_id == offer_id).delete()
     for idx, item in enumerate(offer.items):
         item_data = item.dict()
@@ -602,12 +661,11 @@ def bulk_email_offers(req: schemas.BulkEmailOfferRequest, db: Session = Depends(
         else:
             raise HTTPException(status_code=400, detail="Zgjidhni një email për dërgimin e ofertave.")
 
-    generator = WebPDFGenerator()
     pdf_paths = []
     for off in ordered_offers:
         pdf_path = off.pdf_path
         if not pdf_path or not os.path.exists(pdf_path):
-            pdf_path = generator.generate_offer_pdf(off, db_company, off.client)
+            pdf_path = pdf_generator.generate_offer_pdf(off, db_company, off.client)
             off.pdf_path = pdf_path
             db.commit()
         pdf_paths.append(pdf_path)
@@ -730,6 +788,261 @@ def upload_company_logo(file: UploadFile = File(...), db: Session = Depends(get_
     db.refresh(db_company)
     return db_company
 
+@app.get("/logo.png")
+def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
+    """
+    Kthen logo-n e kompanisë të optimizuar për PWA.
+    Konverton dhe resize-on logo-n në madhësi të specifikuar (default 512x512).
+    """
+    from datetime import datetime
+    from io import BytesIO
+    from PIL import Image as PILImage, ImageDraw, ImageFont
+    import tempfile
+    
+    print(f"[DEBUG] Fetching logo.png at {datetime.now()}, size={size}")
+    
+    company = db.query(models.Company).first()
+    logo_path = None
+    
+    if company and company.logo_path:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(base_dir, company.logo_path.replace("\\", "/").lstrip("/"))
+        if os.path.exists(full_path):
+            logo_path = full_path
+    
+    # Fallback: try to serve from frontend public folder
+    if not logo_path:
+        frontend_public = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "public", "icon-512.png")
+        if os.path.exists(frontend_public):
+            logo_path = frontend_public
+    
+    if logo_path:
+        try:
+            # Hap logo-n me PIL
+            img = PILImage.open(logo_path)
+            
+            # Konverto në RGBA nëse nuk është
+            if img.mode != 'RGBA':
+                img = img.convert('RGBA')
+            
+            # Krijon një background transparent
+            background = PILImage.new('RGBA', (size, size), (255, 255, 255, 0))
+            
+            # Llogarit dimensionet për të mbajtur aspect ratio
+            img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
+            
+            # Vendos logo-n në qendër të background-it
+            x_offset = (size - img.width) // 2
+            y_offset = (size - img.height) // 2
+            background.paste(img, (x_offset, y_offset), img)
+            
+            # Konverto në RGB me background të bardhë për kompatibilitet më të mirë
+            final_img = PILImage.new('RGB', (size, size), (255, 255, 255))
+            final_img.paste(background, mask=background.split()[3] if background.mode == 'RGBA' else None)
+            
+            # Ruaj në buffer
+            buffer = BytesIO()
+            final_img.save(buffer, format='PNG', optimize=True)
+            buffer.seek(0)
+            
+            return FileResponse(
+                buffer,
+                media_type="image/png",
+                filename="logo.png",
+                headers={
+                    "Cache-Control": "public, max-age=3600"
+                }
+            )
+        except Exception as e:
+            print(f"[ERROR] Error processing logo: {e}")
+            # Nëse ka gabim, kthe logo-n origjinale
+            if os.path.exists(logo_path):
+                return FileResponse(logo_path, media_type="image/png", headers={
+                    "Cache-Control": "public, max-age=3600"
+                })
+    
+    # Final fallback: Krijon një logo default me emrin e kompanisë
+    try:
+        company_name = company.name if company and company.name else "HOLKOS"
+        # Merr shkronjën e parë ose dy shkronjat e para
+        initials = company_name[:2].upper() if len(company_name) >= 2 else company_name[0].upper() if company_name else "H"
+        
+        # Krijon një imazh me background të bardhë
+        img = PILImage.new('RGB', (size, size), (17, 24, 39))  # #111827 - theme color
+        draw = ImageDraw.Draw(img)
+        
+        # Përpiqet të përdorë një font, ose default
+        try:
+            font_size = int(size * 0.4)
+            # Përpiqet të përdorë font të sistemit
+            try:
+                font = ImageFont.truetype("arial.ttf", font_size)
+            except:
+                try:
+                    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
+                except:
+                    font = ImageFont.load_default()
+        except:
+            font = ImageFont.load_default()
+        
+        # Llogarit pozicionin për tekstin
+        bbox = draw.textbbox((0, 0), initials, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        x = (size - text_width) // 2
+        y = (size - text_height) // 2
+        
+        # Vizaton tekstin në qendër
+        draw.text((x, y), initials, fill=(255, 255, 255), font=font)
+        
+        # Ruaj në buffer
+        buffer = BytesIO()
+        img.save(buffer, format='PNG', optimize=True)
+        buffer.seek(0)
+        
+        return FileResponse(
+            buffer,
+            media_type="image/png",
+            filename="logo.png",
+            headers={
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+    except Exception as e:
+        print(f"[ERROR] Error creating default logo: {e}")
+        return JSONResponse({"error": "Icon not found"}, status_code=404)
+
+@app.get("/apple-touch-icon.png")
+def get_apple_touch_icon(db: Session = Depends(get_db)):
+    """
+    Kthen apple-touch-icon të optimizuar për iOS (180x180).
+    iOS kërkon background të bardhë dhe madhësi saktësisht 180x180.
+    """
+    from datetime import datetime
+    from io import BytesIO
+    from PIL import Image as PILImage, ImageDraw, ImageFont
+    
+    size = 180  # iOS kërkon saktësisht 180x180
+    print(f"[DEBUG] Fetching apple-touch-icon.png at {datetime.now()}")
+    
+    company = db.query(models.Company).first()
+    logo_path = None
+    
+    if company and company.logo_path:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(base_dir, company.logo_path.replace("\\", "/").lstrip("/"))
+        if os.path.exists(full_path):
+            logo_path = full_path
+    
+    # Fallback: try to serve from frontend public folder
+    if not logo_path:
+        frontend_public = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "public", "icon-512.png")
+        if os.path.exists(frontend_public):
+            logo_path = frontend_public
+    
+    if logo_path:
+        try:
+            # Hap logo-n me PIL
+            img = PILImage.open(logo_path)
+            
+            # Konverto në RGBA nëse nuk është
+            if img.mode != 'RGBA':
+                img = img.convert('RGBA')
+            
+            # Krijon një background të bardhë (iOS kërkon background të bardhë, jo transparent)
+            background = PILImage.new('RGB', (size, size), (255, 255, 255))
+            
+            # Llogarit dimensionet për të mbajtur aspect ratio dhe të përshtatet brenda
+            # Lëmë pak padding (10%) për të shmangur që logoja të prekë skajet
+            max_size = int(size * 0.8)
+            img.thumbnail((max_size, max_size), PILImage.Resampling.LANCZOS)
+            
+            # Vendos logo-n në qendër të background-it
+            x_offset = (size - img.width) // 2
+            y_offset = (size - img.height) // 2
+            
+            # Nëse logoja ka transparency, përdor mask
+            if img.mode == 'RGBA':
+                background.paste(img, (x_offset, y_offset), img)
+            else:
+                background.paste(img, (x_offset, y_offset))
+            
+            # Ruaj në buffer
+            buffer = BytesIO()
+            background.save(buffer, format='PNG', optimize=True)
+            buffer.seek(0)
+            
+            return FileResponse(
+                buffer,
+                media_type="image/png",
+                filename="apple-touch-icon.png",
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            )
+        except Exception as e:
+            print(f"[ERROR] Error processing apple-touch-icon: {e}")
+            # Nëse ka gabim, krijo default
+            pass
+    
+    # Fallback: Krijon një logo default me emrin e kompanisë
+    try:
+        company_name = company.name if company and company.name else "HOLKOS"
+        # Merr shkronjën e parë ose dy shkronjat e para
+        initials = company_name[:2].upper() if len(company_name) >= 2 else company_name[0].upper() if company_name else "H"
+        
+        # Krijon një imazh me background të bardhë (iOS kërkon të bardhë)
+        img = PILImage.new('RGB', (size, size), (255, 255, 255))
+        draw = ImageDraw.Draw(img)
+        
+        # Krijon një background të rrumbullakët me ngjyrën e temës
+        padding = 20
+        draw.ellipse([padding, padding, size - padding, size - padding], fill=(17, 24, 39))  # #111827
+        
+        # Përpiqet të përdorë një font
+        try:
+            font_size = int(size * 0.35)
+            try:
+                font = ImageFont.truetype("arial.ttf", font_size)
+            except:
+                try:
+                    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
+                except:
+                    font = ImageFont.load_default()
+        except:
+            font = ImageFont.load_default()
+        
+        # Llogarit pozicionin për tekstin
+        bbox = draw.textbbox((0, 0), initials, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        x = (size - text_width) // 2
+        y = (size - text_height) // 2
+        
+        # Vizaton tekstin në qendër
+        draw.text((x, y), initials, fill=(255, 255, 255), font=font)
+        
+        # Ruaj në buffer
+        buffer = BytesIO()
+        img.save(buffer, format='PNG', optimize=True)
+        buffer.seek(0)
+        
+        return FileResponse(
+            buffer,
+            media_type="image/png",
+            filename="apple-touch-icon.png",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+    except Exception as e:
+        print(f"[ERROR] Error creating default apple-touch-icon: {e}")
+        return JSONResponse({"error": "Icon not found"}, status_code=404)
+
 # --- SETTINGS ---
 @app.get("/settings/feature-payment-status")
 def get_feature_payment_status(db: Session = Depends(get_db)):
@@ -739,14 +1052,19 @@ def get_feature_payment_status(db: Session = Depends(get_db)):
 
 @app.get("/manifest.webmanifest")
 def get_manifest(db: Session = Depends(get_db)):
-    company = db.query(models.Company).first()
-    logo_path = company.logo_path if company and company.logo_path else None
-    icon_url = f"/{logo_path.lstrip('/')}" if logo_path else "/icon-512.png"
+    from datetime import datetime
+    print(f"[DEBUG] Fetching manifest.webmanifest at {datetime.now()}")
+    
+    # Përdorim rrugën tonë të rregullt /logo.png që është më e stabilmja për Safari
+    # Shtojmë një timestamp të thjeshtë për të shmangur cache probleme
+    import time
+    timestamp = int(time.time() / 60)  # Ndryshon çdo minutë
+    
     return JSONResponse(
         {
             "name": "Holkos Fatura",
-            "short_name": "Holkos",
-            "description": "Faturim dhe oferta",
+            "short_name": "Holkos Fatura",
+            "description": "Menaxhimi i faturave dhe ofertave",
             "start_url": "/",
             "scope": "/",
             "display": "standalone",
@@ -755,16 +1073,22 @@ def get_manifest(db: Session = Depends(get_db)):
             "theme_color": "#111827",
             "icons": [
                 {
-                    "src": icon_url,
+                    "src": f"/logo.png?size=192&v={timestamp}",
                     "sizes": "192x192",
                     "type": "image/png",
+                    "purpose": "any"
                 },
                 {
-                    "src": icon_url,
+                    "src": f"/logo.png?size=512&v={timestamp}",
                     "sizes": "512x512",
                     "type": "image/png",
-                },
+                    "purpose": "any maskable"
+                }
             ],
+        },
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Content-Type": "application/manifest+json"
         }
     )
 
@@ -884,8 +1208,7 @@ def preview_offer_pdf_get(preview_id: str, font_size: str = Query(None), db: Ses
     
     temp_offer = _create_temp_offer(offer)
     
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_offer_pdf(temp_offer, db_company, db_client, manual_font_size=font_size)
+    pdf_path = pdf_generator.generate_offer_pdf(temp_offer, db_company, db_client, manual_font_size=font_size)
     
     return FileResponse(pdf_path, media_type='application/pdf', filename=f"Preview_{temp_offer.offer_number.replace(' ', '_')}.pdf", content_disposition_type='inline')
 
@@ -901,8 +1224,7 @@ def preview_offer_pdf(offer: schemas.OfferCreate, font_size: str = Query(None), 
     
     temp_offer = _create_temp_offer(offer)
     
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_offer_pdf(temp_offer, db_company, db_client, manual_font_size=font_size)
+    pdf_path = pdf_generator.generate_offer_pdf(temp_offer, db_company, db_client, manual_font_size=font_size)
     
     return FileResponse(pdf_path, media_type='application/pdf', filename=f"Preview_{temp_offer.offer_number.replace(' ', '_')}.pdf", content_disposition_type='inline')
 
@@ -912,13 +1234,28 @@ def get_offer_pdf(offer_id: int, font_size: str = None, db: Session = Depends(ge
     if not db_offer:
         raise HTTPException(status_code=404, detail="Offer not found")
     
+    # Check if PDF already exists
+    if db_offer.pdf_path:
+        if db_offer.pdf_path.startswith(('http://', 'https://')):
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(db_offer.pdf_path)
+        elif os.path.exists(db_offer.pdf_path):
+            return FileResponse(
+                db_offer.pdf_path, 
+                media_type='application/pdf', 
+                filename=os.path.basename(db_offer.pdf_path), 
+                content_disposition_type='inline'
+            )
+
     db_company = db.query(models.Company).first()
     db_client = db.query(models.Client).filter(models.Client.id == db_offer.client_id).first()
     
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_offer_pdf(db_offer, db_company, db_client, manual_font_size=font_size)
-    db_offer.pdf_path = pdf_path
-    db.commit()
+    pdf_path = pdf_generator.generate_offer_pdf(db_offer, db_company, db_client, manual_font_size=font_size)
+    
+    # Only save path if it's not a custom font size preview
+    if not font_size:
+        db_offer.pdf_path = pdf_path
+        db.commit()
     
     return FileResponse(pdf_path, media_type='application/pdf', filename=os.path.basename(pdf_path), content_disposition_type='inline')
 
@@ -937,10 +1274,8 @@ def email_invoice(invoice_id: int, payload: schemas.EmailRequest = None, db: Ses
     if not dest_email:
         raise HTTPException(status_code=400, detail="Klienti nuk ka adresë email-i.")
         
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_invoice_pdf(db_invoice, db_company, db_client)
+    pdf_path = pdf_generator.generate_invoice_pdf(db_invoice, db_company, db_client)
     
-    email_service = WebEmailService()
     success, message = email_service.send_document(db_invoice, db_company, dest_email, pdf_path, is_offer=False)
     
     if not success:
@@ -963,10 +1298,8 @@ def email_offer(offer_id: int, payload: schemas.EmailRequest = None, db: Session
     if not dest_email:
         raise HTTPException(status_code=400, detail="Klienti nuk ka adresë email-i.")
         
-    generator = WebPDFGenerator()
-    pdf_path = generator.generate_offer_pdf(db_offer, db_company, db_client, manual_font_size=None)
+    pdf_path = pdf_generator.generate_offer_pdf(db_offer, db_company, db_client, manual_font_size=None)
     
-    email_service = WebEmailService()
     success, message = email_service.send_document(db_offer, db_company, dest_email, pdf_path, is_offer=True)
     
     if not success:

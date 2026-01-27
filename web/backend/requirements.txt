@@ -7,3 +7,4 @@ jinja2
 reportlab
 python-dotenv
 cryptography
+vercel

@@ -10,14 +10,20 @@ from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle,
     Paragraph, Spacer, Image
 )
-from PIL import Image as PILImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from PIL import Image as PILImage, ImageOps
+import json
+try:
+    import vercel
+except ImportError:
+    vercel = None
 
 # We'll use absolute paths or relative to the backend project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
 os.makedirs(EXPORTS_DIR, exist_ok=True)
+_LOGO_CACHE = {}  # Cache for processed logo paths: { (original_path, height): (processed_path, width, height) }
 
 class WebPDFGenerator:
     def __init__(self):
@@ -62,9 +68,15 @@ class WebPDFGenerator:
         return ""
 
     def process_logo(self, logo_path, logo_height=32*mm):
-        """Perpunon logon duke hequr pjeset e bardha (portuar nga desktop)"""
+        """Perpunon logon duke hequr pjeset e bardha (me caching dhe optimizim)"""
+        if not logo_path:
+            logo_path = os.path.join(BASE_DIR, "..", "assets", "images", "logo.png")
+            if not os.path.exists(logo_path):
+                return None, 0
+
+        # Resolve path
         resolved_path = logo_path
-        if logo_path and not os.path.isabs(logo_path):
+        if not os.path.isabs(logo_path):
             candidate = os.path.join(BASE_DIR, logo_path)
             if os.path.exists(candidate):
                 resolved_path = candidate
@@ -73,55 +85,32 @@ class WebPDFGenerator:
                 if os.path.exists(repo_candidate):
                     resolved_path = repo_candidate
 
-        if not resolved_path or not os.path.exists(resolved_path):
-            fallback_path = os.path.abspath(os.path.join(BASE_DIR, "..", "assets", "images", "logo.png"))
-            if os.path.exists(fallback_path):
-                resolved_path = fallback_path
-            else:
-                return None, 0
+        if not os.path.exists(resolved_path):
+            return None, 0
+
+        # Check Cache
+        cache_key = (resolved_path, logo_height)
+        if cache_key in _LOGO_CACHE:
+            path, width, height = _LOGO_CACHE[cache_key]
+            if os.path.exists(path):
+                return Image(path, width, height), height
 
         try:
             pil_img = PILImage.open(resolved_path)
             if pil_img.mode != 'RGBA':
                 pil_img = pil_img.convert('RGBA')
             
-            bbox = pil_img.getbbox()
-            if not bbox or bbox == (0, 0, pil_img.width, pil_img.height):
-                rgb_img = pil_img.convert('RGB')
-                width, height = rgb_img.size
-                left, top, right, bottom = width, height, 0, 0
-                found_content = False
-                for y in range(height):
-                    for x in range(width):
-                        r, g, b = rgb_img.getpixel((x, y))
-                        if not (r >= 250 and g >= 250 and b >= 250):
-                            top = y
-                            found_content = True
-                            break
-                    if found_content: break
-                
-                if found_content:
-                    found_content = False
-                    for y in range(height - 1, top - 1, -1):
-                        for x in range(width):
-                            r, g, b = rgb_img.getpixel((x, y))
-                            if not (r >= 250 and g >= 250 and b >= 250):
-                                bottom = y
-                                found_content = True
-                                break
-                        if found_content: break
-                    left = width
-                    right = 0
-                    for y in range(top, bottom + 1):
-                        for x in range(width):
-                            r, g, b = rgb_img.getpixel((x, y))
-                            if not (r >= 250 and g >= 250 and b >= 250):
-                                left = min(left, x)
-                                right = max(right, x)
-                    if left < width and right >= left:
-                        bbox = (left, top, right + 1, bottom + 1)
-                        pil_img = pil_img.crop(bbox)
-            elif bbox:
+            # Optimized cropping of white background
+            # 1. Convert to grayscale and threshold
+            # 2. Invert so background is black (0) and logo is white (>0)
+            # 3. getbbox() correctly finds the non-black area
+            grayscale = pil_img.convert('L')
+            # Pixels >= 250 (almost white) become 255 (white)
+            threshold = 250
+            mask = grayscale.point(lambda p: 255 if p < threshold else 0)
+            bbox = mask.getbbox()
+            
+            if bbox:
                 pil_img = pil_img.crop(bbox)
             
             img_width, img_height = pil_img.size
@@ -136,20 +125,51 @@ class WebPDFGenerator:
             path = temp_logo.name
             temp_logo.close()
             
+            # Register for cleanup at exit
             atexit.register(lambda: os.unlink(path) if os.path.exists(path) else None)
+            
+            _LOGO_CACHE[cache_key] = (path, logo_width, logo_height)
             return Image(path, logo_width, logo_height), logo_height
-        except:
+        except Exception as e:
+            print(f"Error processing logo: {e}")
             return None, 0
 
+    def _get_storage_path(self, doc_type, date_obj, filename):
+        """Krijon dhe kthen rrugën e ruajtjes sipas vitit dhe muajit"""
+        year = str(date_obj.year)
+        month = f"{date_obj.month:02d}"
+        
+        # exports/fatura/2026/01/filename.pdf
+        folder_path = os.path.join(EXPORTS_DIR, doc_type, year, month)
+        os.makedirs(folder_path, exist_ok=True)
+        return os.path.join(folder_path, filename)
+
+    def _handle_post_generation(self, local_path, doc_type, date_obj, filename):
+        """Me ndihmën e këtij funksioni skedarët ngarkohen në Vercel Blob nëse token-i ekziston"""
+        token = os.environ.get("BLOB_READ_WRITE_TOKEN")
+        if token and vercel:
+            try:
+                cloud_path = f"{doc_type}/{date_obj.year}/{date_obj.month:02d}/{filename}"
+                with open(local_path, "rb") as f:
+                    blob = vercel.blob.put(cloud_path, f.read(), token=token)
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+                return blob.url
+            except Exception as e:
+                print(f"Cloud upload failed: {e}")
+                return local_path
+        return local_path
+
     def generate_invoice_pdf(self, invoice, company, client):
-        filename = f"Fatura_{invoice.invoice_number.replace(' ', '_')}_{invoice.date.year if hasattr(invoice.date, 'year') else datetime.now().year}.pdf"
-        filepath = os.path.join(EXPORTS_DIR, filename)
+        year = invoice.date.year if hasattr(invoice.date, 'year') else datetime.now().year
+        filename = f"Fatura_{invoice.invoice_number.replace(' ', '_')}_{year}.pdf"
+        filepath = self._get_storage_path("faturat", invoice.date, filename)
         
         doc = SimpleDocTemplate(
             filepath, pagesize=A4,
             leftMargin=15*mm, rightMargin=15*mm, topMargin=12*mm, bottomMargin=12*mm
         )
-        
+
         story = []
         
         # Title
@@ -262,10 +282,18 @@ class WebPDFGenerator:
             ("GRID", (2, 0), (2, -1), 1, colors.black),
             ("ALIGN", (1, 0), (2, -1), "RIGHT"),
             ("SPAN", (0, 0), (0, 3)),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("FONTNAME", (1, 3), (2, 3), "Helvetica-Bold"),
             ("FONTSIZE", (2, 3), (2, 3), 13),
-            ("PADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (1, 0), (2, 2), 6),
+            ("BOTTOMPADDING", (1, 0), (2, 2), 6),
+            # Special alignment for the final TOTAL row (PER PAGESE)
+            # Value Column (Right)
+            ("TOPPADDING", (2, 3), (2, 3), 4),
+            ("BOTTOMPADDING", (2, 3), (2, 3), 8),
+            # Label Column (PER PAGESE) 
+            ("TOPPADDING", (1, 3), (1, 3), 6),
+            ("BOTTOMPADDING", (1, 3), (1, 3), 6),
         ]))
         story.append(totals_table)
         story.append(Spacer(1, 35*mm))
@@ -282,17 +310,12 @@ class WebPDFGenerator:
         story.append(sig_table)
 
         doc.build(story)
-        return filepath
+        return self._handle_post_generation(filepath, "faturat", invoice.date, filename)
 
     def generate_offer_pdf(self, offer, company, client, manual_font_size=None):
-        """Gjeneron PDF për një ofertë - identike me desktop app"""
-        import json
-        import tempfile
-        import atexit
-        from PIL import Image as PILImage
-        
+        """Gjeneron PDF për një ofertë - identike me desktop app (optimized)"""
         filename = f"Oferta_{offer.offer_number.replace(' ', '_')}.pdf"
-        filepath = os.path.join(EXPORTS_DIR, filename)
+        filepath = self._get_storage_path("ofertat", offer.date, filename)
         
         doc = SimpleDocTemplate(
             filepath, pagesize=A4,
@@ -304,49 +327,14 @@ class WebPDFGenerator:
         # -------------------------------
         # HEADER (Standard Invoice Header)
         # -------------------------------
-        logo_path = company.logo_path if company.logo_path and os.path.exists(company.logo_path) else None
-        if not logo_path:
-            # Try to find logo in images directory
-            images_dir = os.path.join(BASE_DIR, "assets", "images")
-            logo_path = os.path.join(images_dir, "logo.png") if os.path.exists(os.path.join(images_dir, "logo.png")) else None
-            
         buyer_style = ParagraphStyle("buyer", fontSize=11, alignment=TA_RIGHT)
         buyer_bold_style = ParagraphStyle("buyer_bold", fontSize=12, fontName="Helvetica-Bold", alignment=TA_RIGHT)
         
         company_data = []
-        logo_height = 32*mm
-        
-        if logo_path and os.path.exists(logo_path):
-            try:
-                pil_img = PILImage.open(logo_path)
-                if pil_img.mode != 'RGBA': pil_img = pil_img.convert('RGBA')
-                bbox = pil_img.getbbox()
-                if bbox: pil_img = pil_img.crop(bbox)
-                
-                img_width, img_height = pil_img.size
-                aspect_ratio = img_width / img_height
-                logo_width = logo_height * aspect_ratio
-                max_width = 50*mm
-                if logo_width > max_width:
-                    logo_width = max_width
-                    logo_height = logo_width / aspect_ratio
-                
-                temp_logo = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
-                pil_img.save(temp_logo.name, 'PNG')
-                temp_logo_path = temp_logo.name
-                temp_logo.close()
-                logo = Image(temp_logo_path, logo_width, logo_height)
-                
-                def cleanup_temp_logo():
-                    try: 
-                        if os.path.exists(temp_logo_path): os.unlink(temp_logo_path)
-                    except: pass
-                atexit.register(cleanup_temp_logo)
-                
-                company_data.append([logo])
-            except Exception as e:
-                print(f"Gabim logo: {e}")
-                company_data.append([Paragraph(f"<b>{company.name}</b>", self.bold_style)])
+        logo_img, logo_h = self.process_logo(company.logo_path)
+        logo_height = logo_h if logo_h > 0 else 0
+        if logo_img:
+            company_data.append([logo_img])
         else:
             company_data.append([Paragraph(f"<b>{company.name}</b>", self.bold_style)])
             
@@ -641,4 +629,4 @@ class WebPDFGenerator:
         story.append(signatures_table)
         
         doc.build(story)
-        return filepath
+        return self._handle_post_generation(filepath, "ofertat", offer.date, filename)
