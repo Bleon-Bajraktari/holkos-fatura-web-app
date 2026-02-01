@@ -33,6 +33,16 @@ UPLOADS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads"
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
+# Startup: ekzekuto migrimin e DB (shto kolona qe mungojne)
+@app.on_event("startup")
+def run_db_migration():
+    try:
+        from update_db import update_db
+        update_db()
+    except Exception as e:
+        import logging
+        logging.warning(f"DB migration skipped or failed: {e}")
+
 # Dependency to get DB session
 def get_db():
     db = database.SessionLocal()
@@ -100,13 +110,8 @@ def get_invoices(
                 )
             )
         
-        num_part = func.substring_index(
-            func.substring_index(models.Invoice.invoice_number, 'NR.', -1),
-            '/',
-            1
-        )
         invoices = query.order_by(
-            cast(num_part, Integer).desc(),
+            models.Invoice.date.desc(),
             models.Invoice.id.desc()
         ).all()
         

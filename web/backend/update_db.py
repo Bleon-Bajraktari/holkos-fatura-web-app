@@ -12,8 +12,11 @@ def update_db():
     # 2. Add missing columns to existing tables
     with engine.connect() as conn:
         # Invoices table
-        rows = conn.execute(text("SHOW COLUMNS FROM invoices")).fetchall()
-        columns = [row[0] for row in rows] # row[0] is 'Field' in SHOW COLUMNS
+        try:
+            rows = conn.execute(text("SHOW COLUMNS FROM invoices")).fetchall()
+        except Exception:
+            rows = []
+        columns = [row[0] for row in rows] if rows else []
         if "created_at" not in columns:
             print("Adding 'created_at' to invoices...")
             conn.execute(text("ALTER TABLE invoices ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
@@ -30,31 +33,41 @@ def update_db():
             conn.execute(text("ALTER TABLE invoices ADD COLUMN save_timestamp DATETIME NULL"))
         
         # Invoice Items table
-        rows = conn.execute(text("SHOW COLUMNS FROM invoice_items")).fetchall()
-        columns = [row[0] for row in rows]
+        try:
+            rows = conn.execute(text("SHOW COLUMNS FROM invoice_items")).fetchall()
+        except Exception:
+            rows = []
+        columns = [row[0] for row in rows] if rows else []
         if "unit" not in columns:
             print("Adding 'unit' to invoice_items...")
             conn.execute(text("ALTER TABLE invoice_items ADD COLUMN unit VARCHAR(50)"))
-        else:
-            print("Ensuring 'unit' is VARCHAR(50) in invoice_items...")
+        elif columns:
             conn.execute(text("ALTER TABLE invoice_items MODIFY COLUMN unit VARCHAR(50)"))
 
-        # Offers and OfferItems - Standard check
-        rows = conn.execute(text("SHOW COLUMNS FROM offer_items")).fetchall()
-        columns = [row[0] for row in rows]
-        if "unit" not in columns:
-            print("Adding 'unit' to offer_items...")
-            conn.execute(text("ALTER TABLE offer_items ADD COLUMN unit VARCHAR(50)"))
-        else:
-            print("Ensuring 'unit' is VARCHAR(50) in offer_items...")
-            conn.execute(text("ALTER TABLE offer_items MODIFY COLUMN unit VARCHAR(50)"))
+        # Offers and OfferItems - Standard check (skip if table missing)
+        try:
+            rows = conn.execute(text("SHOW COLUMNS FROM offer_items")).fetchall()
+            columns = [row[0] for row in rows]
+            if "unit" not in columns:
+                print("Adding 'unit' to offer_items...")
+                conn.execute(text("ALTER TABLE offer_items ADD COLUMN unit VARCHAR(50)"))
+            else:
+                conn.execute(text("ALTER TABLE offer_items MODIFY COLUMN unit VARCHAR(50)"))
+            if "order_index" not in columns:
+                print("Adding 'order_index' to offer_items...")
+                conn.execute(text("ALTER TABLE offer_items ADD COLUMN order_index INT DEFAULT 0"))
+        except Exception as ex:
+            print("offer_items check skipped:", ex)
 
         # Offer table check
-        rows = conn.execute(text("SHOW COLUMNS FROM offers")).fetchall()
-        columns = [row[0] for row in rows]
-        if "save_timestamp" not in columns:
-            print("Adding 'save_timestamp' to offers...")
-            conn.execute(text("ALTER TABLE offers ADD COLUMN save_timestamp DATETIME NULL"))
+        try:
+            rows = conn.execute(text("SHOW COLUMNS FROM offers")).fetchall()
+            columns = [row[0] for row in rows]
+            if "save_timestamp" not in columns:
+                print("Adding 'save_timestamp' to offers...")
+                conn.execute(text("ALTER TABLE offers ADD COLUMN save_timestamp DATETIME NULL"))
+        except Exception as ex:
+            print("offers check skipped:", ex)
 
         # Offers and OfferItems should have been created by create_all if они missing.
         
