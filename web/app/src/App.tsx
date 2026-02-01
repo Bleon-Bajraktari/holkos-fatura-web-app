@@ -33,12 +33,21 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchStats = async (retries = 1) => {
             try {
                 const data = await DashboardService.getStats()
                 setStats(data)
+                if (data) localStorage.setItem('dashboard_cache', JSON.stringify(data))
             } catch (error) {
                 console.error('Error fetching stats:', error)
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, 2500))
+                    return fetchStats(retries - 1)
+                }
+                try {
+                    const cached = localStorage.getItem('dashboard_cache')
+                    if (cached) setStats(JSON.parse(cached))
+                } catch (_) {}
             } finally {
                 setLoading(false)
             }

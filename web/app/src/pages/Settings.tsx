@@ -50,20 +50,38 @@ const SettingsPage = () => {
     useEffect(() => {
         const load = async () => {
             setLoadError(null)
+            const fetchCompany = async (retries = 1): Promise<any> => {
+                try {
+                    return await CompanyService.get()
+                } catch (e) {
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, 2500))
+                        return fetchCompany(retries - 1)
+                    }
+                    throw e
+                }
+            }
             try {
                 const [companyData, paymentData] = await Promise.allSettled([
-                    CompanyService.get(),
+                    fetchCompany(),
                     SettingsService.getPaymentStatus()
                 ])
                 if (companyData.status === 'fulfilled' && companyData.value) {
                     setCompany(mergeCompany(companyData.value))
+                    localStorage.setItem('company_cache', JSON.stringify(companyData.value))
+                } else if (companyData.status === 'fulfilled' && !companyData.value) {
+                    setCompany(mergeCompany({}))
                 } else if (companyData.status === 'rejected') {
                     try {
                         const cached = localStorage.getItem('company_cache')
                         if (cached) {
                             setCompany(mergeCompany(JSON.parse(cached)))
+                            setLoadError('Të dhënat e shfaqura janë nga cache. Rifreskoni për të marrë nga serveri.')
                         } else {
-                            setLoadError('Backend nuk është i lidhur ose nuk ka të dhëna. Sigurohuni që backend-i të jetë duke u ekzekutuar (cd web/backend && uvicorn main:app --reload --port 8000). Mund të plotësoni fushat dhe të ruani.')
+                            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                            setLoadError(isLocalhost
+                                ? 'Backend nuk është i lidhur. Nisni serverin: cd web/backend && uvicorn main:app --reload --port 8000. Mund të plotësoni fushat dhe të ruani kur backend-i të jetë gati.'
+                                : 'Lidhja me backend dështoi (serveri mund të jetë duke u ngrohur). Mund të plotësoni fushat dhe të ruani, ose rifreskoni pas disa sekondash.')
                         }
                     } catch (_) {
                         setLoadError('Backend nuk është i lidhur. Filloni serverin nga web/backend dhe rifreskoni faqen.')
@@ -93,6 +111,7 @@ const SettingsPage = () => {
         try {
             await CompanyService.update(company)
             await SettingsService.updatePaymentStatus(paymentStatusEnabled)
+            localStorage.setItem('company_cache', JSON.stringify(company))
             setMessage({ type: 'success', text: 'Të dhënat u ruajtën me sukses!' })
         } catch (error) {
             console.error(error)
@@ -131,19 +150,6 @@ const SettingsPage = () => {
             const registrations = await navigator.serviceWorker.getRegistrations()
             await Promise.all(registrations.map(reg => reg.unregister()))
         }
-    }
-
-    const clearLocalCacheKeys = () => {
-        const keys = Object.keys(localStorage)
-        keys.forEach(key => {
-            if (
-                key === 'company_cache' ||
-                key === 'dashboard_cache' ||
-                key.startsWith('years_cache_')
-            ) {
-                localStorage.removeItem(key)
-            }
-        })
     }
 
     if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
@@ -405,9 +411,7 @@ const SettingsPage = () => {
                                 Zgjidhja e Problemeve (PWA & Cache)
                             </h3>
                             <p className="text-xs text-slate-500 max-w-xl">
-                                Përdoreni këtë buton nëse keni probleme me:
-                                <span className="font-bold"> logon, hapjen offline, ose nëse të dhënat nuk shfaqen. </span>
-                                Mund të pastroni vetëm cache-in (pa humbur të dhënat offline), ose të bëni reset total.
+                                Përdoreni këtë buton nëse keni probleme me: <span className="font-bold">të dhëna të vjetra në listat e faturave/ofertave, logon, ose hapjen offline.</span> Pastron cache-in, IndexedDB (fatura, oferta, klientë) dhe Service Worker. Cilësimet mbeten. Për fshirje totale përdorni Reset Total.
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2">
@@ -415,13 +419,17 @@ const SettingsPage = () => {
                                 type="button"
                                 disabled={resettingCache || resettingAll}
                                 onClick={async () => {
-                                    if (confirm('Kjo do të pastrojë cache-in dhe Service Worker. Të dhënat offline do të ruhen. Vazhdoni?')) {
+                                    if (confirm('Kjo do të pastrojë cache-in, të dhënat e listave (fatura, oferta, klientë) dhe Service Worker. Të dhënat e Cilësimeve mbeten. Vazhdoni?')) {
                                         setResettingCache(true)
                                         try {
-                                            clearLocalCacheKeys()
+                                            await db.invoices.clear()
+                                            await db.offers.clear()
+                                            await db.clients.clear()
+                                            localStorage.removeItem('dashboard_cache')
+                                            Object.keys(localStorage).filter(k => k.startsWith('years_cache_')).forEach(k => { try { localStorage.removeItem(k) } catch (_) {} })
                                             await clearCacheStorage()
                                             await unregisterServiceWorkers()
-                                            alert('Cache u pastrua! Aplikacioni do të rifreskohet.')
+                                            alert('Cache u pastrua! Aplikacioni do të rifreskohet dhe do të ngarkojë të dhënat e reja.')
                                             window.location.reload()
                                         } catch (err) {
                                             console.error('Cache reset failed:', err)

@@ -88,6 +88,23 @@ Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në 
 
 ---
 
+## Importimi i backup-it në Cloud
+
+Për të marrë të dhënat nga një pajisje tjetër (p.sh. backup nga Holkos Fatura LOKAL) dhe për t’i vendosur në TiDB Cloud:
+
+1. **Sigurohu që tabelat ekzistojnë** në TiDB Cloud. Nëse databaza është e re, ekzekuto fillimisht `sql/schema.sql` nga TiDB Cloud Console.
+2. **Kopjo skedarin e backup-it** (`.sql`) në projektin.
+3. **Konfiguro `web/backend/.env`** me `DATABASE_URL` të TiDB Cloud (si në hapat e mësipërm).
+4. **Ekzekuto skriptin e importit**:
+   ```bash
+   python import_backup_to_cloud.py backup.sql
+   ```
+   ose, pa argument, jep shtegun kur pyetet.
+5. Konfirmo me `po` kur pyetet.
+6. Pas importit, `pdf_path` pastrohet automatikisht (shtigjet lokale nuk vlejnë në cloud; PDF-et gjenerohen në kërkesë).
+
+---
+
 ## Hapi 1: Konfigurimi i TiDB Cloud
 
 ### 1.1 Merr credentials nga TiDB Cloud

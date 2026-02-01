@@ -6,6 +6,7 @@ export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 const api = axios.create({
     baseURL: API_BASE,
+    timeout: 30000,
 });
 
 /** Për SMTP përdorim gjithmonë /api (Vercel function) – mos drejto te Render */
@@ -577,7 +578,7 @@ export const ClientService = {
 };
 
 export const CompanyService = {
-    get: () => api.get('/company').then(res => res.data),
+    get: () => api.get('/company', { timeout: 45000 }).then(res => res.data),
     update: (data: any) => api.put('/company', data).then(res => res.data),
     uploadLogo: (file: File) => {
         const formData = new FormData();
@@ -589,7 +590,7 @@ export const CompanyService = {
 };
 
 export const DashboardService = {
-    getStats: () => api.get('/dashboard/stats').then(res => res.data),
+    getStats: () => api.get('/dashboard/stats', { timeout: 45000 }).then(res => res.data),
 };
 
 export const SettingsService = {

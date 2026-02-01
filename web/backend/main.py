@@ -735,20 +735,22 @@ def get_stats(db: Session = Depends(get_db)):
     
     activity = []
     for inv in recent_invoices:
+        client_name = (inv.client.name if inv.client else None) or "Klient"
         activity.append({
             "type": "invoice",
             "number": inv.invoice_number,
             "amount": float(inv.total),
-            "date": inv.created_at.isoformat(),
-            "client": inv.client_name if hasattr(inv, 'client_name') else "Klient"
+            "date": (inv.created_at or inv.date).isoformat() if inv.created_at or inv.date else "",
+            "client": client_name
         })
     for off in recent_offers:
+        client_name = (off.client.name if off.client else None) or "Klient"
         activity.append({
             "type": "offer",
             "number": off.offer_number,
             "amount": float(off.total),
-            "date": off.created_at.isoformat(),
-            "client": off.client_name if hasattr(off, 'client_name') else "Klient"
+            "date": (off.created_at or off.date).isoformat() if off.created_at or off.date else "",
+            "client": client_name
         })
     
     # Sort activity by date
