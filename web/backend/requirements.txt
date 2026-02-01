@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 email-validator
+resend
 pymysql
 sqlalchemy
 python-multipart
