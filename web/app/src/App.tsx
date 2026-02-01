@@ -18,7 +18,7 @@ import {
     FilePlus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CompanyService, DashboardService } from './services/api'
+import { CompanyService, DashboardService, API_BASE } from './services/api'
 import InvoicesPage from './pages/Invoices'
 import OffersPage from './pages/Offers'
 import ClientsPage from './pages/Clients'
@@ -263,7 +263,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             })
     }, [])
 
-    const logoUrl = company?.logo_path ? `/${company.logo_path.replace(/^\/+/, '')}` : ''
+    const logoUrl = company?.logo_path
+        ? (API_BASE && API_BASE.startsWith('http')
+            ? `${API_BASE.replace(/\/$/, '')}/${company.logo_path.replace(/^\/+/, '')}`
+            : `/${company.logo_path.replace(/^\/+/, '')}`)
+        : ''
 
     useEffect(() => {
         const version = Date.now()
@@ -289,7 +293,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Gjithmonë përditëso apple-touch-icon me endpoint-in e backend-it
-        updateLink('apple-touch-icon', '/apple-touch-icon.png')
+        updateLink('apple-touch-icon', (API_BASE && API_BASE.startsWith('http') ? `${API_BASE}/apple-touch-icon.png` : '/apple-touch-icon.png'))
     }, [logoUrl])
 
     return (
@@ -395,14 +399,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                         <button className="p-2.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl relative transition-all">
                             <Bell size={20} />
                             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-600 rounded-full ring-2 ring-white"></span>
-                        </button>
-                        <div className="h-6 w-[1px] bg-slate-200 mx-1"></div>
-                        <button className="flex items-center gap-3 p-1.5 pl-1.5 pr-4 hover:bg-slate-100 rounded-2xl transition-all group">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold shadow-md shadow-blue-100 group-hover:scale-105 transition-transform">BH</div>
-                            <div className="text-left hidden sm:block">
-                                <p className="text-xs font-bold text-slate-800 leading-tight">Bleon H.</p>
-                                <p className="text-[10px] text-slate-400 font-medium">Administrator</p>
-                            </div>
                         </button>
                     </div>
                 </header>

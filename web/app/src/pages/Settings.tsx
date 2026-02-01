@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2 } from 'lucide-react'
-import { CompanyService, SettingsService } from '../services/api'
+import { CompanyService, SettingsService, API_BASE } from '../services/api'
 import { db } from '../services/db'
 
 const SettingsPage = () => {
@@ -157,7 +157,9 @@ const SettingsPage = () => {
                             {company.logo_path && (
                                 <div className="mt-3">
                                     <img
-                                        src={`/${company.logo_path.replace(/^\/+/, '')}`}
+                                        src={API_BASE && API_BASE.startsWith('http')
+                                            ? `${API_BASE.replace(/\/$/, '')}/${company.logo_path.replace(/^\/+/, '')}`
+                                            : `/${company.logo_path.replace(/^\/+/, '')}`}
                                         alt="Logo"
                                         className="h-14 w-auto rounded-lg border border-slate-200 bg-white p-1"
                                     />
