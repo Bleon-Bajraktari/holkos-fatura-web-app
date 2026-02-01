@@ -59,9 +59,10 @@ export default async function handler(req, res) {
             }
             return { docNum, docDate, pdfBuffer, id }
         }))
+        const docLabel = isOffer ? 'Oferta' : 'Faturat'
         const docLines = results.map(r => `${isOffer ? 'Ofertë' : 'Fatura'} nr. ${r.docNum} - ${r.docDate}`)
         const attachments = results.filter(r => r.pdfBuffer).map(r => ({
-            filename: `${basePath.slice(0, -1)}_${r.id}.pdf`,
+            filename: `${isOffer ? 'oferta' : 'fatura'} nr.${r.docNum}.pdf`,
             content: r.pdfBuffer
         }))
 
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
         const mailOptions = {
             from: `"${(company_name || 'Holkos').replace(/"/g, '')}" <${smtp_user}>`,
             to: dest_email,
-            subject: `${docLabel} - ${company_name || 'Holkos'}`,
+            subject: `${docLabel} - ${(company_name || 'Holkos').replace(/"/g, '')}`,
             text: bodyText,
             attachments
         }

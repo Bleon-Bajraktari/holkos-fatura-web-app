@@ -77,10 +77,8 @@ export default async function handler(req, res) {
             text: bodyText
         }
         if (pdfBuffer) {
-            mailOptions.attachments = [{
-                filename: `Dokumenti_${doc_number || document_id}.pdf`,
-                content: pdfBuffer
-            }]
+            const pdfName = nr ? `${isOffer ? 'oferta' : 'fatura'} nr.${nr}.pdf` : `Dokumenti_${document_id}.pdf`
+            mailOptions.attachments = [{ filename: pdfName, content: pdfBuffer }]
         }
 
         await transporter.sendMail(mailOptions)
