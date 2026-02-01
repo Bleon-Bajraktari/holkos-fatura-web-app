@@ -595,10 +595,8 @@ const InvoicesPage = () => {
             <EmailPicker
                 isOpen={emailModalOpen}
                 title="Dërgo faturat me email"
-                allowClientEmail
                 onClose={() => setEmailModalOpen(false)}
                 onConfirm={(email) => handleBulkEmail(email)}
-                onConfirmClientEmail={() => handleBulkEmail()}
             />
         </div>
     )

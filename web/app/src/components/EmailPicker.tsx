@@ -22,20 +22,16 @@ type Props = {
     isOpen: boolean
     title?: string
     initialEmail?: string
-    allowClientEmail?: boolean
     onClose: () => void
     onConfirm: (email: string) => void | Promise<void>
-    onConfirmClientEmail?: () => void | Promise<void>
 }
 
 const EmailPicker = ({
     isOpen,
     title = 'Zgjidh Email',
     initialEmail = '',
-    allowClientEmail = false,
     onClose,
-    onConfirm,
-    onConfirmClientEmail
+    onConfirm
 }: Props) => {
     const [emails, setEmails] = useState<string[]>([])
     const [email, setEmail] = useState('')
@@ -82,22 +78,6 @@ const EmailPicker = ({
         try {
             if (remember) handleSaveEmail(email)
             await onConfirm(email.trim())
-            setSuccess(true)
-            setTimeout(() => onClose(), 800)
-        } catch (e: any) {
-            const msg = e?.response?.data?.detail ?? e?.message ?? 'Gabim gjatë dërgimit të email-it.'
-            setError(String(msg))
-        } finally {
-            setSending(false)
-        }
-    }
-
-    const handleConfirmClientEmail = async () => {
-        if (!onConfirmClientEmail || sending) return
-        setSending(true)
-        setError(null)
-        try {
-            await onConfirmClientEmail()
             setSuccess(true)
             setTimeout(() => onClose(), 800)
         } catch (e: any) {
@@ -180,7 +160,6 @@ const EmailPicker = ({
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 px-5 pb-5">
-                    
                     <button
                         onClick={handleConfirm}
                         disabled={!isValid || sending}

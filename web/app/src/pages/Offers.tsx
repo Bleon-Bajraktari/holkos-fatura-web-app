@@ -583,10 +583,8 @@ const OffersPage = () => {
             <EmailPicker
                 isOpen={emailModalOpen}
                 title="Dërgo ofertat me email"
-                allowClientEmail
                 onClose={() => setEmailModalOpen(false)}
                 onConfirm={(email) => handleBulkEmail(email)}
-                onConfirmClientEmail={() => handleBulkEmail()}
             />
         </div>
     )
