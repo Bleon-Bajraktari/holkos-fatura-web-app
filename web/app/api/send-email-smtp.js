@@ -53,11 +53,12 @@ export default async function handler(req, res) {
             host: smtp_server || 'smtp.gmail.com',
             port,
             secure,
-            auth: {
-                user: smtp_user,
-                pass: smtp_password
-            }
+            auth: { user: smtp_user, pass: smtp_password },
+            requireTLS: port === 587,
+            connectionTimeout: 15000,
+            greetingTimeout: 10000
         })
+        await transporter.verify()
 
         const docType = isOffer ? 'Ofertë' : 'Faturë'
         const bodyText = doc_number
