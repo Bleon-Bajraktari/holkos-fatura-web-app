@@ -13,9 +13,13 @@ def _send_via_resend(document_or_docs, company, dest_email, pdf_paths, is_offer=
     Dërgon email me Resend API (funksionon në Render free tier - SMTP është i bllokuar).
     """
     api_key = os.getenv("RESEND_API_KEY")
-    from_addr = os.getenv("RESEND_FROM") or (company.smtp_user if company and company.smtp_user else None)
-    if not api_key or not from_addr:
-        return False, "Vendos RESEND_API_KEY dhe RESEND_FROM në Render Environment."
+    from_addr = (
+        os.getenv("RESEND_FROM")
+        or (company.smtp_user if company and company.smtp_user else None)
+        or "onboarding@resend.dev"
+    )
+    if not api_key:
+        return False, "Vendos RESEND_API_KEY në Render Environment."
     try:
         import resend
         resend.api_key = api_key
