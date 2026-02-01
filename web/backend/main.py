@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, extract, or_, cast, Integer, text
-from typing import List
+from typing import List, Optional
 from datetime import date
 import json
 import models, schemas, database, os
@@ -56,6 +56,17 @@ def health_check(db: Session = Depends(get_db)):
             content={"status": "error", "database": str(e)},
             status_code=500,
         )
+
+@app.get("/email/status")
+def email_status(db: Session = Depends(get_db)):
+    """Kontrollon konfigurimin e email-it për diagnostikim."""
+    db_company = db.query(models.Company).first()
+    smtp_ok = bool(db_company and db_company.smtp_user and db_company.smtp_password)
+    return {
+        "smtp_configured": smtp_ok,
+        "mode": "smtp" if smtp_ok else "none",
+        "message": "OK - SMTP" if smtp_ok else "Plotëso SMTP në Cilësimet.",
+    }
 
 # --- INVOICES ---
 @app.get("/invoices")
@@ -1274,7 +1285,7 @@ def get_offer_pdf(offer_id: int, font_size: str = None, db: Session = Depends(ge
     return FileResponse(pdf_path, media_type='application/pdf', filename=os.path.basename(pdf_path), content_disposition_type='inline')
 
 @app.post("/invoices/{invoice_id}/email")
-def email_invoice(invoice_id: int, payload: schemas.EmailRequest = None, db: Session = Depends(get_db)):
+def email_invoice(invoice_id: int, payload: Optional[schemas.EmailRequest] = Body(None), db: Session = Depends(get_db)):
     db_invoice = db.query(models.Invoice).filter(models.Invoice.id == invoice_id).first()
     if not db_invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -1282,7 +1293,7 @@ def email_invoice(invoice_id: int, payload: schemas.EmailRequest = None, db: Ses
     db_company = db.query(models.Company).first()
     db_client = db.query(models.Client).filter(models.Client.id == db_invoice.client_id).first()
     
-    dest_email = payload.dest_email if payload else None
+    dest_email = (payload and payload.dest_email) or None
     if not dest_email:
         dest_email = db_client.email if db_client else None
     if not dest_email:
@@ -1298,7 +1309,7 @@ def email_invoice(invoice_id: int, payload: schemas.EmailRequest = None, db: Ses
     return {"message": message}
 
 @app.post("/offers/{offer_id}/email")
-def email_offer(offer_id: int, payload: schemas.EmailRequest = None, db: Session = Depends(get_db)):
+def email_offer(offer_id: int, payload: Optional[schemas.EmailRequest] = Body(None), db: Session = Depends(get_db)):
     db_offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
     if not db_offer:
         raise HTTPException(status_code=404, detail="Offer not found")
@@ -1306,7 +1317,7 @@ def email_offer(offer_id: int, payload: schemas.EmailRequest = None, db: Session
     db_company = db.query(models.Company).first()
     db_client = db.query(models.Client).filter(models.Client.id == db_offer.client_id).first()
     
-    dest_email = payload.dest_email if payload else None
+    dest_email = (payload and payload.dest_email) or None
     if not dest_email:
         dest_email = db_client.email if db_client else None
     if not dest_email:

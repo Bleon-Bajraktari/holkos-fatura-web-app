@@ -14,6 +14,50 @@ Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në 
 
 ---
 
+## Zhvillim Lokal (Localhost)
+
+### Backend (`web/backend`)
+
+1. **Kopjo .env**:
+   ```bash
+   cd web/backend
+   cp .env.example .env
+   ```
+
+2. **Plotëso .env**:
+   - **DATABASE_URL** – TiDB Cloud (si më poshtë) OSE MySQL lokal:
+     ```bash
+     # MySQL lokal (XAMPP):
+     DATABASE_URL=mysql+pymysql://root:@localhost:3306/holkos_fatura1
+     ```
+   - Për email (opsional): plotëso SMTP në Cilësimet pas deploy
+
+3. **Starto backend**:
+   ```bash
+   pip install -r requirements.txt
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+4. **Testo**: `http://localhost:8000/` dhe `http://localhost:8000/email/status`
+
+### Frontend (`web/app`)
+
+1. **Plotëso .env** (opsional – default është `/api`):
+   ```
+   VITE_API_BASE=/api
+   ```
+
+2. **Starto frontend**:
+   ```bash
+   cd web/app
+   npm install
+   npm run dev
+   ```
+
+3. **Proxy**: Vite proxy `/api` → `http://localhost:8000` (shiko `vite.config.ts`)
+
+---
+
 ## Hapi 1: Konfigurimi i TiDB Cloud
 
 ### 1.1 Merr credentials nga TiDB Cloud
@@ -79,7 +123,7 @@ Ose përdor variabla të ndara:
 
 ### 2.3 Deploy dhe merr URL
 
-Pas deploy-it të suksesshëm, merr URL-in (p.sh. `https://holkos-fatura-api.onrender.com`). Ky do të jetë **VITE_API_BASE** për frontend.
+Pas deploy-it të suksesshëm, merr URL-in (p.sh. `https://holkos-fatura-api.onrender.com`). Ky duhet të jetë i njëjtë me `vercel.json` rewrites (nëse ndryshon, ndërroje atje).
 
 ---
 
@@ -100,13 +144,9 @@ Pas deploy-it të suksesshëm, merr URL-in (p.sh. `https://holkos-fatura-api.onr
 
 ### 3.3 Variablat e mjedisit në Vercel
 
-Shto variablin:
+**Nuk nevojiten** – frontend përdor `VITE_API_BASE=/api` për localhost dhe deploy. `vercel.json` rewrites drejtojnë `/api` te Render backend.
 
-| Key | Value |
-|-----|-------|
-| `VITE_API_BASE` | URL e backend-it (p.sh. `https://holkos-fatura-api.onrender.com`) |
-
-**Shënim**: Në zhvillim lokal, frontend përdor `/api` (proxy në localhost:8000). Për prod, përdor URL-in e plotë të backend-it.
+Nëse backend-i yt ka URL tjetër, ndërro në `web/app/vercel.json` në `rewrites.destination`.
 
 ### 3.4 TiDB Cloud Integration (Opsional)
 
@@ -141,11 +181,10 @@ Sigurohu që databaza TiDB ka tabelat e nevojshme. Ekzekuto skemën në TiDB Clo
 
 ### Të dhënat nuk shfaqen (lidhja me databazë / API)
 
-**1. Kontrollo VITE_API_BASE në Vercel** (shkaku më i zakonshëm)
-- Në Vercel: **Settings** → **Environment Variables**
-- Duhet të ketë `VITE_API_BASE` me URL të backend-it, p.sh. `https://holkos-fatura-api.onrender.com`
-- **Mos harro**: Pas ndryshimit të variablave, bëj **Redeploy** – Vite i përfshin variablat vetëm gjatë build-it
-- Nëse mungon, frontend bën kërkesa në `/api` (domain i Vercel) – ku nuk ka backend
+**1. Kontrollo vercel.json rewrites**
+- `web/app/vercel.json` duhet të ketë rewrites që drejtojnë `/api` te Render backend
+- URL-i në `destination` duhet të përputhet me URL-in e backend-it (p.sh. `https://holkos-fatura-api.onrender.com`)
+- Nëse backend-i ka URL tjetër, ndërro në vercel.json dhe bëj Redeploy
 
 **2. Kontrollo që backend-i (Render) funksionon**
 - Hap `https://[backend-url]/` – duhet të shfaqet `{"message": "Holkos Fatura API is running"}`
@@ -162,6 +201,13 @@ Sigurohu që databaza TiDB ka tabelat e nevojshme. Ekzekuto skemën në TiDB Clo
 - Ekzekuto `sql/schema.sql` në TiDB Cloud nëse tabelat nuk ekzistojnë
 - Verifiko që databaza ka të dhëna
 
+### Email nuk dërgohet
+**SMTP nga Cilësimet (Gmail/Outlook)** – përdor Vercel Serverless Function:
+1. Plotëso Cilësimet → Konfigurimi i Email-it (smtp_server, smtp_user, smtp_password)
+2. Për Gmail: përdor **App Password** (jo fjalëkalimin normal) – krijo në Google Account → Security → App Passwords
+3. Në Vercel Environment: shto `BACKEND_URL=https://holkos-fatura-api.onrender.com`
+4. Funksionon vetëm në deploy (Vercel) – localhost përdor backend SMTP direkt
+
 ### CORS errors (Access-Control-Allow-Origin)
 Backend ka konfigurim për `*.vercel.app`. Nëse ende ke CORS:
 - Bëj **Redeploy** të backend-it në Render (ndryshimet e CORS duhet të aplikohen)
@@ -175,8 +221,8 @@ Backend ka `allow_origins=["*"]`. Nëse ke probleme, kontrollo që domajni i Ver
 - Kontrollo që DATABASE_URL është i saktë (pa hapësira, me `sslaccept=strict`)
 
 ### Frontend nuk lidhet me API
-- Verifiko që `VITE_API_BASE` është vendosur në Vercel (Environment Variables)
-- Pas ndryshimit të variablave, bëj **Redeploy** që Vite ta përfshijë në build
+- Verifiko që `web/app/vercel.json` rewrites drejtojnë `/api` te URL-i i saktë të backend-it
+- Kontrollo që backend-i (Render) është i vënë në punë dhe `/health` kthen OK
 
 ---
 
