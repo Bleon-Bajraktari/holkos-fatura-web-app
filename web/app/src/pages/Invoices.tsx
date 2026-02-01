@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { InvoiceService, SettingsService } from '../services/api'
+import { InvoiceService, SettingsService, API_BASE } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 const months = [
@@ -187,7 +187,7 @@ const InvoicesPage = () => {
             alert('Fatura nuk është sinkronizuar ende. Prisni sa të ketë internet për të shkarkuar PDF.');
             return;
         }
-        window.open(`/api/invoices/${id}/pdf`, '_blank', 'noopener,noreferrer')
+        window.open(`${API_BASE}/invoices/${id}/pdf`, '_blank', 'noopener,noreferrer')
     }
 
     const handleDelete = async (id: string | number) => {

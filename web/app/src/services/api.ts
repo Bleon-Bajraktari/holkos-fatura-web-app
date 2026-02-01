@@ -2,7 +2,7 @@ import axios from 'axios';
 import { OfflineService } from './offline';
 import { db } from './db';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 const api = axios.create({
     baseURL: API_BASE,

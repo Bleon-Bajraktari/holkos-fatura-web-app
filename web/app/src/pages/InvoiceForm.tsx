@@ -13,7 +13,7 @@ import {
     Users
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { InvoiceService, OfferService, ClientService } from '../services/api'
+import { InvoiceService, OfferService, ClientService, API_BASE } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 interface InvoiceItem {
@@ -222,7 +222,7 @@ const InvoiceForm = () => {
             }
 
             if (action === 'pdf') {
-                const pdfEndpoint = isOffer ? `/api/offers/${savedDoc.id}/pdf` : `/api/invoices/${savedDoc.id}/pdf`
+                const pdfEndpoint = isOffer ? `${API_BASE}/offers/${savedDoc.id}/pdf` : `${API_BASE}/invoices/${savedDoc.id}/pdf`
                 if (isMobile) {
                     window.location.href = pdfEndpoint
                     return

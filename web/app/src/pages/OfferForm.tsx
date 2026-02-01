@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, FileDown, MoveUp, MoveDown, X, Eye, Search, UserPlus, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { OfferService, ClientService } from '../services/api'
+import { OfferService, ClientService, API_BASE } from '../services/api'
 
 type OfferRowType = 'item' | 'header' | 'text'
 
@@ -220,7 +220,7 @@ const OfferForm = () => {
                 const previewId = `preview_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
                 // First, store the data on server via POST
-                const storeResponse = await fetch(`/api/offers/preview-store/${previewId}`, {
+                const storeResponse = await fetch(`${API_BASE}/offers/preview-store/${previewId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -233,10 +233,10 @@ const OfferForm = () => {
                 }
 
                 // Then navigate to GET endpoint (works better on iOS)
-                window.location.href = `/api/offers/preview-pdf/${previewId}${queryParam}`
+                window.location.href = `${API_BASE}/offers/preview-pdf/${previewId}${queryParam}`
             } else {
                 // For desktop, use fetch and blob
-                const response = await fetch(`/api/offers/preview-pdf${queryParam}`, {
+                const response = await fetch(`${API_BASE}/offers/preview-pdf${queryParam}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ const OfferForm = () => {
             }
 
             if (action === 'pdf') {
-                const pdfUrl = `/api/offers/${saved.id}/pdf${fontSize && fontSize !== 'Auto' ? `?font_size=${fontSize}` : ''}`
+                const pdfUrl = `${API_BASE}/offers/${saved.id}/pdf${fontSize && fontSize !== 'Auto' ? `?font_size=${fontSize}` : ''}`
                 window.open(pdfUrl, '_blank')
             }
             navigate('/offers')

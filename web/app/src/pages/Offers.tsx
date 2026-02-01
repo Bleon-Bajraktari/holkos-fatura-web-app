@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { OfferService } from '../services/api'
+import { OfferService, API_BASE } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 const months = [
@@ -184,9 +184,9 @@ const OffersPage = () => {
         }
         const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
         if (isMobile) {
-            window.location.href = `/api/offers/${id}/pdf`
+            window.location.href = `${API_BASE}/offers/${id}/pdf`
         } else {
-            window.open(`/api/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
+            window.open(`${API_BASE}/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
         }
     }
 
@@ -198,9 +198,9 @@ const OffersPage = () => {
         try {
             const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
             if (isMobile) {
-                window.location.href = `/api/offers/${id}/pdf`
+                window.location.href = `${API_BASE}/offers/${id}/pdf`
             } else {
-                window.open(`/api/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
+                window.open(`${API_BASE}/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
             }
             setTimeout(() => loadOffers(), 1000)
         } catch (error) {
