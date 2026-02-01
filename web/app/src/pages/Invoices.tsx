@@ -121,7 +121,7 @@ const InvoicesPage = () => {
         })
         const map: Record<string, { invoices: any[], total: number }> = {}
         for (const inv of sorted) {
-            const name = inv.client?.name?.trim() || 'Pa Emër'
+            const name = (String(inv?.client?.name ?? '')).trim() || 'Pa Emër'
             if (!map[name]) map[name] = { invoices: [], total: 0 }
             map[name].invoices.push(inv)
             map[name].total += Number(inv.total || 0)

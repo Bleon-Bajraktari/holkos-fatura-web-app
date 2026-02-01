@@ -101,10 +101,10 @@ const OfferForm = () => {
     }, [id, isEdit])
 
     const filteredClients = useMemo(() => {
-        const term = searchTerm.toLowerCase()
+        const term = (searchTerm || '').toLowerCase()
         return clients.filter(c =>
-            c.name.toLowerCase().includes(term) ||
-            c.unique_number?.toLowerCase().includes(term)
+            (String(c?.name ?? '')).toLowerCase().includes(term) ||
+            (String(c?.unique_number ?? '')).toLowerCase().includes(term)
         )
     }, [clients, searchTerm])
 

@@ -117,7 +117,7 @@ const OffersPage = () => {
         })
         const map: Record<string, { offers: any[], total: number }> = {}
         for (const off of sorted) {
-            const name = off.client?.name?.trim() || 'Pa Emër'
+            const name = (String(off?.client?.name ?? '')).trim() || 'Pa Emër'
             if (!map[name]) map[name] = { offers: [], total: 0 }
             map[name].offers.push(off)
             map[name].total += Number(off.total || 0)

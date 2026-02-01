@@ -30,10 +30,10 @@ const ClientsPage = () => {
     }, [])
 
     const filtered = clients.filter((c: any) => {
-        const term = search.toLowerCase()
-        return c.name.toLowerCase().includes(term)
-            || (c.unique_number || '').toLowerCase().includes(term)
-            || (c.address || '').toLowerCase().includes(term)
+        const term = (search || '').toLowerCase()
+        return (String(c?.name ?? '')).toLowerCase().includes(term)
+            || (String(c?.unique_number ?? '')).toLowerCase().includes(term)
+            || (String(c?.address ?? '')).toLowerCase().includes(term)
     })
 
     const clearForm = () => {

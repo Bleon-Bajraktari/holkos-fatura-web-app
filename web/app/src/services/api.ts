@@ -30,12 +30,12 @@ const filterLocalData = (data: any[], params: any) => {
         return (Number(idB) || 0) - (Number(idA) || 0);
     });
 
-    if (params.search) {
+    if (params?.search && typeof params.search === 'string') {
         const s = params.search.toLowerCase();
         filtered = filtered.filter(f =>
-            f.invoice_number?.toLowerCase().includes(s) ||
-            f.offer_number?.toLowerCase().includes(s) ||
-            f.client?.name?.toLowerCase().includes(s)
+            (String(f?.invoice_number ?? '')).toLowerCase().includes(s) ||
+            (String(f?.offer_number ?? '')).toLowerCase().includes(s) ||
+            (String(f?.client?.name ?? '')).toLowerCase().includes(s)
         );
     }
     if (params.date_from) {
@@ -194,7 +194,7 @@ const getOfflineCollectionData = async (url: string, params: any) => {
         return allClients.sort((a, b) => {
             if (a._isOfflinePending && !b._isOfflinePending) return -1;
             if (!a._isOfflinePending && b._isOfflinePending) return 1;
-            return a.name.localeCompare(b.name);
+            return (String(a?.name ?? '')).localeCompare(String(b?.name ?? ''));
         });
     }
 

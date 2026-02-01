@@ -250,8 +250,8 @@ const InvoiceForm = () => {
     }
 
     const filteredClients = clients.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.unique_number?.toLowerCase().includes(searchTerm.toLowerCase())
+        (String(c?.name ?? '')).toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+        (String(c?.unique_number ?? '')).toLowerCase().includes((searchTerm || '').toLowerCase())
     )
 
     const selectedClientEmail = clients.find(c => c.id === invoice.client_id)?.email || ''
