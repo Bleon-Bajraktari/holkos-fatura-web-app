@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { OfferService, API_BASE } from '../services/api'
+import { OfferService, CompanyService, API_BASE } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 const months = [
@@ -26,7 +26,12 @@ const OffersPage = () => {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [emailModalOpen, setEmailModalOpen] = useState(false)
+    const [company, setCompany] = useState<any>(null)
     const [actionBarStyle, setActionBarStyle] = useState<{ bottom?: string; top?: string }>({ bottom: '64px' })
+
+    useEffect(() => {
+        CompanyService.get().then(setCompany).catch(() => {})
+    }, [])
 
     const loadOffers = () => {
         setLoading(true)
@@ -231,9 +236,14 @@ const OffersPage = () => {
 
     const handleBulkEmail = async (overrideEmail?: string) => {
         if (!selectedIds.size) return
-        const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
-        if (validIds.length === 0) return;
-        await OfferService.bulkEmail(validIds, overrideEmail)
+        const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[]
+        if (validIds.length === 0) return
+        const useSmtp = company?.smtp_user && company?.smtp_password && import.meta.env.PROD && !window.location.hostname.includes('localhost')
+        if (useSmtp && overrideEmail) {
+            await OfferService.bulkEmailViaSmtp(validIds, overrideEmail, company)
+        } else {
+            await OfferService.bulkEmail(validIds, overrideEmail)
+        }
         clearSelection()
         loadOffers()
     }
