@@ -231,15 +231,11 @@ const OffersPage = () => {
 
     const handleBulkEmail = async (overrideEmail?: string) => {
         if (!selectedIds.size) return
-        try {
-            const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
-            if (validIds.length === 0) return;
-            await OfferService.bulkEmail(validIds, overrideEmail)
-            clearSelection()
-            loadOffers()
-        } catch (err: any) {
-            alert(err?.response?.data?.detail || 'Gabim gjatë dërgimit të email-it.')
-        }
+        const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
+        if (validIds.length === 0) return;
+        await OfferService.bulkEmail(validIds, overrideEmail)
+        clearSelection()
+        loadOffers()
     }
 
     return (
@@ -589,8 +585,8 @@ const OffersPage = () => {
                 title="Dërgo ofertat me email"
                 allowClientEmail
                 onClose={() => setEmailModalOpen(false)}
-                onConfirm={(email) => { setEmailModalOpen(false); handleBulkEmail(email); }}
-                onConfirmClientEmail={() => { setEmailModalOpen(false); handleBulkEmail(); }}
+                onConfirm={(email) => handleBulkEmail(email)}
+                onConfirmClientEmail={() => handleBulkEmail()}
             />
         </div>
     )

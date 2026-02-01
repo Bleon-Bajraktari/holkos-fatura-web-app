@@ -33,10 +33,13 @@ export default function NetworkStatus() {
             const queue = OfflineService.getQueue()
             const last = queue[queue.length - 1]
             setQueueCount(queue.length)
-            if (last) {
+            // Shfaq "U ruajt offline" vetëm kur jemi offline – kur jemi online pas suksesi (email, etj.) mos ngatërro përdoruesin
+            if (last && !navigator.onLine) {
                 setLastQueuedTitle(last.title || 'Veprim')
                 setShowToast(true)
                 setTimeout(() => setShowToast(false), 2500)
+            } else {
+                setLastQueuedTitle(null)
             }
         }
 

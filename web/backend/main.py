@@ -771,7 +771,16 @@ def get_stats(db: Session = Depends(get_db)):
 def get_company(db: Session = Depends(get_db)):
     db_company = db.query(models.Company).first()
     if db_company is None:
-        raise HTTPException(status_code=404, detail="Company not found")
+        # Krijo kompani të zbrazët në hyrjen e parë – përdoruesi mund ta plotësojë nga Cilësimet
+        db_company = models.Company(
+            name="Kompania ime",
+            address=None, phone=None, email=None,
+            unique_number=None, fiscal_number=None, account_nib=None, logo_path=None,
+            smtp_server="smtp.gmail.com", smtp_port=587, smtp_user=None, smtp_password=None
+        )
+        db.add(db_company)
+        db.commit()
+        db.refresh(db_company)
     return db_company
 
 @app.put("/company", response_model=schemas.Company)

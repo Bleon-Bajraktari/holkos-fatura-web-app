@@ -2,6 +2,36 @@
 
 Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në Vercel dhe për të lidhur databazën TiDB Cloud.
 
+---
+
+## Push dhe Deploy – hapat e shpejtë
+
+1. **Sigurohu që `.env` nuk përfshihet në Git**  
+   Skedari `.gitignore` përmban `.env` dhe `web/backend/.env` – mos hiq këto rreshta.
+
+2. **Push në GitHub**:
+   ```bash
+   git add .
+   git status   # kontrollo që .env nuk është në listë
+   git commit -m "Gati për deploy – Vercel + Render + TiDB"
+   git push origin main
+   ```
+
+3. **Backend (Render.com)**  
+   Nëse projekti ekziston: push aktivizon redeploy.  
+   Nëse është i ri: **New** → **Web Service** → lidh repo, **Root Directory**: `web/backend`, **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`.  
+   Në **Environment** vendos: `DATABASE_URL` (TiDB Cloud) dhe `PYTHON_VERSION=3.11.10`.
+
+4. **Frontend (Vercel)**  
+   Nëse projekti ekziston: push aktivizon redeploy.  
+   Nëse është i ri: **Add New** → **Project** → lidh repo, **Root Directory**: `web/app`.  
+   Opsional për email: në **Environment** shto `BACKEND_URL=https://holkos-fatura-api.onrender.com`.
+
+5. **Pas deploy-it**  
+   Hap URL-in e Vercel dhe testo: Cilësimet, Faturat, dërgimi i email-it (nëse ke plotësuar SMTP në Cilësimet dhe BACKEND_URL në Vercel).
+
+---
+
 ## Arkitektura e Deploy-it
 
 ```

@@ -243,7 +243,6 @@ const InvoiceForm = () => {
                 } else {
                     await service.email(savedDoc.id, destEmail)
                 }
-                alert('Email-i u dërgua me sukses!')
             }
 
             navigate(isOffer ? '/offers' : '/invoices')
@@ -251,6 +250,7 @@ const InvoiceForm = () => {
             console.error('Error saving invoice:', error)
             console.error('Error response:', error.response?.data)
             const detail = error.response?.data?.detail || error.message || 'Gabim gjatë ruajtjes!'
+            if (action === 'email') throw error
             alert(detail)
         } finally {
             setSaving(false)
@@ -655,9 +655,8 @@ const InvoiceForm = () => {
                 title="Dërgo faturën me email"
                 initialEmail={selectedClientEmail}
                 onClose={() => setEmailModalOpen(false)}
-                onConfirm={(email) => {
-                    setEmailModalOpen(false)
-                    handleSave('email', email)
+                onConfirm={async (email) => {
+                    await handleSave('email', email)
                 }}
             />
         </div>

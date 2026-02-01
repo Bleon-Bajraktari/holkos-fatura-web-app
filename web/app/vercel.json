@@ -12,8 +12,16 @@
       "destination": "https://holkos-fatura-api.onrender.com/offers/:path*"
     },
     {
+      "source": "/api/company",
+      "destination": "https://holkos-fatura-api.onrender.com/company"
+    },
+    {
       "source": "/api/company/:path*",
       "destination": "https://holkos-fatura-api.onrender.com/company/:path*"
+    },
+    {
+      "source": "/api/settings/:path*",
+      "destination": "https://holkos-fatura-api.onrender.com/settings/:path*"
     },
     {
       "source": "/api/dashboard/:path*",

@@ -1,3 +1,10 @@
+# Environment (secrets - never commit)
+.env
+.env.local
+.env.*.local
+web/backend/.env
+web/app/.env
+
 # Python
 __pycache__/
 *.py[cod]

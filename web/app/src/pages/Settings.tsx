@@ -22,18 +22,68 @@ const SettingsPage = () => {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState({ type: '', text: '' })
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
     const [logoUploading, setLogoUploading] = useState(false)
     const [resettingCache, setResettingCache] = useState(false)
     const [resettingAll, setResettingAll] = useState(false)
 
+    const defaults = {
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        unique_number: '',
+        fiscal_number: '',
+        account_nib: '',
+        smtp_server: 'smtp.gmail.com',
+        smtp_port: 587,
+        smtp_user: '',
+        smtp_password: ''
+    }
+
+    const mergeCompany = (data: any) => {
+        if (!data || typeof data !== 'object') return defaults
+        return { ...defaults, ...data }
+    }
+
     useEffect(() => {
-        Promise.all([
-            CompanyService.get().then(data => setCompany(data)),
-            SettingsService.getPaymentStatus().then(data => setPaymentStatusEnabled(data.enabled))
-        ])
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false))
+        const load = async () => {
+            setLoadError(null)
+            try {
+                const [companyData, paymentData] = await Promise.allSettled([
+                    CompanyService.get(),
+                    SettingsService.getPaymentStatus()
+                ])
+                if (companyData.status === 'fulfilled' && companyData.value) {
+                    setCompany(mergeCompany(companyData.value))
+                } else if (companyData.status === 'rejected') {
+                    try {
+                        const cached = localStorage.getItem('company_cache')
+                        if (cached) {
+                            setCompany(mergeCompany(JSON.parse(cached)))
+                        } else {
+                            setLoadError('Backend nuk është i lidhur ose nuk ka të dhëna. Sigurohuni që backend-i të jetë duke u ekzekutuar (cd web/backend && uvicorn main:app --reload --port 8000). Mund të plotësoni fushat dhe të ruani.')
+                        }
+                    } catch (_) {
+                        setLoadError('Backend nuk është i lidhur. Filloni serverin nga web/backend dhe rifreskoni faqen.')
+                    }
+                }
+                if (paymentData.status === 'fulfilled' && paymentData.value?.enabled !== undefined) {
+                    setPaymentStatusEnabled(paymentData.value.enabled)
+                }
+            } catch (err) {
+                console.error('Settings load error:', err)
+                setLoadError('Gabim gjatë ngarkimit. Provoni të rifreskoni faqen.')
+                try {
+                    const cached = localStorage.getItem('company_cache')
+                    if (cached) setCompany(mergeCompany(JSON.parse(cached)))
+                } catch (_) {}
+            } finally {
+                setLoading(false)
+            }
+        }
+        load()
     }, [])
 
     const handleSave = async (e: React.FormEvent) => {
@@ -123,6 +173,11 @@ const SettingsPage = () => {
                 </button>
             </div>
 
+            {loadError && (
+                <div className="mb-6 p-4 rounded-xl text-sm font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                    {loadError}
+                </div>
+            )}
             {message.text && (
                 <div className={`mb-6 p-4 rounded-xl text-sm font-bold ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
                     {message.text}
