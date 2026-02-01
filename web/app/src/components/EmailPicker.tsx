@@ -47,6 +47,8 @@ const EmailPicker = ({
         setEmail(initialEmail || stored[0] || '')
         setError(null)
         setSuccess(false)
+        // Pre-warm backend (Render) – nëse është fikur, zgjohi që dërguar të jetë më i shpejtë
+        fetch('/api/health', { method: 'GET' }).catch(() => {})
     }, [isOpen, initialEmail])
 
     const isValid = useMemo(() => {
