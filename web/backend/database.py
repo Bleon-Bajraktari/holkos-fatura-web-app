@@ -41,10 +41,12 @@ def _get_database_url():
 
 DATABASE_URL = _get_database_url()
 
-# TiDB Cloud kërkon SSL - PyMySQL përdor connect_args (sslaccept nuk mbështetet)
+# TiDB Cloud Serverless kërkon SSL/TLS - ssl={} nuk aktivizon transport të sigurt
+# Duhet ssl.SSLContext për TLS të vërtetë
 _connect_args = {}
 if "tidbcloud" in DATABASE_URL.lower():
-    _connect_args = {"ssl": {}}  # Aktivizon SSL me default verification
+    import ssl
+    _connect_args = {"ssl": ssl.create_default_context()}
 
 # Engine setup
 engine = create_engine(
