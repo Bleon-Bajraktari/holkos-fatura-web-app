@@ -1,0 +1,25 @@
+# Render.com Blueprint për Holkos Fatura Backend
+# Dokumentacion: https://render.com/docs/blueprint-spec
+# Në Render Dashboard, vendos Root Directory: web/backend
+
+services:
+  - type: web
+    name: holkos-fatura-api
+    rootDir: web/backend
+    runtime: python
+    region: frankfurt  # Më afër TiDB (EU)
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DATABASE_URL
+        sync: false  # Vendos manualisht nga TiDB Cloud
+      # Ose përdor variabla të ndara:
+      # - key: TIDB_HOST
+      # - key: TIDB_PORT
+      # - key: TIDB_USER
+      # - key: TIDB_PASSWORD
+      # - key: TIDB_DATABASE

@@ -8,7 +8,7 @@ const ClientsPage = () => {
     const [clients, setClients] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [selectedId, setSelectedId] = useState<number | null>(null)
+    const [selectedId, setSelectedId] = useState<number | string | null>(null)
     const [form, setForm] = useState({
         name: '',
         address: '',
@@ -47,7 +47,7 @@ const ClientsPage = () => {
             return
         }
         if (selectedId) {
-            await ClientService.update(selectedId, form)
+            await ClientService.update(selectedId as any, form)
         } else {
             await ClientService.create(form)
         }
@@ -66,9 +66,9 @@ const ClientsPage = () => {
         })
     }
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: number | string) => {
         if (!confirm('Jeni të sigurt?')) return
-        await ClientService.delete(id)
+        await ClientService.delete(id as any)
         loadClients()
     }
 

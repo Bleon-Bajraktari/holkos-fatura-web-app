@@ -1,31 +1,23 @@
 import Dexie, { Table } from 'dexie';
 
 export interface LocalInvoice {
-    id?: number;
-    cloudId?: number;
+    id?: number | string; // IndexedDB internal ID (auto-incremented or mapped from backend ID)
     invoice_number: string;
     date: string;
-    total: number;
-    data: any; // Full object storage
-    last_sync: number;
+    data: any; // Full JSON data
 }
 
 export interface LocalOffer {
-    id?: number;
-    cloudId?: number;
+    id?: number | string;
     offer_number: string;
     date: string;
-    total: number;
     data: any;
-    last_sync: number;
 }
 
 export interface LocalClient {
-    id?: number;
-    cloudId?: number;
+    id?: number | string;
     name: string;
-    data: any;
-    last_sync: number;
+    data: any; // Full client data
 }
 
 export class HolkosDB extends Dexie {
@@ -35,8 +27,11 @@ export class HolkosDB extends Dexie {
 
     constructor() {
         super('HolkosBackup');
-        // Version 2 to handle schema change from ++id to id
+        // Define simple schema for querying/sorting
+        // Storing the full object in 'data' avoids schema migration headaches
         this.version(2).stores({
+            // SHËNIM: 'data' nuk shkruhet këtu sepse nuk është index kërkimi,
+            // por ajo RUHET automatikisht bashkë me objektin.
             invoices: 'id, invoice_number, date',
             offers: 'id, offer_number, date',
             clients: 'id, name'

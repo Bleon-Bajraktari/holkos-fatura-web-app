@@ -24,6 +24,8 @@ const SettingsPage = () => {
     const [message, setMessage] = useState({ type: '', text: '' })
     const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
     const [logoUploading, setLogoUploading] = useState(false)
+    const [resettingCache, setResettingCache] = useState(false)
+    const [resettingAll, setResettingAll] = useState(false)
 
     useEffect(() => {
         Promise.all([
@@ -65,6 +67,33 @@ const SettingsPage = () => {
         } finally {
             setLogoUploading(false)
         }
+    }
+
+    const clearCacheStorage = async () => {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys()
+            await Promise.all(cacheNames.map(name => caches.delete(name)))
+        }
+    }
+
+    const unregisterServiceWorkers = async () => {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations()
+            await Promise.all(registrations.map(reg => reg.unregister()))
+        }
+    }
+
+    const clearLocalCacheKeys = () => {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+            if (
+                key === 'company_cache' ||
+                key === 'dashboard_cache' ||
+                key.startsWith('years_cache_')
+            ) {
+                localStorage.removeItem(key)
+            }
+        })
     }
 
     if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
@@ -310,39 +339,75 @@ const SettingsPage = () => {
                     </label>
                 </div>
 
-                {/* PWA Performance & Cache Section */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2 border-dashed">
+                {/* Advanced & Troubleshooting Section */}
+                <div className="bg-white p-8 rounded-3xl border border-rose-200 shadow-sm space-y-4 lg:col-span-2 border-dashed bg-rose-50/10">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-1">
-                                <Server size={20} className="text-rose-500" />
-                                Memoria Lokale (PWA Backup)
+                                <Server size={20} className="text-rose-600" />
+                                Zgjidhja e Problemeve (PWA & Cache)
                             </h3>
-                            <p className="text-xs text-slate-400">Nëse shihni faturat e dublikuara ose të dhëna të vjetra offline, pastroni memorien lokale.</p>
+                            <p className="text-xs text-slate-500 max-w-xl">
+                                Përdoreni këtë buton nëse keni probleme me:
+                                <span className="font-bold"> logon, hapjen offline, ose nëse të dhënat nuk shfaqen. </span>
+                                Mund të pastroni vetëm cache-in (pa humbur të dhënat offline), ose të bëni reset total.
+                            </p>
                         </div>
-                        <button
-                            onClick={async () => {
-                                if (confirm('A jeni të sigurt? Kjo do të fshijë çdo të dhënë lokale dhe do t’i shkarkojë saktë nga Cloud.')) {
-                                    await db.invoices.clear();
-                                    await db.offers.clear();
-                                    await db.clients.clear();
-
-                                    // Pastrojmë të gjitha cache-et në localStorage
-                                    Object.keys(localStorage).forEach(key => {
-                                        if (key.startsWith('years_cache_') || key === 'company_cache') {
-                                            localStorage.removeItem(key);
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <button
+                                type="button"
+                                disabled={resettingCache || resettingAll}
+                                onClick={async () => {
+                                    if (confirm('Kjo do të pastrojë cache-in dhe Service Worker. Të dhënat offline do të ruhen. Vazhdoni?')) {
+                                        setResettingCache(true)
+                                        try {
+                                            clearLocalCacheKeys()
+                                            await clearCacheStorage()
+                                            await unregisterServiceWorkers()
+                                            alert('Cache u pastrua! Aplikacioni do të rifreskohet.')
+                                            window.location.reload()
+                                        } catch (err) {
+                                            console.error('Cache reset failed:', err)
+                                            alert('Pati një gabim gjatë pastrimit të cache. Provoni manualisht.')
+                                        } finally {
+                                            setResettingCache(false)
                                         }
-                                    });
-
-                                    alert('Memoria u pastrua me sukses! Tani hapni listat që të shkarkohen të dhënat e reja.');
-                                    window.location.reload();
-                                }
-                            }}
-                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-black hover:bg-rose-100 transition-all shadow-sm"
-                        >
-                            <Trash2 size={16} />
-                            PASTRO MEMORIEN (CACHE)
-                        </button>
+                                    }
+                                }}
+                                className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-950 transition-all shadow-lg shadow-slate-200 disabled:opacity-60"
+                            >
+                                <Trash2 size={16} />
+                                {resettingCache ? 'Duke pastruar...' : 'PASTRO CACHE (REKOMANDUAR)'}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={resettingCache || resettingAll}
+                                onClick={async () => {
+                                    if (confirm('KUJDES: Kjo do të fshijë të gjitha të dhënat lokale (IndexedDB + LocalStorage), do të çregjistrojë Service Worker dhe do të rifreskojë aplikacionin. Vazhdoni?')) {
+                                        setResettingAll(true)
+                                        try {
+                                            await db.invoices.clear()
+                                            await db.offers.clear()
+                                            await db.clients.clear()
+                                            localStorage.clear()
+                                            await clearCacheStorage()
+                                            await unregisterServiceWorkers()
+                                            alert('Reset total u krye! Aplikacioni do të rifreskohet.')
+                                            window.location.reload()
+                                        } catch (err) {
+                                            console.error('Reset failed:', err)
+                                            alert('Pati një gabim gjatë reset-it total. Provoni manualisht.')
+                                        } finally {
+                                            setResettingAll(false)
+                                        }
+                                    }
+                                }}
+                                className="flex items-center justify-center gap-2 px-5 py-3 bg-rose-600 text-white rounded-xl text-xs font-black hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 disabled:opacity-60"
+                            >
+                                <Trash2 size={16} />
+                                {resettingAll ? 'Duke resetuar...' : 'RESET TOTAL'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

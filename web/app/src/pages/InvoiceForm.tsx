@@ -59,7 +59,18 @@ const InvoiceForm = () => {
         return true
     })
 
-    const [invoice, setInvoice] = useState({
+    const [invoice, setInvoice] = useState<{
+        invoice_number: string,
+        offer_number: string,
+        subject: string,
+        description: string,
+        date: string,
+        payment_due_date: string,
+        client_id: number | string,
+        client_name: string,
+        vat_percentage: number,
+        items: InvoiceItem[]
+    }>({
         invoice_number: '',
         offer_number: '',
         subject: '',
@@ -190,6 +201,9 @@ const InvoiceForm = () => {
             const { client_name, ...invoiceData } = invoice
             const data = {
                 ...invoiceData,
+                // If it's a temp ID (string), pass it as is. Offline interceptor will handle it.
+                // If synced later, Sync Service must handle ID resolution (Client First, then Invoice).
+                client_id: invoice.client_id,
                 payment_due_date: invoice.payment_due_date || null,
                 items: invoice.items.map(item => ({
                     ...item,

@@ -1,0 +1,12 @@
+# Render.com Blueprint për Holkos Fatura Backend
+# Shiko web/DEPLOY.md për udhëzime të plota
+
+services:
+  - type: web
+    name: holkos-fatura-api
+    rootDir: web/backend
+    runtime: python
+    region: frankfurt
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT

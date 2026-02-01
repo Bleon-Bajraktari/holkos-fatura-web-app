@@ -9,78 +9,72 @@ export default defineConfig({
         react(),
         basicSsl(),
         VitePWA({
-            registerType: 'prompt',
+            registerType: 'autoUpdate',
+            manifest: false, // Using local file in public/manifest.webmanifest
             devOptions: {
-                enabled: true
+                enabled: true,
+                type: 'module',
             },
-            includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'logo.png', 'manifest.webmanifest'],
             workbox: {
+                // Force SW to activate immediately
+                skipWaiting: true,
+                clientsClaim: true,
                 cleanupOutdatedCaches: true,
+
+                // SPA Fallback: Clean URLs
                 navigateFallback: '/index.html',
+                // Apply fallback to all app routes (exclude API/uploads below)
+                navigateFallbackAllowlist: [/^\/(?!api|uploads|manifest\.webmanifest).*/],
+                // Do NOT use index.html for API calls or Image uploads
+                navigateFallbackDenylist: [/^\/api/, /^\/uploads/, /manifest\.webmanifest$/],
+
+                // Precache these files
                 globPatterns: ['**/*.{js,css,html,png,svg,woff2,ico,json}'],
+
                 runtimeCaching: [
+                    // 1. Critical Static Assets (Manifest, Icons) - StaleWhileRevalidate
+                    // Load fast from cache, check update in background
+                    {
+                        urlPattern: /(manifest\.webmanifest|icon-.*\.png|favicon\.ico)/i,
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'app-shell-static',
+                            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 } // 30 days
+                        }
+                    },
+                    // 2. Google Fonts - CacheFirst (Immutable)
                     {
                         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
                         handler: 'CacheFirst',
                         options: {
                             cacheName: 'google-fonts-cache',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
-                            },
-                            cacheableResponse: {
-                                statuses: [0, 200]
-                            }
+                            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
                         }
                     },
+                    // 3. User Uploads (Logos) - CacheFirst (Rarely change, max performance)
                     {
-                        urlPattern: /\/api\/dashboard\/stats/i,
-                        handler: 'NetworkFirst',
+                        urlPattern: /.*\/uploads\/.*\.(png|jpg|jpeg|svg|webp)/i,
+                        handler: 'CacheFirst',
                         options: {
-                            cacheName: 'api-stats-cache',
-                            expiration: {
-                                maxEntries: 5,
-                                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-                            }
+                            cacheName: 'user-uploads-cache',
+                            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 365 }
                         }
                     },
+                    // 4. API Data (Invoices, Dashboard) - NetworkFirst
+                    // Try network. If fails, use Cached response.
                     {
                         urlPattern: /\/api\/.*/i,
                         handler: 'NetworkFirst',
                         options: {
                             cacheName: 'api-data-cache',
+                            networkTimeoutSeconds: 5, // Fallback to cache after 5s
                             expiration: {
                                 maxEntries: 100,
-                                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-                            }
-                        }
-                    },
-                    {
-                        urlPattern: /.*\/uploads\/.*\.(png|jpg|jpeg|svg|webp|gif)/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'company-assets-cache',
-                            expiration: {
-                                maxEntries: 50,
-                                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days backup
                             },
                             cacheableResponse: {
                                 statuses: [0, 200]
                             }
-                        }
-                    },
-                    {
-                        urlPattern: /manifest\.webmanifest/i,
-                        handler: 'NetworkFirst',
-                        options: {
-                            cacheName: 'manifest-cache',
-                        }
-                    },
-                    {
-                        urlPattern: /\/logo\.png/i,
-                        handler: 'NetworkFirst',
-                        options: {
-                            cacheName: 'logo-cache',
                         }
                     }
                 ]
@@ -90,6 +84,7 @@ export default defineConfig({
     server: {
         https: true,
         host: true,
+        allowedHosts: ['.ngrok-free.dev'],
         port: 5173,
         proxy: {
             '/api': {
@@ -101,18 +96,7 @@ export default defineConfig({
                 target: 'http://localhost:8000',
                 changeOrigin: true,
             },
-            '/logo.png': {
-                target: 'http://localhost:8000',
-                changeOrigin: true,
-            },
-            '/apple-touch-icon.png': {
-                target: 'http://localhost:8000',
-                changeOrigin: true,
-            },
-            '/manifest.webmanifest': {
-                target: 'http://localhost:8000',
-                changeOrigin: true,
-            },
+            // Direct proxies for static files removed to rely on public/ folder
         },
     },
 })

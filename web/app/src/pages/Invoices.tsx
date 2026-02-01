@@ -20,10 +20,10 @@ const InvoicesPage = () => {
     const [month, setMonth] = useState('Të gjithë')
     const [years, setYears] = useState<string[]>([])
     const [showStatus, setShowStatus] = useState(true)
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
     const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
-    const [expandedInvoiceId, setExpandedInvoiceId] = useState<number | null>(null)
+    const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | number | null>(null)
     const [emailModalOpen, setEmailModalOpen] = useState(false)
     const [statusFilter, setStatusFilter] = useState('Të gjithë')
     const [dateFrom, setDateFrom] = useState('')
@@ -107,8 +107,20 @@ const InvoicesPage = () => {
     }, [debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
 
     const grouped = useMemo(() => {
+        const sorted = [...invoices].sort((a, b) => {
+            const idA = a.id;
+            const idB = b.id;
+            const isTempA = String(idA).startsWith('temp-');
+            const isTempB = String(idB).startsWith('temp-');
+
+            if (isTempA && !isTempB) return -1;
+            if (!isTempA && isTempB) return 1;
+            if (isTempA && isTempB) return 0;
+
+            return (Number(idB) || 0) - (Number(idA) || 0);
+        })
         const map: Record<string, { invoices: any[], total: number }> = {}
-        for (const inv of invoices) {
+        for (const inv of sorted) {
             const name = inv.client?.name?.trim() || 'Pa Emër'
             if (!map[name]) map[name] = { invoices: [], total: 0 }
             map[name].invoices.push(inv)
@@ -136,11 +148,11 @@ const InvoicesPage = () => {
         setDateTo('')
     }
 
-    const toggleInvoiceActions = (id: number) => {
+    const toggleInvoiceActions = (id: string | number) => {
         setExpandedInvoiceId(prev => (prev === id ? null : id))
     }
 
-    const toggleSelect = (id: number) => {
+    const toggleSelect = (id: string | number) => {
         if (!selectionMode) return
         setSelectedIds(prev => {
             const next = new Set(prev)
@@ -170,30 +182,40 @@ const InvoicesPage = () => {
         }
     }
 
-    const handleDownloadPdf = (id: number) => {
+    const handleDownloadPdf = (id: string | number) => {
+        if (String(id).startsWith('temp-')) {
+            alert('Fatura nuk është sinkronizuar ende. Prisni sa të ketë internet për të shkarkuar PDF.');
+            return;
+        }
         window.open(`/api/invoices/${id}/pdf`, '_blank', 'noopener,noreferrer')
     }
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string | number) => {
         if (!confirm('A jeni të sigurt?')) return
-        await InvoiceService.delete(id)
+        // If local temp, maybe remove from Queue? Currently API service handles DELETE to queue too.
+        await InvoiceService.delete(Number(id) || id as any)
         loadInvoices()
     }
 
-    const handleToggleStatus = async (id: number, current: string) => {
+    const handleToggleStatus = async (id: string | number, current: string) => {
+        if (String(id).startsWith('temp-')) return; // No status toggle for offline yet
         const next = current === 'paid' ? 'draft' : 'paid'
-        await InvoiceService.updateStatus(id, next)
+        await InvoiceService.updateStatus(Number(id), next)
         loadInvoices()
     }
 
-    const handleClone = (id: number) => {
+    const handleClone = (id: string | number) => {
         navigate(`/invoices/new?clone=${id}`)
     }
 
     const handleBulkDelete = async () => {
         if (!selectedIds.size) return
         if (!confirm(`A jeni të sigurt se doni të fshini ${selectedIds.size} fatura?`)) return
-        await InvoiceService.bulkDelete(Array.from(selectedIds))
+        // Filter out temp IDs (strings) as they cannot be bulk deleted via API yet
+        const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
+        if (validIds.length === 0) return;
+
+        await InvoiceService.bulkDelete(validIds)
         clearSelection()
         loadInvoices()
     }
@@ -201,7 +223,9 @@ const InvoicesPage = () => {
     const handleBulkEmail = async (overrideEmail?: string) => {
         if (!selectedIds.size) return
         try {
-            await InvoiceService.bulkEmail(Array.from(selectedIds), overrideEmail)
+            const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
+            if (validIds.length === 0) return;
+            await InvoiceService.bulkEmail(validIds, overrideEmail)
             clearSelection()
             loadInvoices()
         } catch (err: any) {
@@ -442,7 +466,12 @@ const InvoicesPage = () => {
                                                             </div>
 
                                                             <div className="hidden sm:block col-span-3">
-                                                                {showStatus ? (
+                                                                {inv.status === 'pending-sync' || inv._isOfflinePending ? (
+                                                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center w-fit gap-1">
+                                                                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
+                                                                        NË PRITJE
+                                                                    </span>
+                                                                ) : showStatus ? (
                                                                     inv.status === 'paid' ? (
                                                                         <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">E PAGUAR</span>
                                                                     ) : (

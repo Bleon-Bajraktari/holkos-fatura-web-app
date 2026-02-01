@@ -19,10 +19,10 @@ const OffersPage = () => {
     const [year, setYear] = useState(new Date().getFullYear().toString())
     const [month, setMonth] = useState('Të gjithë')
     const [years, setYears] = useState<string[]>([])
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
     const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
-    const [expandedOfferId, setExpandedOfferId] = useState<number | null>(null)
+    const [expandedOfferId, setExpandedOfferId] = useState<string | number | null>(null)
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [emailModalOpen, setEmailModalOpen] = useState(false)
@@ -103,8 +103,20 @@ const OffersPage = () => {
     }, [debouncedSearch, year, month, dateFrom, dateTo])
 
     const grouped = useMemo(() => {
+        const sorted = [...offers].sort((a, b) => {
+            const idA = a.id;
+            const idB = b.id;
+            const isTempA = String(idA).startsWith('temp-');
+            const isTempB = String(idB).startsWith('temp-');
+
+            if (isTempA && !isTempB) return -1;
+            if (!isTempA && isTempB) return 1;
+            if (isTempA && isTempB) return 0;
+
+            return (Number(idB) || 0) - (Number(idA) || 0);
+        })
         const map: Record<string, { offers: any[], total: number }> = {}
-        for (const off of offers) {
+        for (const off of sorted) {
             const name = off.client?.name?.trim() || 'Pa Emër'
             if (!map[name]) map[name] = { offers: [], total: 0 }
             map[name].offers.push(off)
@@ -131,11 +143,11 @@ const OffersPage = () => {
         setDateTo('')
     }
 
-    const toggleOfferActions = (id: number) => {
+    const toggleOfferActions = (id: string | number) => {
         setExpandedOfferId(prev => (prev === id ? null : id))
     }
 
-    const toggleSelect = (id: number) => {
+    const toggleSelect = (id: string | number) => {
         if (!selectionMode) return
         setSelectedIds(prev => {
             const next = new Set(prev)
@@ -165,7 +177,11 @@ const OffersPage = () => {
         }
     }
 
-    const handleDownloadPdf = (id: number) => {
+    const handleDownloadPdf = (id: string | number) => {
+        if (String(id).startsWith('temp-')) {
+            alert('Oferta nuk është sinkronizuar ende. Prisni sa të ketë internet për të shkarkuar PDF.');
+            return;
+        }
         const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
         if (isMobile) {
             window.location.href = `/api/offers/${id}/pdf`
@@ -174,7 +190,11 @@ const OffersPage = () => {
         }
     }
 
-    const handleGeneratePdf = async (id: number) => {
+    const handleGeneratePdf = async (id: string | number) => {
+        if (String(id).startsWith('temp-')) {
+            alert('Oferta nuk është sinkronizuar ende.');
+            return;
+        }
         try {
             const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
             if (isMobile) {
@@ -189,20 +209,22 @@ const OffersPage = () => {
         }
     }
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string | number) => {
         if (!confirm('A jeni të sigurt?')) return
-        await OfferService.delete(id)
+        await OfferService.delete(Number(id) || id as any)
         loadOffers()
     }
 
-    const handleClone = (id: number) => {
+    const handleClone = (id: string | number) => {
         navigate(`/offers/new?clone=${id}`)
     }
 
     const handleBulkDelete = async () => {
         if (!selectedIds.size) return
         if (!confirm(`A jeni të sigurt se doni të fshini ${selectedIds.size} oferta?`)) return
-        await OfferService.bulkDelete(Array.from(selectedIds))
+        const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
+        if (validIds.length === 0) return;
+        await OfferService.bulkDelete(validIds)
         clearSelection()
         loadOffers()
     }
@@ -210,7 +232,9 @@ const OffersPage = () => {
     const handleBulkEmail = async (overrideEmail?: string) => {
         if (!selectedIds.size) return
         try {
-            await OfferService.bulkEmail(Array.from(selectedIds), overrideEmail)
+            const validIds = Array.from(selectedIds).filter(id => typeof id === 'number') as number[];
+            if (validIds.length === 0) return;
+            await OfferService.bulkEmail(validIds, overrideEmail)
             clearSelection()
             loadOffers()
         } catch (err: any) {
@@ -440,7 +464,14 @@ const OffersPage = () => {
                                                             </div>
 
                                                             <div className="col-span-6 text-right flex items-center justify-end gap-3">
-                                                                <div className="text-sm font-black text-gray-900">{parseFloat(off.total || 0).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</div>
+                                                                {off.status === 'pending-sync' || off._isOfflinePending ? (
+                                                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center gap-1">
+                                                                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
+                                                                        PRITJE
+                                                                    </span>
+                                                                ) : (
+                                                                    <div className="text-sm font-black text-gray-900">{parseFloat(off.total || 0).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</div>
+                                                                )}
                                                                 <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
