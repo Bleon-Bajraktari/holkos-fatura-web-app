@@ -17,13 +17,18 @@ email_service = WebEmailService()
 
 app = FastAPI(title="Holkos Fatura API")
 
-# CORS setup
+# CORS setup - allow_origins=["*"] + allow_credentials=True nuk funksionon në shfletues
+# Duhet origjina e saktë; përdor regex për *.vercel.app (prod + preview)
+_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,https://localhost:5173,http://localhost:3000")
+CORS_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify the actual origin
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Prod + preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Serve uploaded assets (e.g., company logo)

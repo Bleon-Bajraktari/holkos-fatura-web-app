@@ -65,7 +65,7 @@ Në **Environment** shto:
 | Key | Value |
 |-----|-------|
 | `DATABASE_URL` | `mysql://USER:PASSWORD@HOST:4000/DATABASE?sslaccept=strict` |
-| `PYTHON_VERSION` | `3.11` |
+| `PYTHON_VERSION` | `3.11.10` |
 
 Ose përdor variabla të ndara:
 
@@ -139,7 +139,33 @@ Sigurohu që databaza TiDB ka tabelat e nevojshme. Ekzekuto skemën në TiDB Clo
 
 ## Troubleshooting
 
-### CORS errors
+### Të dhënat nuk shfaqen (lidhja me databazë / API)
+
+**1. Kontrollo VITE_API_BASE në Vercel** (shkaku më i zakonshëm)
+- Në Vercel: **Settings** → **Environment Variables**
+- Duhet të ketë `VITE_API_BASE` me URL të backend-it, p.sh. `https://holkos-fatura-api.onrender.com`
+- **Mos harro**: Pas ndryshimit të variablave, bëj **Redeploy** – Vite i përfshin variablat vetëm gjatë build-it
+- Nëse mungon, frontend bën kërkesa në `/api` (domain i Vercel) – ku nuk ka backend
+
+**2. Kontrollo që backend-i (Render) funksionon**
+- Hap `https://[backend-url]/` – duhet të shfaqet `{"message": "Holkos Fatura API is running"}`
+- Nëse 502/503: Render mund të jetë në gjumë (free tier); prit 30–60 s dhe provo përsëri
+
+**3. Kontrollo DATABASE_URL në Render**
+- Në Render: **Environment** → sigurohu që `DATABASE_URL` është i vendosur saktë
+- Format: `mysql://USER:PASSWORD@HOST:4000/test?sslaccept=strict`
+- Pas ndryshimit, bëj **Redeploy** të backend-it
+
+**4. Kontrollo skemën e databazës**
+- Ekzekuto `sql/schema.sql` në TiDB Cloud nëse tabelat nuk ekzistojnë
+- Verifiko që databaza ka të dhëna
+
+### CORS errors (Access-Control-Allow-Origin)
+Backend ka konfigurim për `*.vercel.app`. Nëse ende ke CORS:
+- Bëj **Redeploy** të backend-it në Render (ndryshimet e CORS duhet të aplikohen)
+- Shto origjinën në Render: **Environment** → `CORS_ORIGINS=https://emri-projektit.vercel.app`
+
+### CORS të tjera
 Backend ka `allow_origins=["*"]`. Nëse ke probleme, kontrollo që domajni i Vercel është në listë.
 
 ### Database connection failed
