@@ -4,12 +4,28 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/invoices",
+      "destination": "https://holkos-fatura-api.onrender.com/invoices"
+    },
+    {
       "source": "/api/invoices/:path*",
       "destination": "https://holkos-fatura-api.onrender.com/invoices/:path*"
     },
     {
+      "source": "/api/offers",
+      "destination": "https://holkos-fatura-api.onrender.com/offers"
+    },
+    {
       "source": "/api/offers/:path*",
       "destination": "https://holkos-fatura-api.onrender.com/offers/:path*"
+    },
+    {
+      "source": "/api/clients",
+      "destination": "https://holkos-fatura-api.onrender.com/clients"
+    },
+    {
+      "source": "/api/clients/:path*",
+      "destination": "https://holkos-fatura-api.onrender.com/clients/:path*"
     },
     {
       "source": "/api/company",
@@ -28,8 +44,8 @@
       "destination": "https://holkos-fatura-api.onrender.com/dashboard/:path*"
     },
     {
-      "source": "/api/clients/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/clients/:path*"
+      "source": "/api/templates",
+      "destination": "https://holkos-fatura-api.onrender.com/templates"
     },
     {
       "source": "/api/templates/:path*",
