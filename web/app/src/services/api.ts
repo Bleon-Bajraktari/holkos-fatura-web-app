@@ -542,6 +542,8 @@ export const InvoiceService = {
     bulkDelete: (ids: number[]) => api.post('/invoices/bulk-delete', { invoice_ids: ids }).then(res => res.data),
     bulkEmail: (ids: number[], email?: string) => api.post('/invoices/bulk-email', { invoice_ids: ids, override_email: email }).then(res => res.data),
     email: (id: number, dest_email?: string) => api.post(`/invoices/${id}/email`, dest_email ? { dest_email } : {}).then(res => res.data),
+    emailViaSmtp: (id: number, dest_email: string, company: { smtp_server?: string; smtp_port?: number; smtp_user?: string; smtp_password?: string; name?: string }, doc?: { invoice_number?: string; date?: string; total?: number }) =>
+        api.post('/send-email-smtp', { dest_email, document_type: 'invoice', document_id: id, smtp_server: company.smtp_server, smtp_port: company.smtp_port, smtp_user: company.smtp_user, smtp_password: company.smtp_password, company_name: company.name, doc_number: doc?.invoice_number, doc_date: doc?.date, doc_total: doc?.total, subject: doc ? `Faturë e re: ${doc.invoice_number} - ${company.name}` : undefined }).then(res => res.data),
 };
 
 export const OfferService = {
@@ -556,6 +558,8 @@ export const OfferService = {
     bulkDelete: (ids: number[]) => api.post('/offers/bulk-delete', { offer_ids: ids }).then(res => res.data),
     bulkEmail: (ids: number[], email?: string) => api.post('/offers/bulk-email', { offer_ids: ids, override_email: email }).then(res => res.data),
     email: (id: number, dest_email?: string) => api.post(`/offers/${id}/email`, dest_email ? { dest_email } : {}).then(res => res.data),
+    emailViaSmtp: (id: number, dest_email: string, company: { smtp_server?: string; smtp_port?: number; smtp_user?: string; smtp_password?: string; name?: string }, doc?: { offer_number?: string; date?: string; total?: number }) =>
+        api.post('/send-email-smtp', { dest_email, document_type: 'offer', document_id: id, smtp_server: company.smtp_server, smtp_port: company.smtp_port, smtp_user: company.smtp_user, smtp_password: company.smtp_password, company_name: company.name, doc_number: doc?.offer_number, doc_date: doc?.date, doc_total: doc?.total, subject: doc ? `Ofertë e re: ${doc.offer_number} - ${company.name}` : undefined }).then(res => res.data),
 };
 
 export const ClientService = {

@@ -13,7 +13,7 @@ import {
     Users
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { InvoiceService, OfferService, ClientService, API_BASE } from '../services/api'
+import { InvoiceService, OfferService, ClientService, CompanyService, API_BASE } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 interface InvoiceItem {
@@ -36,6 +36,7 @@ const InvoiceForm = () => {
     const isClone = !!cloneId && !isEdit && !isOffer
 
     const [clients, setClients] = useState<any[]>([])
+    const [company, setCompany] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -93,6 +94,7 @@ const InvoiceForm = () => {
 
     useEffect(() => {
         ClientService.getAll().then(data => setClients(data))
+        CompanyService.get().then(data => setCompany(data)).catch(() => {})
 
         if (isEdit) {
             setLoading(true)
@@ -234,7 +236,13 @@ const InvoiceForm = () => {
                     alert('Ju lutem zgjidhni një email!')
                     return
                 }
-                await service.email(savedDoc.id, destEmail)
+                const useSmtp = company?.smtp_user && company?.smtp_password && import.meta.env.PROD && !window.location.hostname.includes('localhost')
+                if (useSmtp) {
+                    const doc = isOffer ? { offer_number: savedDoc.offer_number, date: savedDoc.date, total: savedDoc.total } : { invoice_number: savedDoc.invoice_number, date: savedDoc.date, total: savedDoc.total }
+                    await service.emailViaSmtp(savedDoc.id, destEmail, company, doc)
+                } else {
+                    await service.email(savedDoc.id, destEmail)
+                }
                 alert('Email-i u dërgua me sukses!')
             }
 
