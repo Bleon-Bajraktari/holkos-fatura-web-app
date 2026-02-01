@@ -71,17 +71,17 @@ def update_db():
 
         # Offers and OfferItems should have been created by create_all if они missing.
         
-        # 3. Add Unique Constraints
+        # 3. Hiq indekset e vjeter qe kerkonin unike globale
+        # Numrat e fatures jane unike per vit, jo globale (FATURA NR.1 2025 + FATURA NR.1 2026 OK)
         try:
-            conn.execute(text("CREATE UNIQUE INDEX idx_unique_invoice_number ON invoices (invoice_number)"))
-            print("Added unique index to invoice_number.")
-        except:
-            pass # Index probably already exists
-            
+            conn.execute(text("ALTER TABLE invoices DROP INDEX idx_unique_invoice_number"))
+            print("Dropped idx_unique_invoice_number (allow per-year duplicates).")
+        except Exception:
+            pass
         try:
-            conn.execute(text("CREATE UNIQUE INDEX idx_unique_offer_number ON offers (offer_number)"))
-            print("Added unique index to offer_number.")
-        except:
+            conn.execute(text("ALTER TABLE offers DROP INDEX idx_unique_offer_number"))
+            print("Dropped idx_unique_offer_number.")
+        except Exception:
             pass
             
         conn.commit()

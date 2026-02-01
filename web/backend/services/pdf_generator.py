@@ -244,7 +244,7 @@ class WebPDFGenerator:
             story.append(Table([[due_table]], colWidths=[180*mm], style=[('ALIGN', (0,0), (-1,-1), 'CENTER')]))
             story.append(Spacer(1, 10*mm))
         
-        # Items Table
+        # Items Table (vetem rreshtat e artikujve)
         items_data = [["PERSHKRIMI", "M²", "CMIMI", "NENTOTALI"]]
         for item in invoice.items:
             items_data.append([
@@ -253,8 +253,9 @@ class WebPDFGenerator:
                 self.format_number(item.unit_price, True),
                 self.format_number(item.quantity * item.unit_price, True)
             ])
-        while len(items_data) < 6: items_data.append(["", "", "", ""])
-            
+        while len(items_data) < 6:
+            items_data.append(["", "", "", ""])
+
         items_table = Table(items_data, colWidths=[85*mm, 25*mm, 35*mm, 40*mm])
         items_table.setStyle(TableStyle([
             ('GRID', (0,0), (-1,-1), 1, colors.black),
@@ -264,9 +265,7 @@ class WebPDFGenerator:
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('PADDING', (0,0), (-1,-1), 6),
         ]))
-        story.append(items_table)
-        
-        # Totals
+
         legal_p = ""
         if invoice.vat_percentage == 0:
             legal_p = Paragraph("<i>Ngarkesa e kundert, nenparagrafi 1.4.1 ose 1.4.2 i nenit 52 te ligjit per TVSH</i>", self.note_style)
@@ -282,20 +281,30 @@ class WebPDFGenerator:
             ("GRID", (2, 0), (2, -1), 1, colors.black),
             ("ALIGN", (1, 0), (2, -1), "RIGHT"),
             ("SPAN", (0, 0), (0, 3)),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("VALIGN", (0, 0), (0, 0), "TOP"),
+            ("VALIGN", (1, 0), (2, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (0, 0), 2),
+            ("BOTTOMPADDING", (0, 0), (0, 0), 2),
             ("FONTNAME", (1, 3), (2, 3), "Helvetica-Bold"),
             ("FONTSIZE", (2, 3), (2, 3), 13),
             ("TOPPADDING", (1, 0), (2, 2), 6),
             ("BOTTOMPADDING", (1, 0), (2, 2), 6),
-            # Special alignment for the final TOTAL row (PER PAGESE)
-            # Value Column (Right)
             ("TOPPADDING", (2, 3), (2, 3), 4),
             ("BOTTOMPADDING", (2, 3), (2, 3), 8),
-            # Label Column (PER PAGESE) 
             ("TOPPADDING", (1, 3), (1, 3), 6),
             ("BOTTOMPADDING", (1, 3), (1, 3), 6),
         ]))
-        story.append(totals_table)
+
+        # Tabela e vetme: artikujt + totalet, pa hapesire ndermjet
+        combined = Table([[items_table], [totals_table]], colWidths=[185*mm])
+        combined.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        story.append(combined)
         story.append(Spacer(1, 35*mm))
         
         # Signatures

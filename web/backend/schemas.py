@@ -75,8 +75,9 @@ class InvoiceBase(BaseModel):
     invoice_number: str
     date: date
     payment_due_date: Optional[date] = None
-    client_id: int
+    client_id: int  # Pranon edhe string qe konvertohet ne int
     template_id: Optional[int] = None
+    client_name: Optional[str] = None  # Per UI - nuk ruhet ne DB
     subtotal: Decimal = 0.00
     vat_percentage: Decimal = 18.00
     vat_amount: Decimal = 0.00

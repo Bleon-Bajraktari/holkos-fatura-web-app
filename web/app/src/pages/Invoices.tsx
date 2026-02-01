@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { InvoiceService, SettingsService, CompanyService, API_BASE } from '../services/api'
+import { OfflineService } from '../services/offline'
 import EmailPicker from '../components/EmailPicker'
 
 const months = [
@@ -197,8 +198,12 @@ const InvoicesPage = () => {
 
     const handleDelete = async (id: string | number) => {
         if (!confirm('A jeni të sigurt?')) return
-        // If local temp, maybe remove from Queue? Currently API service handles DELETE to queue too.
-        await InvoiceService.delete(Number(id) || id as any)
+        if (String(id).startsWith('temp-')) {
+            await OfflineService.removePendingDocument('invoices', String(id))
+            loadInvoices()
+            return
+        }
+        await InvoiceService.delete(Number(id))
         loadInvoices()
     }
 

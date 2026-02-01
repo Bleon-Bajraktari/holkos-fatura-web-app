@@ -394,8 +394,15 @@ api.interceptors.response.use(
         const url = config.url || '';
 
         // 2. HANDLE OFFLINE / NETWORK ERRORS
-        if ((!error.response || (error.response && error.response.status >= 500)) && config) {
-            console.log(`[OfflineAPI] Intercepted ${config.method} ${url}`);
+        // 500 = server error - mos trego "U ruajt offline", por gabimin e vertete
+        const isNetworkFailure = !error.response;
+        const isServerError = error.response?.status >= 500;
+        if (config && (isNetworkFailure || isServerError)) {
+            if (isServerError) {
+                // Serveri u pergjigj me gabim - mos ruaj offline, trego gabimin
+                return Promise.reject(error);
+            }
+            console.log(`[OfflineAPI] Intercepted ${config.method} ${url} (network failure)`);
 
             // A) GET REQUESTS -> SERVE FROM CACHE
             if (config.method === 'get') {

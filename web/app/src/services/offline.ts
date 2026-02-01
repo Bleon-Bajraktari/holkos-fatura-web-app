@@ -200,6 +200,17 @@ export const OfflineService = {
         window.dispatchEvent(new Event('offline_queue_changed'));
     },
 
+    // 5. Remove pending document by temp ID (fshirje lokale e faturave/ofertave offline)
+    async removePendingDocument(entity: 'invoices' | 'offers' | 'clients', tempId: string) {
+        const actionId = String(tempId).replace(/^temp-/, '');
+        const queue = this.getQueue();
+        const action = queue.find(a => a.id === actionId && getEntityFromUrl(a.url)?.entity === entity);
+        if (action) this.removeFromQueue(actionId);
+        if (entity === 'invoices') await db.invoices.delete(tempId as any);
+        if (entity === 'offers') await db.offers.delete(tempId as any);
+        if (entity === 'clients') await db.clients.delete(tempId as any);
+    },
+
     saveQueue(queue: PendingAction[]) {
         localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
     },

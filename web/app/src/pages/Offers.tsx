@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfferService, CompanyService, API_BASE } from '../services/api'
+import { OfflineService } from '../services/offline'
 import EmailPicker from '../components/EmailPicker'
 
 const months = [
@@ -216,7 +217,12 @@ const OffersPage = () => {
 
     const handleDelete = async (id: string | number) => {
         if (!confirm('A jeni të sigurt?')) return
-        await OfferService.delete(Number(id) || id as any)
+        if (String(id).startsWith('temp-')) {
+            await OfflineService.removePendingDocument('offers', String(id))
+            loadOffers()
+            return
+        }
+        await OfferService.delete(Number(id))
         loadOffers()
     }
 

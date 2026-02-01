@@ -208,6 +208,16 @@ def get_invoice_years(db: Session = Depends(get_db)):
 
 @app.post("/invoices", response_model=schemas.Invoice)
 def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)):
+    try:
+        return _create_invoice_impl(invoice, db)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+def _create_invoice_impl(invoice: schemas.InvoiceCreate, db: Session):
     from datetime import date as dt_date
     
     # Check for duplicate within the same year
