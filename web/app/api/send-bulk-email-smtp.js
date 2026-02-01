@@ -34,22 +34,36 @@ export default async function handler(req, res) {
 
         const isOffer = document_type === 'offer'
         const basePath = isOffer ? 'offers' : 'invoices'
-        const attachments = []
-        for (const id of ids) {
-            const pdfUrl = `${BACKEND_URL}/${basePath}/${id}/pdf`
-            try {
-                const pdfRes = await fetch(pdfUrl, { headers: { Accept: 'application/pdf' } })
-                if (pdfRes.ok) {
-                    const arrayBuffer = await pdfRes.arrayBuffer()
-                    attachments.push({
-                        filename: `${basePath.slice(0, -1)}_${id}.pdf`,
-                        content: Buffer.from(arrayBuffer)
-                    })
+        const numKey = isOffer ? 'offer_number' : 'invoice_number'
+        const results = await Promise.all(ids.map(async (id) => {
+            let docNum = String(id)
+            let docDate = ''
+            let pdfBuffer = null
+            const [docRes, pdfRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/${basePath}/${id}`),
+                fetch(`${BACKEND_URL}/${basePath}/${id}/pdf`, { headers: { Accept: 'application/pdf' } })
+            ])
+            if (docRes.ok) {
+                const doc = await docRes.json()
+                const raw = String(doc[numKey] || '')
+                const nrMatch = raw.match(/NR\.\s*(\d+)/i) || raw.match(/(\d+)/)
+                docNum = nrMatch ? nrMatch[1] : raw || docNum
+                if (doc.date) {
+                    const d = new Date(doc.date)
+                    docDate = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 }
-            } catch (e) {
-                console.error('PDF fetch error for', id, e.message)
             }
-        }
+            if (pdfRes.ok) {
+                const arrayBuffer = await pdfRes.arrayBuffer()
+                pdfBuffer = Buffer.from(arrayBuffer)
+            }
+            return { docNum, docDate, pdfBuffer, id }
+        }))
+        const docLines = results.map(r => `${isOffer ? 'Ofertë' : 'Fatura'} nr. ${r.docNum} - ${r.docDate}`)
+        const attachments = results.filter(r => r.pdfBuffer).map(r => ({
+            filename: `${basePath.slice(0, -1)}_${r.id}.pdf`,
+            content: r.pdfBuffer
+        }))
 
         const port = parseInt(smtp_port || '587', 10)
         const secure = port === 465
@@ -62,10 +76,8 @@ export default async function handler(req, res) {
             connectionTimeout: 15000,
             greetingTimeout: 10000
         })
-        await transporter.verify()
 
-        const docLabel = isOffer ? 'Oferta' : 'Faturat'
-        const bodyText = `Ju lutem gjeni të bashkëngjitur ${docLabel.toLowerCase()} (${ids.length} dokument${ids.length > 1 ? 'e' : ''}).\n\nMe respekt,\n${company_name || 'Holkos'}`
+        const bodyText = docLines.join('\n')
 
         const mailOptions = {
             from: `"${(company_name || 'Holkos').replace(/"/g, '')}" <${smtp_user}>`,

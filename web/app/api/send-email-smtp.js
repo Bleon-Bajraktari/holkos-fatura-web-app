@@ -58,23 +58,16 @@ export default async function handler(req, res) {
             connectionTimeout: 15000,
             greetingTimeout: 10000
         })
-        await transporter.verify()
 
         const docType = isOffer ? 'Ofertë' : 'Faturë'
+        const nrMatch = String(doc_number || '').match(/NR\.\s*(\d+)/i) || String(doc_number || '').match(/(\d+)/)
+        const nr = nrMatch ? nrMatch[1] : doc_number || ''
+        const dateFormatted = doc_date ? (() => {
+            const d = new Date(doc_date)
+            return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        })() : ''
         const bodyText = doc_number
-            ? `I/E dashur klient,
-
-Ju lutem gjeni të bashkëngjitur ${docType.toLowerCase()}n tuaj të re me numër ${doc_number}.
-
-Detajet:
-- Numri: ${doc_number}
-- Data: ${doc_date || ''}
-- Totali: ${doc_total || ''} €
-
-Ju faleminderit për bashkëpunimin!
-
-Me respekt,
-${company_name || 'Holkos'}`
+            ? `${docType} nr. ${nr} - ${dateFormatted}`
             : `Dokumenti i bashkëngjitur.`
 
         const mailOptions = {
