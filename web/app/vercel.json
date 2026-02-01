@@ -4,60 +4,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/invoices",
-      "destination": "https://holkos-fatura-api.onrender.com/invoices"
-    },
-    {
-      "source": "/api/invoices/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/invoices/:path*"
-    },
-    {
-      "source": "/api/offers",
-      "destination": "https://holkos-fatura-api.onrender.com/offers"
-    },
-    {
-      "source": "/api/offers/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/offers/:path*"
-    },
-    {
-      "source": "/api/clients",
-      "destination": "https://holkos-fatura-api.onrender.com/clients"
-    },
-    {
-      "source": "/api/clients/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/clients/:path*"
-    },
-    {
-      "source": "/api/company",
-      "destination": "https://holkos-fatura-api.onrender.com/company"
-    },
-    {
-      "source": "/api/company/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/company/:path*"
-    },
-    {
-      "source": "/api/settings/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/settings/:path*"
-    },
-    {
-      "source": "/api/dashboard/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/dashboard/:path*"
-    },
-    {
-      "source": "/api/templates",
-      "destination": "https://holkos-fatura-api.onrender.com/templates"
-    },
-    {
-      "source": "/api/templates/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/templates/:path*"
-    },
-    {
-      "source": "/api/health",
-      "destination": "https://holkos-fatura-api.onrender.com/health"
-    },
-    {
-      "source": "/api/email/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/email/:path*"
+      "source": "/api/:path((?!send-email-smtp)(?!send-bulk-email-smtp).*)",
+      "destination": "https://holkos-fatura-api.onrender.com/:path"
     },
     {
       "source": "/uploads/:path*",
