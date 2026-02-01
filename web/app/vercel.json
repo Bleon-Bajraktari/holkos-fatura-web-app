@@ -48,10 +48,6 @@
       "destination": "https://holkos-fatura-api.onrender.com/uploads/:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "https://holkos-fatura-api.onrender.com/:path*"
-    },
-    {
       "source": "/((?!api|uploads|assets|_next|favicon|icon|apple-touch|manifest\\.webmanifest).*)",
       "destination": "/index.html"
     }
