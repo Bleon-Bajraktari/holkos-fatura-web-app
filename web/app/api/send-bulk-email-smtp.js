@@ -2,7 +2,7 @@
  * Vercel Serverless Function - Dërgon bulk email (disa fatura/oferta) me SMTP nga Cilësimet.
  * Render bllokon SMTP, ndaj bulk-email bëhet nga Vercel.
  */
-const nodemailer = require('nodemailer')
+import nodemailer from 'nodemailer'
 
 const BACKEND_URL = (process.env.BACKEND_URL || 'https://holkos-fatura-api.onrender.com').replace(/\/$/, '')
 

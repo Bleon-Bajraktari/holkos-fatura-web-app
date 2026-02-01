@@ -2,7 +2,7 @@
  * Vercel Serverless Function - Dërgon email me SMTP nga Cilësimet (company)
  * Përdor të dhënat SMTP nga Cilësimet (Gmail, Outlook, etj.) - Vercel lejon SMTP (jo portën 25)
  */
-const nodemailer = require('nodemailer')
+import nodemailer from 'nodemailer'
 
 const BACKEND_URL = (process.env.BACKEND_URL || 'https://holkos-fatura-api.onrender.com').replace(/\/$/, '')
 
