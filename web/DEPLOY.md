@@ -149,7 +149,9 @@ Sigurohu që databaza TiDB ka tabelat e nevojshme. Ekzekuto skemën në TiDB Clo
 
 **2. Kontrollo që backend-i (Render) funksionon**
 - Hap `https://[backend-url]/` – duhet të shfaqet `{"message": "Holkos Fatura API is running"}`
-- Nëse 502/503: Render mund të jetë në gjumë (free tier); prit 30–60 s dhe provo përsëri
+- Hap `https://[backend-url]/health` – duhet `{"status": "ok", "database": "connected"}`
+- Nëse 502/503: Render (free tier) fiket pas 15 min – prit 30–60 s dhe rifresko
+- Nëse `/health` tregon `database: error`: DATABASE_URL në Render është gabim
 
 **3. Kontrollo DATABASE_URL në Render**
 - Në Render: **Environment** → sigurohu që `DATABASE_URL` është i vendosur saktë

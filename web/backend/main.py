@@ -17,15 +17,12 @@ email_service = WebEmailService()
 
 app = FastAPI(title="Holkos Fatura API")
 
-# CORS setup - allow_origins=["*"] + allow_credentials=True nuk funksionon në shfletues
-# Duhet origjina e saktë; përdor regex për *.vercel.app (prod + preview)
-_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,https://localhost:5173,http://localhost:3000")
-CORS_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+# CORS setup - allow_credentials=False lejon allow_origins=["*"] që funksionon kudo
+# API nuk përdor cookies, kështu që credentials nuk janë të nevojshme
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Prod + preview deployments
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -47,6 +44,18 @@ def get_db():
 @app.get("/")
 def read_root():
     return {"message": "Holkos Fatura API is running"}
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Verifikon që API dhe databaza funksionojnë."""
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        return JSONResponse(
+            content={"status": "error", "database": str(e)},
+            status_code=500,
+        )
 
 # --- INVOICES ---
 @app.get("/invoices")
