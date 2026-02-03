@@ -9,3 +9,5 @@ reportlab
 python-dotenv
 cryptography
 vercel
+python-jose[cryptography]
+bcrypt

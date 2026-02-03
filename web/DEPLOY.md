@@ -4,6 +4,19 @@ Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në 
 
 ---
 
+## Checklist për Deploy (shpejtë)
+
+| Hapi | Vercel (Frontend) | Render (Backend) |
+|------|-------------------|------------------|
+| Root Directory | `web/app` | `web/backend` |
+| Build | `npm run build` | `pip install -r requirements.txt` |
+| Start | (static) | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+| Env vars | (opsional) BACKEND_URL | DATABASE_URL, **JWT_SECRET_KEY**, PYTHON_VERSION |
+
+**Obligatorisht në Render:** Vendos `JWT_SECRET_KEY` (gjenero me `openssl rand -hex 32`).
+
+---
+
 ## Push dhe Deploy – hapat e shpejtë
 
 1. **Sigurohu që `.env` nuk përfshihet në Git**  
@@ -20,7 +33,7 @@ Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në 
 3. **Backend (Render.com)**  
    Nëse projekti ekziston: push aktivizon redeploy.  
    Nëse është i ri: **New** → **Web Service** → lidh repo, **Root Directory**: `web/backend`, **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`.  
-   Në **Environment** vendos: `DATABASE_URL` (TiDB Cloud) dhe `PYTHON_VERSION=3.11.10`.
+   Në **Environment** vendos: `DATABASE_URL` (TiDB Cloud), `JWT_SECRET_KEY` (openssl rand -hex 32), `PYTHON_VERSION=3.11.10`.
 
 4. **Frontend (Vercel)**  
    Nëse projekti ekziston: push aktivizon redeploy.  
@@ -157,6 +170,11 @@ Në **Environment** shto:
 |-----|-------|
 | `DATABASE_URL` | `mysql://USER:PASSWORD@HOST:4000/DATABASE?sslaccept=strict` |
 | `PYTHON_VERSION` | `3.11.10` |
+| `JWT_SECRET_KEY` | Sekret i fortë (min. 32 kar.): `openssl rand -hex 32` |
+| `APP_INITIAL_USERNAME` | `admin` (opsional, default) |
+| `APP_INITIAL_PASSWORD` | `holkos2025` (opsional, ndrysho nga Cilësimet pas login) |
+
+**E rëndësishme:** `JWT_SECRET_KEY` duhet të jetë i ndryshëm në prod. Gjenero: `openssl rand -hex 32`
 
 Ose përdor variabla të ndara:
 
@@ -210,8 +228,10 @@ Kjo vendos automatikisht `TIDB_HOST`, `TIDB_PORT`, etj. për backend (nëse back
 ## Hapi 4: Verifikimi
 
 1. **Backend**: Hap `https://[backend-url]/` – duhet të shfaqet `{"message": "Holkos Fatura API is running"}`
-2. **Frontend**: Hap URL-in e Vercel – aplikacioni duhet të ngarkohet
-3. **Testo lidhjen**: Krijo një klient ose faturë për të verifikuar lidhjen me TiDB
+2. **Backend health**: Hap `https://[backend-url]/health` – `{"status":"ok","database":"connected"}`
+3. **Frontend**: Hap URL-in e Vercel – duhet të shfaqet faqja e Login
+4. **Login**: Përdor `admin` / `holkos2025` (ose kredencialet nga APP_INITIAL_*)
+5. **Testo**: Krijo një klient ose faturë për të verifikuar lidhjen me TiDB
 
 ---
 

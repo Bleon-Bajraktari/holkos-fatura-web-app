@@ -17,6 +17,12 @@ services:
         value: 3.11.10
       - key: DATABASE_URL
         sync: false  # Vendos manualisht nga TiDB Cloud
+      - key: JWT_SECRET_KEY
+        sync: false  # Obligatorisht: openssl rand -hex 32
+      - key: APP_INITIAL_USERNAME
+        value: admin
+      - key: APP_INITIAL_PASSWORD
+        value: holkos2025  # Ndrysho pas login-it të parë
       # Ose përdor variabla të ndara:
       # - key: TIDB_HOST
       # - key: TIDB_PORT

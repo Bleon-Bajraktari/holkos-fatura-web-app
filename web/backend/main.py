@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query, Body
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query, Body, Header
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, extract, or_, cast, Integer, text
 from typing import List, Optional
@@ -10,15 +12,50 @@ import json
 import models, schemas, database, os
 from services.pdf_generator import WebPDFGenerator
 from services.email_service import WebEmailService
+from auth import decode_token
 
 # Initialize global services
 pdf_generator = WebPDFGenerator()
 email_service = WebEmailService()
 
+# Public paths (no auth required)
+AUTH_SKIP_PATHS = {
+    "/", "/health", "/auth/login", "/auth/refresh",
+    "/docs", "/redoc", "/openapi.json",
+    "/logo.png", "/apple-touch-icon.png", "/manifest.webmanifest",
+}
+
+def _is_public_path(path: str) -> bool:
+    base = path.split("?")[0].rstrip("/") or "/"
+    if base.startswith("/api/"):
+        base = base[4:] or "/"
+    if base in AUTH_SKIP_PATHS:
+        return True
+    if base.startswith("/auth/") or base.startswith("/uploads/"):
+        return True
+    return False
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        path = request.scope.get("path", "")
+        if _is_public_path(path):
+            return await call_next(request)
+        auth_header = request.headers.get("Authorization")
+        token = None
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        if not token or not decode_token(token):
+            return JSONResponse(content={"detail": "Not authenticated"}, status_code=401)
+        return await call_next(request)
+
 app = FastAPI(title="Holkos Fatura API")
 
-# CORS setup - allow_credentials=False lejon allow_origins=["*"] që funksionon kudo
-# API nuk përdor cookies, kështu që credentials nuk janë të nevojshme
+# Auth middleware (last added = runs first for incoming request)
+app.add_middleware(AuthMiddleware)
+
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,7 +88,111 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/")
+# --- AUTH ---
+def _ensure_auth_credentials(db: Session):
+    """Krijo admin/holkos2025 vetëm nëse mungojnë. APP_FORCE_RESET_CREDENTIALS mbishkruan vetëm kur kredencialet janë bosh."""
+    from auth import hash_password
+    import os
+    username = os.getenv("APP_INITIAL_USERNAME", "admin")
+    password = os.getenv("APP_INITIAL_PASSWORD", "holkos2025")
+    pw_hash = hash_password(password)
+    changed = False
+    for key, val in [("app_login_username", username), ("app_login_password", pw_hash)]:
+        row = db.query(models.Setting).filter(models.Setting.setting_key == key).first()
+        is_empty = not row or not (row.setting_value or "").strip()
+        if is_empty:
+            if row:
+                row.setting_value = val
+            else:
+                db.add(models.Setting(setting_key=key, setting_value=val))
+            changed = True
+    if changed:
+        db.commit()
+
+@app.post("/auth/login", response_model=schemas.TokenResponse)
+def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
+    from auth import verify_password, create_access_token
+    _ensure_auth_credentials(db)
+    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
+    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+    if not username_row or not password_row or not (username_row.setting_value or "").strip():
+        raise HTTPException(status_code=401, detail="Kredencialet nuk janë konfiguruar.")
+    stored_username = (username_row.setting_value or "").strip()
+    stored_hash = password_row.setting_value or ""
+    if not stored_username or not stored_hash:
+        raise HTTPException(status_code=401, detail="Kredencialet nuk janë konfiguruar.")
+    if login_data.username.strip().lower() != stored_username.lower():
+        raise HTTPException(status_code=401, detail="Emri i përdoruesit ose fjalëkalimi është i gabuar.")
+    if not verify_password(login_data.password, stored_hash):
+        raise HTTPException(status_code=401, detail="Emri i përdoruesit ose fjalëkalimi është i gabuar.")
+    token = create_access_token(login_data.username)
+    return schemas.TokenResponse(access_token=token, expires_in=1800)
+
+@app.put("/auth/change-password")
+def change_password(
+    payload: schemas.ChangePasswordRequest,
+    Authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db)
+):
+    from auth import verify_password, hash_password, decode_token
+    if not Authorization or not Authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token i munguar.")
+    token = Authorization[7:].strip()
+    token_data = decode_token(token)
+    if not token_data or "sub" not in token_data:
+        raise HTTPException(status_code=401, detail="Token i pavlefshëm.")
+    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
+    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+    if not username_row or not password_row:
+        raise HTTPException(status_code=400, detail="Kredencialet nuk janë konfiguruar.")
+    stored_hash = password_row.setting_value or ""
+    if not verify_password(payload.current_password, stored_hash):
+        raise HTTPException(status_code=400, detail="Fjalëkalimi aktual është i gabuar.")
+    if len(payload.new_password) < 4:
+        raise HTTPException(status_code=400, detail="Fjalëkalimi i ri duhet të ketë të paktën 4 karaktere.")
+    password_row.setting_value = hash_password(payload.new_password)
+    db.commit()
+    return {"message": "Fjalëkalimi u ndryshua me sukses."}
+
+@app.put("/auth/change-username")
+def change_username(
+    payload: schemas.ChangeUsernameRequest,
+    Authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db)
+):
+    from auth import verify_password, decode_token, create_access_token
+    if not Authorization or not Authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token i munguar.")
+    token = Authorization[7:].strip()
+    token_data = decode_token(token)
+    if not token_data or "sub" not in token_data:
+        raise HTTPException(status_code=401, detail="Token i pavlefshëm.")
+    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
+    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+    if not username_row or not password_row:
+        raise HTTPException(status_code=400, detail="Kredencialet nuk janë konfiguruar.")
+    stored_hash = password_row.setting_value or ""
+    if not verify_password(payload.current_password, stored_hash):
+        raise HTTPException(status_code=400, detail="Fjalëkalimi është i gabuar.")
+    new_username = (payload.new_username or "").strip()
+    if len(new_username) < 2:
+        raise HTTPException(status_code=400, detail="Emri i përdoruesit duhet të ketë të paktën 2 karaktere.")
+    username_row.setting_value = new_username
+    db.commit()
+    new_token = create_access_token(new_username)
+    return {"message": "Emri i përdoruesit u ndryshua me sukses.", "access_token": new_token, "token_type": "bearer", "expires_in": 1800}
+
+@app.post("/auth/refresh", response_model=schemas.TokenResponse)
+def refresh_token(Authorization: Optional[str] = Header(None, alias="Authorization")):
+    from auth import decode_token, create_access_token
+    if not Authorization or not Authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token i munguar ose i pavlefshëm.")
+    token = Authorization[7:].strip()
+    payload = decode_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Token i skaduar ose i pavlefshëm.")
+    new_token = create_access_token(payload["sub"])
+    return schemas.TokenResponse(access_token=new_token, expires_in=1800)
 def read_root():
     return {"message": "Holkos Fatura API is running"}
 
@@ -896,10 +1037,9 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
             final_img.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
             
-            return FileResponse(
-                buffer,
+            return Response(
+                content=buffer.getvalue(),
                 media_type="image/png",
-                filename="logo.png",
                 headers={
                     "Cache-Control": "public, max-age=3600"
                 }
@@ -951,10 +1091,9 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
         img.save(buffer, format='PNG', optimize=True)
         buffer.seek(0)
         
-        return FileResponse(
-            buffer,
+        return Response(
+            content=buffer.getvalue(),
             media_type="image/png",
-            filename="logo.png",
             headers={
                 "Cache-Control": "public, max-age=3600"
             }
@@ -1023,10 +1162,9 @@ def get_apple_touch_icon(db: Session = Depends(get_db)):
             background.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
             
-            return FileResponse(
-                buffer,
+            return Response(
+                content=buffer.getvalue(),
                 media_type="image/png",
-                filename="apple-touch-icon.png",
                 headers={
                     "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
                     "Pragma": "no-cache",
@@ -1080,10 +1218,9 @@ def get_apple_touch_icon(db: Session = Depends(get_db)):
         img.save(buffer, format='PNG', optimize=True)
         buffer.seek(0)
         
-        return FileResponse(
-            buffer,
+        return Response(
+            content=buffer.getvalue(),
             media_type="image/png",
-            filename="apple-touch-icon.png",
             headers={
                 "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
                 "Pragma": "no-cache",

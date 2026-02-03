@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { InvoiceService, SettingsService, CompanyService, API_BASE } from '../services/api'
+import { InvoiceService, SettingsService, CompanyService, openPdf } from '../services/api'
 import { OfflineService } from '../services/offline'
 import EmailPicker from '../components/EmailPicker'
 
@@ -17,9 +17,10 @@ const InvoicesPage = () => {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
-    const [year, setYear] = useState(new Date().getFullYear().toString())
+    const [year, setYear] = useState('')
     const [month, setMonth] = useState('Të gjithë')
     const [years, setYears] = useState<string[]>([])
+    const [yearsLoaded, setYearsLoaded] = useState(false)
     const [showStatus, setShowStatus] = useState(true)
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
@@ -67,7 +68,15 @@ const InvoicesPage = () => {
 
     useEffect(() => {
         SettingsService.getPaymentStatus().then(data => setShowStatus(data.enabled)).catch(() => setShowStatus(true))
-        InvoiceService.getYears().then(data => setYears(data.years || [])).catch(() => setYears([]))
+        InvoiceService.getYears().then(data => {
+            const yrs = data.years || []
+            setYears(yrs)
+            if (yrs.length) {
+                const latest = String(Math.max(...yrs.map((y: string) => parseInt(y, 10))))
+                setYear(latest)
+            }
+            setYearsLoaded(true)
+        }).catch(() => { setYears([]); setYearsLoaded(true) })
 
         const updateActionBarPosition = () => {
             if (window.visualViewport) {
@@ -109,8 +118,9 @@ const InvoicesPage = () => {
     }, [search])
 
     useEffect(() => {
+        if (!yearsLoaded) return
         loadInvoices()
-    }, [debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
+    }, [yearsLoaded, debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
 
     const grouped = useMemo(() => {
         const sorted = [...invoices].sort((a, b) => {
@@ -147,7 +157,7 @@ const InvoicesPage = () => {
 
     const handleReset = () => {
         setSearch('')
-        setYear(new Date().getFullYear().toString())
+        setYear(years.length ? String(Math.max(...years.map(y => parseInt(y, 10)))) : '')
         setMonth('Të gjithë')
         setStatusFilter('Të gjithë')
         setDateFrom('')
@@ -188,12 +198,16 @@ const InvoicesPage = () => {
         }
     }
 
-    const handleDownloadPdf = (id: string | number) => {
+    const handleDownloadPdf = async (id: string | number) => {
         if (String(id).startsWith('temp-')) {
             alert('Fatura nuk është sinkronizuar ende. Prisni sa të ketë internet për të shkarkuar PDF.');
             return;
         }
-        window.open(`${API_BASE}/invoices/${id}/pdf`, '_blank', 'noopener,noreferrer')
+        try {
+            await openPdf(`/invoices/${id}/pdf`);
+        } catch (e) {
+            alert('Gabim gjatë hapjes së PDF: ' + (e as any)?.response?.data?.detail || (e as Error)?.message);
+        }
     }
 
     const handleDelete = async (id: string | number) => {

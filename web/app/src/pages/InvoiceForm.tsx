@@ -13,7 +13,7 @@ import {
     Users
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { InvoiceService, OfferService, ClientService, CompanyService, API_BASE } from '../services/api'
+import { InvoiceService, OfferService, ClientService, CompanyService, openPdf } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 
 interface InvoiceItem {
@@ -198,7 +198,6 @@ const InvoiceForm = () => {
 
         setSaving(true)
         try {
-            const isMobile = window.matchMedia('(max-width: 768px)').matches
             // Remove client_name from data as it's not part of the schema
             const { client_name, ...invoiceData } = invoice
             const data = {
@@ -224,13 +223,8 @@ const InvoiceForm = () => {
             }
 
             if (action === 'pdf') {
-                const pdfEndpoint = isOffer ? `${API_BASE}/offers/${savedDoc.id}/pdf` : `${API_BASE}/invoices/${savedDoc.id}/pdf`
-                if (isMobile) {
-                    window.location.href = pdfEndpoint
-                    return
-                } else {
-                    window.open(pdfEndpoint, '_blank')
-                }
+                const path = isOffer ? `/offers/${savedDoc.id}/pdf` : `/invoices/${savedDoc.id}/pdf`
+                await openPdf(path)
             } else if (action === 'email') {
                 if (!destEmail) {
                     alert('Ju lutem zgjidhni një email!')

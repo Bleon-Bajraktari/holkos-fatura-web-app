@@ -194,3 +194,21 @@ class StatusUpdate(BaseModel):
 
 class EmailRequest(BaseModel):
     dest_email: Optional[EmailStr] = None
+
+# Auth Schemas
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = 1800  # 30 min in seconds
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class ChangeUsernameRequest(BaseModel):
+    current_password: str
+    new_username: str

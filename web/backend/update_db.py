@@ -1,6 +1,19 @@
+import os
 from sqlalchemy import create_engine, text
 import models
 from database import engine, Base
+
+def _seed_auth_credentials(conn):
+    """Seed app_login_username and app_login_password if missing."""
+    from auth import hash_password
+    username = os.getenv("APP_INITIAL_USERNAME", "admin")
+    password = os.getenv("APP_INITIAL_PASSWORD", "holkos2025")
+    pw_hash = hash_password(password)
+    for key, val in [("app_login_username", username), ("app_login_password", pw_hash)]:
+        existing = conn.execute(text("SELECT id FROM settings WHERE setting_key = :k"), {"k": key}).fetchone()
+        if not existing:
+            conn.execute(text("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)"), {"k": key, "v": val})
+            print(f"Seeded {key}.")
 
 def update_db():
     print("Starting database schema update...")
@@ -85,6 +98,14 @@ def update_db():
             pass
             
         conn.commit()
+
+    # 4. Seed auth credentials if missing
+    with engine.connect() as conn:
+        try:
+            _seed_auth_credentials(conn)
+            conn.commit()
+        except Exception as ex:
+            print("Auth seed skipped:", ex)
     
     print("Database schema update finished.")
 

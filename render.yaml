@@ -1,5 +1,6 @@
 # Render.com Blueprint për Holkos Fatura Backend
 # Shiko web/DEPLOY.md për udhëzime të plota
+# Në Environment vendos: DATABASE_URL, JWT_SECRET_KEY, PYTHON_VERSION=3.11.10
 
 services:
   - type: web

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { OfferService, CompanyService, API_BASE } from '../services/api'
+import { OfferService, CompanyService, openPdf } from '../services/api'
 import { OfflineService } from '../services/offline'
 import EmailPicker from '../components/EmailPicker'
 
@@ -17,9 +17,10 @@ const OffersPage = () => {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
-    const [year, setYear] = useState(new Date().getFullYear().toString())
+    const [year, setYear] = useState('')
     const [month, setMonth] = useState('Të gjithë')
     const [years, setYears] = useState<string[]>([])
+    const [yearsLoaded, setYearsLoaded] = useState(false)
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
     const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
@@ -63,7 +64,15 @@ const OffersPage = () => {
     }
 
     useEffect(() => {
-        OfferService.getYears().then(data => setYears(data.years || [])).catch(() => setYears([]))
+        OfferService.getYears().then(data => {
+            const yrs = data.years || []
+            setYears(yrs)
+            if (yrs.length) {
+                const latest = String(Math.max(...yrs.map((y: string) => parseInt(y, 10))))
+                setYear(latest)
+            }
+            setYearsLoaded(true)
+        }).catch(() => { setYears([]); setYearsLoaded(true) })
 
         const updateActionBarPosition = () => {
             if (window.visualViewport) {
@@ -105,8 +114,9 @@ const OffersPage = () => {
     }, [search])
 
     useEffect(() => {
+        if (!yearsLoaded) return
         loadOffers()
-    }, [debouncedSearch, year, month, dateFrom, dateTo])
+    }, [yearsLoaded, debouncedSearch, year, month, dateFrom, dateTo])
 
     const grouped = useMemo(() => {
         const sorted = [...offers].sort((a, b) => {
@@ -143,7 +153,7 @@ const OffersPage = () => {
 
     const handleReset = () => {
         setSearch('')
-        setYear(new Date().getFullYear().toString())
+        setYear(years.length ? String(Math.max(...years.map(y => parseInt(y, 10)))) : '')
         setMonth('Të gjithë')
         setDateFrom('')
         setDateTo('')
@@ -183,16 +193,15 @@ const OffersPage = () => {
         }
     }
 
-    const handleDownloadPdf = (id: string | number) => {
+    const handleDownloadPdf = async (id: string | number) => {
         if (String(id).startsWith('temp-')) {
             alert('Oferta nuk është sinkronizuar ende. Prisni sa të ketë internet për të shkarkuar PDF.');
             return;
         }
-        const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
-        if (isMobile) {
-            window.location.href = `${API_BASE}/offers/${id}/pdf`
-        } else {
-            window.open(`${API_BASE}/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
+        try {
+            await openPdf(`/offers/${id}/pdf`);
+        } catch (e) {
+            alert('Gabim gjatë hapjes së PDF: ' + (e as any)?.response?.data?.detail || (e as Error)?.message);
         }
     }
 
@@ -202,16 +211,10 @@ const OffersPage = () => {
             return;
         }
         try {
-            const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
-            if (isMobile) {
-                window.location.href = `${API_BASE}/offers/${id}/pdf`
-            } else {
-                window.open(`${API_BASE}/offers/${id}/pdf`, '_blank', 'noopener,noreferrer')
-            }
+            await openPdf(`/offers/${id}/pdf`);
             setTimeout(() => loadOffers(), 1000)
-        } catch (error) {
-            console.error('Error generating PDF:', error)
-            alert('Gabim gjatë gjenerimit të PDF!')
+        } catch (e) {
+            alert('Gabim gjatë gjenerimit të PDF: ' + (e as any)?.response?.data?.detail || (e as Error)?.message);
         }
     }
 

@@ -4,9 +4,36 @@ import { db } from './db';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
+/** Hap PDF me auth – fetch me token, pastaj blob URL (shmang "Not authenticated" kur hapet në tab të ri) */
+export async function openPdf(path: string) {
+    const res = await api.get(path, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+/** Hap PDF nga POST (p.sh. preview i ofertës) */
+export async function openPdfPost(path: string, body: object) {
+    const res = await api.post(path, body, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 const api = axios.create({
     baseURL: API_BASE,
     timeout: 30000,
+});
+
+const TOKEN_KEY = 'holkos_token';
+
+// --- REQUEST INTERCEPTOR: add Authorization header ---
+api.interceptors.request.use((config) => {
+    const url = (config.url || '').split('?')[0];
+    if (url === '/auth/login') return config;
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
 });
 
 /** Për SMTP përdorim gjithmonë /api (Vercel function) – mos drejto te Render */
@@ -393,7 +420,16 @@ api.interceptors.response.use(
         const config = error.config;
         const url = config.url || '';
 
-        // 2. HANDLE OFFLINE / NETWORK ERRORS
+        // 2a. HANDLE 401 UNAUTHORIZED
+        if (error.response?.status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+            if (url !== '/auth/login' && !window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
+        }
+
+        // 2b. HANDLE OFFLINE / NETWORK ERRORS
         // 500 = server error - mos trego "U ruajt offline", por gabimin e vertete
         const isNetworkFailure = !error.response;
         const isServerError = error.response?.status >= 500;
@@ -603,6 +639,13 @@ export const DashboardService = {
 export const SettingsService = {
     getPaymentStatus: () => api.get('/settings/feature-payment-status').then(res => res.data),
     updatePaymentStatus: (enabled: boolean) => api.put('/settings/feature-payment-status', { enabled }).then(res => res.data),
+};
+
+export const AuthService = {
+    changePassword: (currentPassword: string, newPassword: string) =>
+        api.put('/auth/change-password', { current_password: currentPassword, new_password: newPassword }).then(res => res.data),
+    changeUsername: (currentPassword: string, newUsername: string) =>
+        api.put('/auth/change-username', { current_password: currentPassword, new_username: newUsername }).then(res => res.data),
 };
 
 export const TemplateService = {

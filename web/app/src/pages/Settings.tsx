@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2 } from 'lucide-react'
-import { CompanyService, SettingsService, API_BASE } from '../services/api'
+import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2, Lock, User } from 'lucide-react'
+import PasswordInput from '../components/PasswordInput'
+import { CompanyService, SettingsService, AuthService, API_BASE } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 import { db } from '../services/db'
 
 const SettingsPage = () => {
     const navigate = useNavigate()
+    const { user, updateSession } = useAuth()
     const [company, setCompany] = useState<any>({
         name: '',
         address: '',
@@ -27,6 +30,15 @@ const SettingsPage = () => {
     const [logoUploading, setLogoUploading] = useState(false)
     const [resettingCache, setResettingCache] = useState(false)
     const [resettingAll, setResettingAll] = useState(false)
+    const [currentPassword, setCurrentPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [changingPassword, setChangingPassword] = useState(false)
+    const [passwordChangeMsg, setPasswordChangeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+    const [newUsername, setNewUsername] = useState('')
+    const [usernamePassword, setUsernamePassword] = useState('')
+    const [changingUsername, setChangingUsername] = useState(false)
+    const [usernameChangeMsg, setUsernameChangeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
     const defaults = {
         name: '',
@@ -372,12 +384,11 @@ const SettingsPage = () => {
                         <div>
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Fjalëkalimi SMTP</label>
                             <div className="relative">
-                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                                <input
-                                    type="password"
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 z-10" size={18} />
+                                <PasswordInput
                                     value={company.smtp_password}
                                     onChange={e => setCompany({ ...company, smtp_password: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
                                 />
                             </div>
                         </div>
@@ -400,6 +411,158 @@ const SettingsPage = () => {
                         />
                         Aktivizo Menaxhimin e Statusit (Paguar/Pa Paguar)
                     </label>
+                </div>
+
+                {/* Change Username */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <User size={20} className="text-blue-500" />
+                        Ndrysho Emrin e Përdoruesit
+                    </h3>
+                    {user && (
+                        <p className="text-sm text-slate-500">Përdoruesi aktual: <span className="font-bold text-slate-700">{user.username}</span></p>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Emri i ri i përdoruesit</label>
+                            <input
+                                type="text"
+                                value={newUsername}
+                                onChange={(e) => setNewUsername(e.target.value)}
+                                placeholder="p.sh. admin"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Fjalëkalimi aktual (konfirmim)</label>
+                            <PasswordInput
+                                value={usernamePassword}
+                                onChange={(e) => setUsernamePassword(e.target.value)}
+                                placeholder="••••••••"
+                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                    </div>
+                    {usernameChangeMsg && (
+                        <div className={`p-4 rounded-xl text-sm font-bold ${usernameChangeMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                            {usernameChangeMsg.text}
+                        </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <button
+                            type="button"
+                            disabled={changingUsername || !newUsername.trim() || !usernamePassword || newUsername.trim().length < 2}
+                            onClick={async () => {
+                                setUsernameChangeMsg(null)
+                                const un = newUsername.trim()
+                                if (un.length < 2) {
+                                    setUsernameChangeMsg({ type: 'error', text: 'Emri duhet të ketë të paktën 2 karaktere.' })
+                                    return
+                                }
+                                setChangingUsername(true)
+                                try {
+                                    const res = await AuthService.changeUsername(usernamePassword, un)
+                                    if (res?.access_token) {
+                                        updateSession(res.access_token, un)
+                                    }
+                                    setUsernameChangeMsg({ type: 'success', text: 'Emri i përdoruesit u ndryshua me sukses! Më pas hyni me emrin e ri.' })
+                                    setNewUsername('')
+                                    setUsernamePassword('')
+                                } catch (err: any) {
+                                    const detail = err?.response?.data?.detail
+                                    const text = typeof detail === 'string' ? detail : (Array.isArray(detail) ? detail[0] : 'Fjalëkalimi është i gabuar.')
+                                    setUsernameChangeMsg({ type: 'error', text })
+                                } finally {
+                                    setChangingUsername(false)
+                                }
+                            }}
+                            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {changingUsername ? 'Duke ndryshuar...' : 'Ndrysho Emrin'}
+                        </button>
+                        <p className="text-xs text-slate-500">
+                            Emri duhet të ketë të paktën 2 karaktere. Për ndryshim kërkohet fjalëkalimi aktual.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Change Password */}
+                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <Lock size={20} className="text-blue-500" />
+                        Ndrysho Fjalëkalimin
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Fjalëkalimi aktual</label>
+                            <PasswordInput
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                placeholder="••••••••"
+                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Fjalëkalimi i ri</label>
+                            <PasswordInput
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="••••••••"
+                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Konfirmo fjalëkalimin e ri</label>
+                            <PasswordInput
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                    </div>
+                    {passwordChangeMsg && (
+                        <div className={`p-4 rounded-xl text-sm font-bold ${passwordChangeMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                            {passwordChangeMsg.text}
+                        </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <button
+                            type="button"
+                            disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 4}
+                            onClick={async () => {
+                                setPasswordChangeMsg(null)
+                                if (newPassword !== confirmPassword) {
+                                    setPasswordChangeMsg({ type: 'error', text: 'Fjalëkalimet e reja nuk përputhen.' })
+                                    return
+                                }
+                                if (newPassword.length < 4) {
+                                    setPasswordChangeMsg({ type: 'error', text: 'Fjalëkalimi i ri duhet të ketë të paktën 4 karaktere.' })
+                                    return
+                                }
+                                setChangingPassword(true)
+                                try {
+                                    await AuthService.changePassword(currentPassword, newPassword)
+                                    setPasswordChangeMsg({ type: 'success', text: 'Fjalëkalimi u ndryshua me sukses! Mund të hyni me fjalëkalimin e ri.' })
+                                    setCurrentPassword('')
+                                    setNewPassword('')
+                                    setConfirmPassword('')
+                                } catch (err: any) {
+                                    const detail = err?.response?.data?.detail
+                                    const text = typeof detail === 'string' ? detail : (Array.isArray(detail) ? detail[0] : 'Fjalëkalimi aktual është i gabuar.')
+                                    setPasswordChangeMsg({ type: 'error', text })
+                                } finally {
+                                    setChangingPassword(false)
+                                }
+                            }}
+                            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {changingPassword ? 'Duke ndryshuar...' : 'Ndrysho Fjalëkalimin'}
+                        </button>
+                        <p className="text-xs text-slate-500">
+                            Fjalëkalimi duhet të ketë të paktën 4 karaktere.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Advanced & Troubleshooting Section */}

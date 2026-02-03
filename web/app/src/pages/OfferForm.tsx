@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, FileDown, MoveUp, MoveDown, X, Eye, Search, UserPlus, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { OfferService, ClientService, API_BASE } from '../services/api'
+import { OfferService, ClientService, openPdf, openPdfPost } from '../services/api'
 
 type OfferRowType = 'item' | 'header' | 'text'
 
@@ -211,51 +211,9 @@ const OfferForm = () => {
                 items
             }
 
-            // Use preview endpoint that doesn't save to database
+            // POST me auth, merr blob dhe hap (për mobile edhe desktop)
             const queryParam = fontSize && fontSize !== 'Auto' ? `?font_size=${fontSize}` : ''
-            const isMobile = window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod/i.test(navigator.userAgent)
-
-            if (isMobile) {
-                // For mobile devices (especially iOS), store data temporarily on server
-                const previewId = `preview_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-                // First, store the data on server via POST
-                const storeResponse = await fetch(`${API_BASE}/offers/preview-store/${previewId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                })
-
-                if (!storeResponse.ok) {
-                    throw new Error('Gabim gjatë ruajtjes së të dhënave për preview!')
-                }
-
-                // Then navigate to GET endpoint (works better on iOS)
-                window.location.href = `${API_BASE}/offers/preview-pdf/${previewId}${queryParam}`
-            } else {
-                // For desktop, use fetch and blob
-                const response = await fetch(`${API_BASE}/offers/preview-pdf${queryParam}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                })
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({ detail: 'Gabim gjatë preview!' }))
-                    throw new Error(error.detail || 'Gabim gjatë preview!')
-                }
-
-                // Get PDF blob and open it
-                const blob = await response.blob()
-                const url = window.URL.createObjectURL(blob)
-                window.open(url, '_blank')
-                // Clean up the URL after a delay
-                setTimeout(() => window.URL.revokeObjectURL(url), 100)
-            }
+            await openPdfPost(`/offers/preview-pdf${queryParam}`, payload)
         } catch (error: any) {
             console.error('Error previewing offer:', error)
             const detail = error.message || 'Gabim gjatë preview!'
@@ -313,8 +271,8 @@ const OfferForm = () => {
             }
 
             if (action === 'pdf') {
-                const pdfUrl = `${API_BASE}/offers/${saved.id}/pdf${fontSize && fontSize !== 'Auto' ? `?font_size=${fontSize}` : ''}`
-                window.open(pdfUrl, '_blank')
+                const path = `/offers/${saved.id}/pdf${fontSize && fontSize !== 'Auto' ? `?font_size=${fontSize}` : ''}`
+                await openPdf(path)
             }
             navigate('/offers')
         } catch (error: any) {
