@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+import api from '../services/api';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -16,12 +17,16 @@ export default function Login() {
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
   const autofillHandled = useRef(false);
-  const lastTypingRef = useRef(0);
+  const userHasTyped = useRef(false);
+
+  useEffect(() => {
+    api.get('/health').catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (autofillHandled.current || loading) return;
     const tryAutofillLogin = () => {
-      if (Date.now() - lastTypingRef.current < 800) return;
+      if (userHasTyped.current) return;
       const userEl = document.getElementById('username') as HTMLInputElement | null;
       const passEl = document.getElementById('password') as HTMLInputElement | null;
       const u = userEl?.value?.trim();
@@ -33,23 +38,21 @@ export default function Login() {
         login(u, p)
           .then(() => navigate(from, { replace: true }))
           .catch((err: unknown) => {
-            const msg = err && typeof err === 'object' && 'response' in err
-              ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-              : null;
-            setError(msg || 'Emri i përdoruesit ose fjalëkalimi është i gabuar.');
+            const isTimeout = err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'ECONNABORTED';
+            const isNetwork = err && typeof err === 'object' && 'message' in err && typeof (err as { message?: string }).message === 'string' && ((err as { message?: string }).message?.includes('Network') || (err as { message?: string }).message?.includes('timeout'));
+            setError(isTimeout || isNetwork
+              ? 'Serveri po ngrohet. Ju lutemi prisni 30–60 sekonda dhe provoni përsëri.'
+              : (err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail : null) || 'Emri i përdoruesit ose fjalëkalimi është i gabuar.');
             autofillHandled.current = false;
           })
           .finally(() => setLoading(false));
       }
     };
-    // Poll për 15 sek (iOS Safari: autofill ndodh kur përdoruesi prek fushën dhe zgjedh)
-    const iv = setInterval(tryAutofillLogin, 300);
-    const stop = setTimeout(() => clearInterval(iv), 15000);
+    const iv = setInterval(tryAutofillLogin, 400);
+    const stop = setTimeout(() => clearInterval(iv), 12000);
     const onVisibility = () => { if (document.visibilityState === 'visible') tryAutofillLogin(); };
-    const onFocus = () => { tryAutofillLogin(); };
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('focus', onFocus);
-    const onTyping = () => { lastTypingRef.current = Date.now(); };
+    const onTyping = () => { userHasTyped.current = true; };
     const userEl = document.getElementById('username');
     const passEl = document.getElementById('password');
     userEl?.addEventListener('input', onTyping);
@@ -60,7 +63,6 @@ export default function Login() {
       clearInterval(iv);
       clearTimeout(stop);
       document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('focus', onFocus);
       userEl?.removeEventListener('input', onTyping);
       userEl?.removeEventListener('keydown', onTyping);
       passEl?.removeEventListener('input', onTyping);
@@ -85,10 +87,16 @@ export default function Login() {
       await login(u, p);
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-        : null;
-      setError(msg || 'Emri i përdoruesit ose fjalëkalimi është i gabuar.');
+      const isTimeout = err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'ECONNABORTED';
+      const isNetwork = err && typeof err === 'object' && 'message' in err && typeof (err as { message?: string }).message === 'string' && ((err as { message?: string }).message?.includes('Network') || (err as { message?: string }).message?.includes('timeout'));
+      if (isTimeout || isNetwork) {
+        setError('Serveri po ngrohet. Ju lutemi prisni 30–60 sekonda dhe provoni përsëri.');
+      } else {
+        const msg = err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : null;
+        setError(msg || 'Emri i përdoruesit ose fjalëkalimi është i gabuar.');
+      }
     } finally {
       setLoading(false);
     }

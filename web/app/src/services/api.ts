@@ -4,20 +4,37 @@ import { db } from './db';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
-/** Hap PDF me auth – fetch me token, pastaj blob URL (shmang "Not authenticated" kur hapet në tab të ri) */
+function isMobile() {
+    return typeof navigator !== 'undefined' && (
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
+    );
+}
+
+/** Hap PDF me auth – fetch me token, pastaj blob URL (shmang "Not authenticated") */
 export async function openPdf(path: string) {
     const res = await api.get(path, { responseType: 'blob' });
     const url = URL.createObjectURL(res.data);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (isMobile()) {
+        window.location.href = url;
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
 }
 
 /** Hap PDF nga POST (p.sh. preview i ofertës) */
 export async function openPdfPost(path: string, body: object) {
     const res = await api.post(path, body, { responseType: 'blob' });
     const url = URL.createObjectURL(res.data);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (isMobile()) {
+        window.location.href = url;
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
 }
 
 const api = axios.create({

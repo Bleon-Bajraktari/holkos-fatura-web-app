@@ -291,6 +291,11 @@ Backend ka `allow_origins=["*"]`. Nëse ke probleme, kontrollo që domajni i Ver
 - Verifiko që `web/app/vercel.json` rewrites drejtojnë `/api` te URL-i i saktë të backend-it
 - Kontrollo që backend-i (Render) është i vënë në punë dhe `/health` kthen OK
 
+### Login vonon shumë (cold start)
+- Render free tier fiket pas 15 min. Hapja e parë e faqes së login ngre serverin në sfond (ping `/health`).
+- Nëse login dështon me "Serveri po ngrohet..." – prit 30–60 s dhe provo përsëri.
+- Për server gjithmonë aktiv: përdor planin e paguar të Render.
+
 ---
 
 ## Struktura e projektit
