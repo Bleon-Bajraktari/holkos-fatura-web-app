@@ -454,8 +454,9 @@ const InvoicesPage = () => {
                                             <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-50">
                                                 <div className="col-span-3">Numri & Data</div>
                                                 <div className="col-span-2">Statusi</div>
+                                                <div className="col-span-2 text-right">TVSH</div>
                                                 <div className="col-span-2 text-right">Shuma</div>
-                                                <div className="col-span-5 text-right">Veprimet</div>
+                                                <div className="col-span-3 text-right">Veprimet</div>
                                             </div>
                                             {group.invoices.map((inv: any) => {
                                                 const isSelected = selectedIds.has(inv.id)
@@ -470,12 +471,12 @@ const InvoicesPage = () => {
                                                                 : 'bg-white border border-gray-100/50 hover:border-blue-100/50 shadow-sm hover:shadow-md'
                                                             } rounded-2xl`}
                                                     >
-                                                        {/* Summary Row */}
+                                                        {/* Summary Row - Mobile: flex (Numri left, TVSH% + Shuma + expand right) | Desktop: grid */}
                                                         <div
                                                             onClick={() => selectionMode ? toggleSelect(inv.id) : toggleInvoiceActions(inv.id)}
-                                                            className="flex items-center justify-between px-4 py-2.5 sm:grid sm:grid-cols-12 sm:gap-4 cursor-pointer"
+                                                            className="flex items-center justify-between sm:grid sm:grid-cols-12 sm:gap-4 gap-2 px-4 py-2.5 cursor-pointer"
                                                         >
-                                                            <div className="col-span-4 flex items-center gap-3">
+                                                            <div className="flex items-center gap-3 min-w-0 sm:col-span-3">
                                                                 {selectionMode && (
                                                                     <div className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
                                                                         ? 'bg-blue-600 border-blue-600'
@@ -490,7 +491,7 @@ const InvoicesPage = () => {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="hidden sm:block col-span-3">
+                                                            <div className="hidden sm:flex col-span-2 items-center">
                                                                 {inv.status === 'pending-sync' || inv._isOfflinePending ? (
                                                                     <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center w-fit gap-1">
                                                                         <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
@@ -505,9 +506,24 @@ const InvoicesPage = () => {
                                                                 ) : null}
                                                             </div>
 
-                                                            <div className="col-span-5 text-right flex items-center justify-end gap-3">
-                                                                <div className="text-sm font-black text-gray-900">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</div>
-                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                            {/* Mobile: TVSH% + Shuma + expand (right side) */}
+                                                            <div className="flex sm:hidden items-center gap-2">
+                                                                <span className="text-xs font-bold text-gray-500">{parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%</span>
+                                                                <span className="text-sm font-black text-gray-900">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                                    <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Desktop: TVSH, Shuma, Veprimet */}
+                                                            <div className="hidden sm:block col-span-2 text-right">
+                                                                <span className="text-sm font-black text-gray-900">{parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%</span>
+                                                            </div>
+                                                            <div className="hidden sm:block col-span-2 text-right">
+                                                                <span className="text-sm font-black text-gray-900">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                                                            </div>
+                                                            <div className="hidden sm:flex col-span-3 items-center justify-end">
+                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
                                                             </div>

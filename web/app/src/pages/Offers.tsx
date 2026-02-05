@@ -440,9 +440,9 @@ const OffersPage = () => {
                                     {isExpanded && (
                                         <div className="px-8 pb-8 space-y-4 pt-2">
                                             <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-50">
-                                                <div className="col-span-3">Numri & Data</div>
+                                                <div className="col-span-4">Numri & Data</div>
                                                 <div className="col-span-4 text-right">Shuma</div>
-                                                <div className="col-span-5 text-right">Veprimet</div>
+                                                <div className="col-span-4 text-right">Veprimet</div>
                                             </div>
                                             {group.offers.map((off: any) => {
                                                 const isSelected = selectedIds.has(off.id)
@@ -461,9 +461,9 @@ const OffersPage = () => {
                                                         {/* Summary Row */}
                                                         <div
                                                             onClick={() => selectionMode ? toggleSelect(off.id) : toggleOfferActions(off.id)}
-                                                            className="flex items-center justify-between px-4 py-2.5 sm:grid sm:grid-cols-12 sm:gap-4 cursor-pointer"
+                                                            className="grid grid-cols-12 gap-2 sm:gap-4 px-4 py-2.5 cursor-pointer items-center"
                                                         >
-                                                            <div className="col-span-6 flex items-center gap-3">
+                                                            <div className="col-span-6 sm:col-span-4 flex items-center gap-3 min-w-0">
                                                                 {selectionMode && (
                                                                     <div className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
                                                                         ? 'bg-blue-600 border-blue-600'
@@ -478,16 +478,19 @@ const OffersPage = () => {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="col-span-6 text-right flex items-center justify-end gap-3">
+                                                            <div className="col-span-4 text-right flex items-center justify-end sm:justify-end">
                                                                 {off.status === 'pending-sync' || off._isOfflinePending ? (
-                                                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center gap-1">
+                                                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex items-center gap-1 w-fit ml-auto">
                                                                         <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
                                                                         PRITJE
                                                                     </span>
                                                                 ) : (
-                                                                    <div className="text-sm font-black text-gray-900">{parseFloat(off.total || 0).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</div>
+                                                                    <span className="text-sm font-black text-gray-900">{parseFloat(off.total || 0).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                                                                 )}
-                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                            </div>
+
+                                                            <div className="col-span-2 sm:col-span-4 flex items-center justify-end">
+                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
                                                             </div>
