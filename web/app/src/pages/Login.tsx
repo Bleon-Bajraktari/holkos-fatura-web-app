@@ -102,10 +102,10 @@ export default function Login() {
     }
   };
 
-  const logoUrl = '/icon-192.png';
+  const logoUrl = '/login-logo.png';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 px-4 py-8 sm:py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
