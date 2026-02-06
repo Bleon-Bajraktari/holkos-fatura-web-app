@@ -32,13 +32,19 @@ export default async function handler(req, res) {
             })
         }
 
+        const authHeader = req.headers.authorization || req.headers.Authorization || ''
+        const fetchHeaders = {
+            Accept: 'application/pdf',
+            ...(authHeader ? { Authorization: authHeader } : {})
+        }
+
         const isOffer = document_type === 'offer'
         const pdfPath = isOffer ? `offers/${document_id}/pdf` : `invoices/${document_id}/pdf`
         const pdfUrl = `${BACKEND_URL}/${pdfPath}`
 
         let pdfBuffer = null
         try {
-            const pdfRes = await fetch(pdfUrl, { headers: { 'Accept': 'application/pdf' } })
+            const pdfRes = await fetch(pdfUrl, { headers: fetchHeaders })
             if (pdfRes.ok) {
                 const arrayBuffer = await pdfRes.arrayBuffer()
                 pdfBuffer = Buffer.from(arrayBuffer)

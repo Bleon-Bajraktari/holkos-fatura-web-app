@@ -55,6 +55,11 @@ api.interceptors.request.use((config) => {
 
 /** Për SMTP përdorim gjithmonë /api (Vercel function) – mos drejto te Render */
 const smtpApi = axios.create({ baseURL: '/api' });
+smtpApi.interceptors.request.use((config) => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
 
 /**
  * Filter Helper for Offline Data

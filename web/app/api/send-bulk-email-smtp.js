@@ -32,6 +32,16 @@ export default async function handler(req, res) {
             return res.status(400).json({ detail: 'Zgjidhni të paktën një dokument.' })
         }
 
+        const authHeader = req.headers.authorization || req.headers.Authorization || ''
+        const fetchHeaders = {
+            Accept: 'application/json',
+            ...(authHeader ? { Authorization: authHeader } : {})
+        }
+        const pdfHeaders = {
+            Accept: 'application/pdf',
+            ...(authHeader ? { Authorization: authHeader } : {})
+        }
+
         const isOffer = document_type === 'offer'
         const basePath = isOffer ? 'offers' : 'invoices'
         const numKey = isOffer ? 'offer_number' : 'invoice_number'
@@ -40,14 +50,13 @@ export default async function handler(req, res) {
             let docDate = ''
             let pdfBuffer = null
             const [docRes, pdfRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/${basePath}/${id}`),
-                fetch(`${BACKEND_URL}/${basePath}/${id}/pdf`, { headers: { Accept: 'application/pdf' } })
+                fetch(`${BACKEND_URL}/${basePath}/${id}`, { headers: fetchHeaders }),
+                fetch(`${BACKEND_URL}/${basePath}/${id}/pdf`, { headers: pdfHeaders })
             ])
             if (docRes.ok) {
                 const doc = await docRes.json()
                 const raw = String(doc[numKey] || '')
-                const nrMatch = raw.match(/NR\.\s*(\d+)/i) || raw.match(/(\d+)/)
-                docNum = nrMatch ? nrMatch[1] : raw || docNum
+                docNum = raw || docNum
                 if (doc.date) {
                     const d = new Date(doc.date)
                     docDate = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -60,9 +69,17 @@ export default async function handler(req, res) {
             return { docNum, docDate, pdfBuffer, id }
         }))
         const docLabel = isOffer ? 'Oferta' : 'Faturat'
-        const docLines = results.map(r => `${isOffer ? 'Ofertë' : 'Fatura'} nr. ${r.docNum} - ${r.docDate}`)
+        const nrForFilename = (r) => {
+            const m = String(r.docNum || '').match(/NR\.\s*(\d+)/i) || String(r.docNum || '').match(/(\d+)/)
+            return m ? m[1] : r.id
+        }
+        const docLines = results.map(r => {
+            const label = r.docNum || `Dokument ${r.id}`
+            const date = r.docDate ? r.docDate : '(pa datë)'
+            return `${label} - ${date}`
+        })
         const attachments = results.filter(r => r.pdfBuffer).map(r => ({
-            filename: `${isOffer ? 'oferta' : 'fatura'} nr.${r.docNum}.pdf`,
+            filename: `${isOffer ? 'oferta' : 'fatura'} nr.${nrForFilename(r)}.pdf`,
             content: r.pdfBuffer
         }))
 
@@ -78,7 +95,10 @@ export default async function handler(req, res) {
             greetingTimeout: 10000
         })
 
-        const bodyText = docLines.join('\n')
+        const intro = isOffer
+            ? 'I/E dashur klient,\n\nJu lutem gjeni të bashkëngjitura ofertat tuaja.\n\n'
+            : 'I/E dashur klient,\n\nJu lutem gjeni të bashkëngjitura faturat tuaja.\n\n'
+        const bodyText = intro + docLines.join('\n') + '\n\nJu faleminderit për bashkëpunimin!'
 
         const mailOptions = {
             from: `"${(company_name || 'Holkos').replace(/"/g, '')}" <${smtp_user}>`,
