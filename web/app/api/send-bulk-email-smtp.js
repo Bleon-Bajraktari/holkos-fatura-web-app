@@ -95,10 +95,7 @@ export default async function handler(req, res) {
             greetingTimeout: 10000
         })
 
-        const intro = isOffer
-            ? 'I/E dashur klient,\n\nJu lutem gjeni të bashkëngjitura ofertat tuaja.\n\n'
-            : 'I/E dashur klient,\n\nJu lutem gjeni të bashkëngjitura faturat tuaja.\n\n'
-        const bodyText = intro + docLines.join('\n') + '\n\nJu faleminderit për bashkëpunimin!'
+        const bodyText = docLines.join('\n')
 
         const mailOptions = {
             from: `"${(company_name || 'Holkos').replace(/"/g, '')}" <${smtp_user}>`,
