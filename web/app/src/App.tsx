@@ -201,19 +201,6 @@ const Dashboard = () => {
                             )}
                         </div>
                     </div>
-
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] text-white shadow-2xl shadow-blue-900/20 flex flex-col justify-between">
-                        <div>
-                            <Shield className="mb-6 opacity-50" size={32} />
-                            <h3 className="text-xl font-black mb-2 leading-tight">Gati për të dërguar faturë?</h3>
-                            <p className="text-blue-100/70 text-sm font-medium leading-relaxed">Krijoni një faturë të re në sekonda dhe dërgojeni direkt te klienti juaj me email.</p>
-                        </div>
-                        <Link to="/invoices/new">
-                            <button className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-sm hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/20 active:scale-95">
-                                KRIJO FATURË TANI
-                            </button>
-                        </Link>
-                    </div>
                 </div>
             </div>
         </div>
