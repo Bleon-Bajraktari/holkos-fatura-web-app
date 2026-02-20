@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, X } from 'lucide-react'
+import { Plus, Search, Download, Trash2, ArrowLeft, Copy, Mail, XCircle, CheckSquare, RefreshCw, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfferService, CompanyService, openPdf } from '../services/api'
 import { OfflineService } from '../services/offline'
@@ -278,9 +278,10 @@ const OffersPage = () => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={loadOffers}
-                                className="p-2.5 bg-gray-50 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 active:scale-95 sm:flex hidden"
+                                title="Rifresko"
+                                className="p-2.5 bg-gray-50 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center shrink-0"
                             >
-                                <CheckSquare size={18} className={loading ? 'animate-spin' : ''} />
+                                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                             </button>
                             <Link to="/offers/new" className="w-full sm:w-auto">
                                 <button className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white px-8 py-2.5 sm:px-14 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 w-full active:scale-95 transition-all">

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import {
     LayoutDashboard,
     FileText,
+    FileSignature,
     Users,
     Settings,
     Briefcase,
@@ -19,10 +20,12 @@ import {
     LogOut
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CompanyService, DashboardService, API_BASE } from './services/api'
+import { CompanyService, DashboardService, SettingsService, API_BASE } from './services/api'
 import InvoicesPage from './pages/Invoices'
 import OffersPage from './pages/Offers'
 import ClientsPage from './pages/Clients'
+import ContractsPage from './pages/Contracts.tsx'
+import ContractForm from './pages/ContractForm.tsx'
 import SettingsPage from './pages/Settings'
 import TemplatesPage from './pages/Templates'
 import OfferForm from './pages/OfferForm'
@@ -70,10 +73,9 @@ const Dashboard = () => {
     ]
 
     const quickActions = [
-        { label: 'Krijo Faturë', href: '/invoices/new', icon: <FilePlus size={18} />, color: 'text-blue-600 bg-blue-50' },
-        { label: 'Krijo Ofertë', href: '/offers/new', icon: <Briefcase size={18} />, color: 'text-amber-600 bg-amber-50' },
-        { label: 'Lista e Faturave', href: '/invoices', icon: <FileText size={18} />, color: 'text-slate-700 bg-slate-100' },
-        { label: 'Lista e Ofertave', href: '/offers', icon: <Layers size={18} />, color: 'text-indigo-600 bg-indigo-50' },
+        { label: 'Faturat', href: '/invoices', icon: <FileText size={18} />, color: 'text-blue-600 bg-blue-50' },
+        { label: 'Ofertat', href: '/offers', icon: <Layers size={18} />, color: 'text-amber-600 bg-amber-50' },
+        { label: 'Kontratat', href: '/contracts', icon: <FileSignature size={18} />, color: 'text-indigo-600 bg-indigo-50' },
         { label: 'Klientë', href: '/clients', icon: <Users size={18} />, color: 'text-emerald-600 bg-emerald-50' },
         { label: 'Cilësime', href: '/settings', icon: <Settings size={18} />, color: 'text-rose-600 bg-rose-50' },
     ]
@@ -243,6 +245,8 @@ const Layout = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const [company, setCompany] = useState<any>(null)
+    const [navbarCombined, setNavbarCombined] = useState(true)
+    const prevPathRef = useRef(location.pathname)
     const { logout, refreshToken } = useAuth()
 
     const handleLogout = () => {
@@ -251,16 +255,31 @@ const Layout = () => {
     }
     useActivityTracker(true, logout, refreshToken)
 
-    const navItems = [
+    const navItemsCombined = [
         { icon: LayoutDashboard, label: 'Raporte', href: '/' },
-        { icon: FilePlus, label: 'Fatura', href: '/invoices/new' },
-        { icon: Briefcase, label: 'Oferta', href: '/offers/new' },
-        { icon: FileText, label: 'Lista e faturave', href: '/invoices' },
-        { icon: Layers, label: 'Lista e ofertave', href: '/offers' },
+        { icon: FileText, label: 'Faturat', href: '/invoices' },
+        { icon: Layers, label: 'Ofertat', href: '/offers' },
+        { icon: FileSignature, label: 'Kontratat', href: '/contracts' },
         { icon: Users, label: 'Klientë', href: '/clients' },
         { icon: Layers, label: 'Shabllona', href: '/templates' },
         { icon: Settings, label: 'Cilësime', href: '/settings' },
     ]
+    const navItemsSplit = [
+        { icon: LayoutDashboard, label: 'Raporte', href: '/' },
+        { icon: FilePlus, label: 'Faturë e re', href: '/invoices/new' },
+        { icon: FileText, label: 'Lista e faturave', href: '/invoices' },
+        { icon: Briefcase, label: 'Ofertë e re', href: '/offers/new' },
+        { icon: Layers, label: 'Lista e ofertave', href: '/offers' },
+        { icon: FilePlus, label: 'Kontratë e re', href: '/contracts/new' },
+        { icon: FileSignature, label: 'Lista e kontratave', href: '/contracts' },
+        { icon: Users, label: 'Klientë', href: '/clients' },
+        { icon: Layers, label: 'Shabllona', href: '/templates' },
+        { icon: Settings, label: 'Cilësime', href: '/settings' },
+    ]
+    const navItems = navbarCombined ? navItemsCombined : navItemsSplit
+
+    const isNavItemActive = (href: string) =>
+        href === '/' ? location.pathname === '/' : (location.pathname === href || location.pathname.startsWith(href + '/'))
 
     useEffect(() => {
         if (sidebarOpen) {
@@ -284,6 +303,21 @@ const Layout = () => {
                 if (!cached) setCompany(null)
             })
     }, [])
+
+    useEffect(() => {
+        SettingsService.getNavbarCombined()
+            .then((data: { combined?: boolean }) => setNavbarCombined(data.combined !== false))
+            .catch(() => setNavbarCombined(true))
+    }, [])
+
+    useEffect(() => {
+        if (prevPathRef.current === '/settings' && location.pathname !== '/settings') {
+            SettingsService.getNavbarCombined()
+                .then((data: { combined?: boolean }) => setNavbarCombined(data.combined !== false))
+                .catch(() => {})
+        }
+        prevPathRef.current = location.pathname
+    }, [location.pathname])
 
     const logoUrl = company?.logo_path
         ? (API_BASE && API_BASE.startsWith('http')
@@ -340,7 +374,7 @@ const Layout = () => {
                         <SidebarItem
                             key={item.href}
                             {...item}
-                            active={location.pathname === item.href}
+                            active={isNavItemActive(item.href)}
                         />
                     ))}
                 </nav>
@@ -401,7 +435,7 @@ const Layout = () => {
                                     <SidebarItem
                                         key={item.href}
                                         {...item}
-                                        active={location.pathname === item.href}
+                                        active={isNavItemActive(item.href)}
                                     />
                                 ))}
                             </nav>
@@ -488,6 +522,9 @@ function App() {
                         <Route path="offers/new" element={<OfferForm />} />
                         <Route path="offers/edit/:id" element={<OfferForm />} />
                         <Route path="clients" element={<ClientsPage />} />
+                        <Route path="contracts" element={<ContractsPage />} />
+                        <Route path="contracts/new" element={<ContractForm />} />
+                        <Route path="contracts/edit/:id" element={<ContractForm />} />
                         <Route path="templates" element={<TemplatesPage />} />
                         <Route path="settings" element={<SettingsPage />} />
                     </Route>

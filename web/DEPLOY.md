@@ -4,6 +4,18 @@ Ky dokument përshkruan hapat për të deployuar aplikacionin Holkos Fatura në 
 
 ---
 
+## Gati për Render dhe Vercel
+
+Projekti është **i gatshëm** për deploy:
+
+- **Backend (Render):** `web/backend` – ka `requirements.txt`, `render.yaml`, dhe `uvicorn` si start. Migrimi i DB (përfshirë tabelën `contracts`) ekzekutohet në startup.
+- **Frontend (Vercel):** `web/app` – ka `vercel.json` me rewrites: `/api/*` dërgohet te Render API; `/uploads/*` te Render; pjesa tjetër SPA.
+- **CORS:** Backend lejon `allow_origins=["*"]`, i përshtatshëm për çdo domen Vercel.
+
+**Nëse URL-i i backend-it në Render është i ndryshëm** nga `https://holkos-fatura-api.onrender.com`, ndrysho në `web/app/vercel.json` fushat `destination` me URL-in tënd të Render.
+
+---
+
 ## Checklist për Deploy (shpejtë)
 
 | Hapi | Vercel (Frontend) | Render (Backend) |

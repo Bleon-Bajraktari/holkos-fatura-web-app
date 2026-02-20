@@ -67,6 +67,16 @@ class WebPDFGenerator:
             return date_obj.strftime("%d.%m.%Y")
         return ""
 
+    def format_date_spaces(self, date_obj):
+        """DD MM YYYY (e.g. 01 01 2026) for contract Neni 4."""
+        if date_obj:
+            if isinstance(date_obj, str):
+                try:
+                    date_obj = datetime.strptime(date_obj, '%Y-%m-%d').date()
+                except: pass
+            return date_obj.strftime("%d %m %Y")
+        return ""
+
     def process_logo(self, logo_path, logo_height=32*mm):
         """Perpunon logon duke hequr pjeset e bardha (me caching dhe optimizim)"""
         if not logo_path:
@@ -639,3 +649,137 @@ class WebPDFGenerator:
         
         doc.build(story)
         return self._handle_post_generation(filepath, "ofertat", offer.date, filename)
+
+    def generate_contract_pdf(self, contract, company):
+        """Kontratë pune – 2 faqe, pjesët në kllapa të vogla dhe të përqendruara."""
+        from datetime import date as date_type
+        sig_date = contract.signing_date
+        if hasattr(sig_date, 'year'):
+            date_for_path = sig_date
+        else:
+            try:
+                date_for_path = datetime.strptime(str(sig_date), '%Y-%m-%d').date()
+            except Exception:
+                date_for_path = date_type.today()
+        safe_name = (contract.employee_name or "Kontrate").replace(" ", "_")[:50]
+        filename = f"Kontrate_{safe_name}_{date_for_path.year}.pdf"
+        filepath = self._get_storage_path("kontratat", date_for_path, filename)
+
+        doc = SimpleDocTemplate(
+            filepath, pagesize=A4,
+            leftMargin=16*mm, rightMargin=16*mm, topMargin=12*mm, bottomMargin=12*mm
+        )
+
+        def esc(s):
+            return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+        emp = contract.employee_name or ""
+        pers_num = contract.personal_number or ""
+        res = contract.residence or ""
+        salary_val = float(contract.gross_salary) if contract.gross_salary is not None else 0
+        salary_str = f"{int(round(salary_val))}" if salary_val == round(salary_val) else f"{salary_val:,.2f}".replace(",", " ")
+        dt = self.format_date(contract.contract_start_date)
+
+        comp_name = (company.name if company else "Holkos Metal").strip()
+        comp_nf = getattr(company, 'fiscal_number', None) or getattr(company, 'unique_number', None) or "600610093"
+        comp_addr = (company.address or "").strip()
+        comp_rep_fixed = "Mustafë Bajraktari"
+
+        # Tekst normal: 9pt, leading i vogël që të hyjë në 2 faqe
+        contract_style = ParagraphStyle("contract", fontSize=9, leading=11, alignment=TA_LEFT, fontName="Helvetica")
+        # Pjesët në kllapa: më të vogla, të përqendruara në mes të rreshtit
+        paren_style = ParagraphStyle("contract_paren", fontSize=7, leading=9, alignment=TA_CENTER, fontName="Helvetica", textColor=colors.gray)
+        title_contract = ParagraphStyle("contract_title", fontSize=12, alignment=TA_CENTER, fontName="Helvetica-Bold", spaceAfter=3)
+        header_style = ParagraphStyle("contract_header", fontSize=10, alignment=TA_LEFT, fontName="Helvetica-Bold", spaceAfter=2)
+
+        def p(t):
+            return Paragraph(t, contract_style)
+        def paren(t):
+            return Paragraph(esc(t), paren_style)
+
+        story = []
+        spacer_small = 1.5*mm
+
+        story.append(Paragraph("Kontratë e Re.", header_style))
+        story.append(Spacer(1, 2*mm))
+        story.append(p("Në bazë të nenit 10 paragrafi 2, pikat 2.1 dhe 2.2. dhe nenit 11 të Ligjit të Punës Nr. 03/L-212 i shpallur në Gazetën Zyrtare të Republikës së Kosovës me dt.01.12.2010, Punëdhënësi dhe i Punësuari, si subjekte të mardhënies juridike të punës lidhin:"))
+        story.append(Spacer(1, 3*mm))
+        story.append(Spacer(1, 3*mm))
+        story.append(Paragraph("KONTRATË PUNE PËR KOHË TË PACAKTUAR", title_contract))
+        story.append(Spacer(1, 3*mm))
+        story.append(Spacer(1, 3*mm))
+
+        n1_employer = f'NTP "{esc(comp_name)}" përfaqësuar nga {esc(comp_rep_fixed)}, NF {esc(comp_nf)}' + (f'-{esc(comp_addr)}' if comp_addr else ', pn-Istog') + '.'
+        n1_employee = f'<b><u>{esc(emp)}</u></b> NP <b><u>{esc(pers_num)}</u></b> – shkollim i mesem, me banim <b><u>{esc(res)}</u></b>'
+        story.append(p("<b>Neni 1</b><br/>Me këtë kontratë: " + n1_employer))
+        story.append(paren("(Emri/emërtimi, NRB, NF dhe adresa e punëdhënësit)"))
+        story.append(p("Në tekstin e metejmë Punëdhënësi lidhë kontratë pune me:"))
+        story.append(p(n1_employee))
+        story.append(paren("(Emri dhe mbiemri, kualifikimi, adresa dhe numri personal)"))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 2</b><br/>I Punësuari do të kryej këto detyra të punës: Punetor"))
+        story.append(paren("(Emërtimi, natyra, lloji i punës dhe përshkrimi i detyrave të punës)"))
+        story.append(Spacer(1, spacer_small))
+        story.append(p('<b>Neni 3</b><br/>I Punësuari do të kryej punët në: Terren sipas nevojes se NTP "' + esc(comp_name) + '"'))
+        story.append(paren("(vendi i punës ku do të kryhet puna apo në lokacione të ndryshme)"))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 4</b><br/>I Punësuari themelon mardhënie pune në kohë të pacaktuar që nga data: <b><u>" + esc(dt) + "</u></b>."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 5</b><br/>I Punësuari është i detyruar të filloj punën me: <b><u>" + esc(dt) + "</u></b>. Nëse i punësuari nuk e fillon punën në ditën e caktuar sipas kësaj kontrate, do të konsiderohet se nuk ka themeluar mardhanie pune, përvec nëse është penguar për shkaqe të arsyeshme."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 6</b><br/>Ditë pune janë nga e hëna në të premte me nga 8 orë pune, gjithsej 40 orë në javë."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 7</b><br/>Të punësuarit i caktohet paga bazë për punën të cilën e kryen për punëdhënësin, në lartësi prej Bruto <b><u>" + esc(salary_str) + " euro</u></b>, së paku një herë në muaj e cila nuk mund të jetë më e vogël se paga minimale."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 8</b><br/>I punësuari ka të drejtë në pagë shtesë në përqindje të pagës bazë:<br/>1) 20 % në orë kujdestari;<br/>2) 30 % në orë për punë gjatë natës;<br/>3) 30 % në orë për punë jashtë orarit;<br/>4) 50 % në orë për punë gjatë ditëve të festave, dhe<br/>5) 50 % në orë për punë gjatë fundjavës."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 9</b><br/>I punësuari ka të drejtë në kompezim të pagës pa u angazhuar në punë, në rastet në vijim:<br/>1) gjatë ditëve të festive në të cilat nuk punohet;<br/>2) gjatë kohës së shfrytëzimit të pushimit vjetor;<br/>3) gjatë aftësimit dhe përsosjes profesionale për të cilën është dërguar, dhe<br/>4) gjatë ushtrimit të funksioneve publike për të cilat nuk paguhet."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 10</b><br/>I punësuari ka të drejtë në kompensim të pushimit mjekësor të pagës bazë, prej:<br/>1) 100% në rast të shfrytëzimit të pushimit mjekësor të rregullt, mbi bazën deri në 20 ditë pune brenda një (1) viti;<br/>2) 70% në rast të shfrytëzimit të pushimit mjekësore si pasojë e lëndimit në punë ose sëmundjes profesionale, e cila ndërlidhet me kryerjen e punëve dhe shërbimeve për punëdhënësin, në kohëzgjatje prej dhjetë (10) deri në nëntëdhjetë (90) ditë pune."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 11</b><br/>I punësuari ka të drejtë në pushim, dhe atë;<br/>1) pushim gjatë ditës në kohëzgjatje prej se paku 30 minutash, në përputhje me organizimin e orarit të punës me punëdhënësin.<br/>2) pushim ditor në kohëzgjatje prej së paku dymbdhjetë (12) orë pandërprerë, midis dy (2) ditëve të njëpasnjëshme të punës.<br/>3) pushim javor në kohezgjatje prej njëzetekatër (24) orë pandërprerë.<br/>4) pushim vjetor në kohëzgjatje së paku 4 javë.<br/>5) i punësuari i cili përkundër masave mbrojtëse nuk mund të mbrohet nga ndikimet e jashtme, ka te drejtë në pushim vjetor shtesë edhe për dy (2) ditë të tjera.<br/>6) nëna me fëmijë deri ne tre (3) vjec, prindi vetushqyes dhe personat me aftësi të kufizuara kanë të drejtë në pushim vjetor shtesë edhe për dy (2) ditë të tjera."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 12</b><br/>I punësuari i cili për herë të parë themelon mardhënie pune ose i cili nuk ka ndërprerje më tepër se pesë (5) ditë pune, ka të drejtën e shfrytezimit të pushimit vjetor pas gjashtë (6) muajve të punës së pandërprerë."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 13</b><br/>I punësuari ka të drejtë së paku një ditë e gjysmë (1.5) të pushimit, për cdo muaj kalendarik të kaluar në punë, nësë:<br/>1) në vitin kalendarik në të cilin për herë të parë ka themeluar mardhënie pune, nuk i ka gjashtë (6) muaj të punës së pandërprerë.<br/>2) në vitin kalendarik nuk e ka fituar të drejtën për shfrytëzimin e pushimit vjetor për shkak të ndërprejes së mardhënies së punës."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 14</b><br/>I punësuari është përgjegjës për kompenzimin e dëmit për punën ose me lidhje me punën, nëse me qëllim ose nga pakujdesia i ka shkaktuar dëm punëdhënësit. I punësuari është përgjegjës edhe për kompenzimin e dëmit, nëse me fajin e tij i ka shkaktuar dëm palës së tretë, dëm të cilin punëdhënësi duhet t'a kompenzoj."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 15</b><br/>Të punësuarit i ndërprehet mardhënia e punës nga punëdhënësi, nëse:<br/>1) ndërpreja e tillë arsyetohet për arsye ekonomike, teknike ose organizative;<br/>2) i punësuari nuk është më i aftë të kryej detyrat e punës;<br/>3) në rastet e rënda të sjelljes së keqe të të punësuarit;<br/>4) për shkak të mospërmbushjes së detyrave të punës, dhe<br/>5) për rastet e tjera të cilat janë të përcaktuara me Ligjin e Punës."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 16</b><br/>Punëdhënësi obligohet të siguroj dhe të zbatoj mjetet dhe masat e mbrojtjes në punë, sipas legjislacionit në fuqi. I punësuari është i detyruar t'iu përmbahet masave të mbrojtjes në punë."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 17</b><br/>Punëdhënësi obligohet t'i paguaj kontributet prej 5% për skemën pensionale të obligueshme dhe skemat tjera të përcaktuara me ligj."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 18</b><br/>Punëdhënësi dhe i punësuari i pranojnë të gjitha të drejtat, detyrimet dhe përgjegjësitë e caktuara me Ligj, me Kontratë Kolektive dhe me këtë Kontratë."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 19</b><br/>Për kontestet eventuale të moszbatimit të kësaj kontrate, palët kontraktuese e pranojnë kompetencën e Gjykatës Komunale në Peje."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 20</b><br/>Secila palë mund t'a shkëputë këtë Kontratë në mënyrë të njëanëshme, sipas kushteve dhe rasteve të caktuara me Ligj dhe me Kontratën Kolektive."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 21</b><br/>Në asnjë rast, dispozitat e kësaj Kontratë nuk mund të jenë me pak të favorshme për të punësuarin dhe punëdhënësin, së dispozitat e Ligjit të Punës ose të Kontratës Kolektive, për sa u përket të drejtave dhe kushteve nga mardhënia juridike e punës. Për të drejtat dhe detyrimet të cilat nuk janë përcaktuar me këtë Kontratë, zbatohen drejtëpërdrejtë dispozitat e Ligjit të Punës dhe të Kontratës Kolektive."))
+        story.append(Spacer(1, spacer_small))
+        story.append(p("<b>Neni 22</b><br/>Pas njoftimit me përmbajtjen e Kontratës, kjo Kontratë nga palët kontraktuese u nënshkrua me <b><u>" + esc(dt) + "</u></b>.<br/>Në Peje dhe atë në 5 kopje autentike, nga të cilat secilës palë i mbeten nga dy (2) kopje."))
+        story.append(Spacer(1, 6*mm))
+
+        sig_style = ParagraphStyle("sig", fontSize=9, fontName="Helvetica-Bold")
+        sig_style_right = ParagraphStyle("sig_right", fontSize=9, fontName="Helvetica-Bold", alignment=TA_RIGHT)
+        contract_style_right = ParagraphStyle("contract_sig_right", fontSize=9, leading=11, alignment=TA_RIGHT, fontName="Helvetica")
+        sig_table = Table([
+            [Paragraph("Punëdhenesi:", sig_style), Paragraph("I Punësuari:", sig_style_right)],
+            [Paragraph(esc(comp_name), contract_style), Paragraph(esc(emp), contract_style_right)],
+            [Paragraph(esc(comp_rep_fixed), contract_style), Paragraph("", contract_style)],
+            ["", ""],
+            [".......................................................................................V.V.......................................................................................", ""]
+        ], colWidths=[90*mm, 90*mm])
+        sig_table.setStyle(TableStyle([
+            ("ALIGN", (0, 0), (0, -1), "LEFT"),
+            ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+        ]))
+        story.append(sig_table)
+
+        doc.build(story)
+        return self._handle_post_generation(filepath, "kontratat", date_for_path, filename)

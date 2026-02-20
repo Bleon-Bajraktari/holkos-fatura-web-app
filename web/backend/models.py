@@ -113,6 +113,25 @@ class OfferItem(Base):
 
     offer = relationship("Offer", back_populates="items")
 
+class Contract(Base):
+    __tablename__ = "contracts"
+    id = Column(Integer, primary_key=True, index=True)
+    employee_name = Column(String(255), nullable=False)
+    personal_number = Column(String(50))
+    residence = Column(String(255))
+    contract_start_date = Column(Date, nullable=False)  # e vetmja datë, përdoret për Neni 4, 5, 22
+    work_start_date = Column(Date, nullable=False)
+    signing_date = Column(Date, nullable=False)
+    gross_salary = Column(DECIMAL(10, 2), nullable=False)
+    pdf_path = Column(String(500))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    @property
+    def contract_date(self):
+        return self.contract_start_date
+
+
 class Setting(Base):
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True, index=True)

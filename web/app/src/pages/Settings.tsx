@@ -27,6 +27,7 @@ const SettingsPage = () => {
     const [message, setMessage] = useState({ type: '', text: '' })
     const [loadError, setLoadError] = useState<string | null>(null)
     const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
+    const [navbarCombined, setNavbarCombined] = useState(true)
     const [logoUploading, setLogoUploading] = useState(false)
     const [resettingCache, setResettingCache] = useState(false)
     const [resettingAll, setResettingAll] = useState(false)
@@ -74,9 +75,10 @@ const SettingsPage = () => {
                 }
             }
             try {
-                const [companyData, paymentData] = await Promise.allSettled([
+                const [companyData, paymentData, navbarData] = await Promise.allSettled([
                     fetchCompany(),
-                    SettingsService.getPaymentStatus()
+                    SettingsService.getPaymentStatus(),
+                    SettingsService.getNavbarCombined()
                 ])
                 if (companyData.status === 'fulfilled' && companyData.value) {
                     setCompany(mergeCompany(companyData.value))
@@ -102,6 +104,9 @@ const SettingsPage = () => {
                 if (paymentData.status === 'fulfilled' && paymentData.value?.enabled !== undefined) {
                     setPaymentStatusEnabled(paymentData.value.enabled)
                 }
+                if (navbarData.status === 'fulfilled' && navbarData.value?.combined !== undefined) {
+                    setNavbarCombined(navbarData.value.combined)
+                }
             } catch (err) {
                 console.error('Settings load error:', err)
                 setLoadError('Gabim gjatë ngarkimit. Provoni të rifreskoni faqen.')
@@ -123,6 +128,7 @@ const SettingsPage = () => {
         try {
             await CompanyService.update(company)
             await SettingsService.updatePaymentStatus(paymentStatusEnabled)
+            await SettingsService.updateNavbarCombined(navbarCombined)
             localStorage.setItem('company_cache', JSON.stringify(company))
             setMessage({ type: 'success', text: 'Të dhënat u ruajtën me sukses!' })
         } catch (error) {
@@ -410,6 +416,15 @@ const SettingsPage = () => {
                             className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
                         />
                         Aktivizo Menaxhimin e Statusit (Paguar/Pa Paguar)
+                    </label>
+                    <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 mt-4 pt-4 border-t border-slate-100">
+                        <input
+                            type="checkbox"
+                            checked={navbarCombined}
+                            onChange={(e) => setNavbarCombined(e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30"
+                        />
+                        Menyja e bashkuar (një link për Faturat, Ofertat, Kontratat). Çaktivizo për të ndarë: Faturë e re, Lista e faturave, Ofertë e re, Lista e ofertave, Kontratë e re, Lista e kontratave.
                     </label>
                 </div>
 

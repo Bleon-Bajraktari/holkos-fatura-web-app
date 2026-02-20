@@ -642,6 +642,16 @@ export const ClientService = {
     delete: (id: number) => api.delete(`/clients/${id}`).then(res => res.data)
 };
 
+export const ContractService = {
+    getAll: (params?: { search?: string; date_from?: string; date_to?: string }) => api.get('/contracts', { params }).then(res => res.data),
+    getYears: () => api.get('/contracts/years').then(res => res.data),
+    get: (id: number) => api.get(`/contracts/${id}`).then(res => res.data),
+    create: (data: any) => api.post('/contracts', data).then(res => res.data),
+    update: (id: number, data: any) => api.put(`/contracts/${id}`, data).then(res => res.data),
+    delete: (id: number) => api.delete(`/contracts/${id}`).then(res => res.data),
+    getPdfPath: (id: number) => `/contracts/${id}/pdf`,
+};
+
 export const CompanyService = {
     get: () => api.get('/company', { timeout: 45000 }).then(res => res.data),
     update: (data: any) => api.put('/company', data).then(res => res.data),
@@ -661,6 +671,8 @@ export const DashboardService = {
 export const SettingsService = {
     getPaymentStatus: () => api.get('/settings/feature-payment-status').then(res => res.data),
     updatePaymentStatus: (enabled: boolean) => api.put('/settings/feature-payment-status', { enabled }).then(res => res.data),
+    getNavbarCombined: () => api.get('/settings/navbar-combined').then(res => res.data),
+    updateNavbarCombined: (combined: boolean) => api.put('/settings/navbar-combined', { combined }).then(res => res.data),
 };
 
 export const AuthService = {

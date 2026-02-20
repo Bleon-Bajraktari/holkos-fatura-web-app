@@ -618,6 +618,106 @@ def delete_client(client_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Client deleted"}
 
+# --- CONTRACTS ---
+@app.get("/contracts", response_model=List[schemas.Contract])
+def get_contracts(
+    search: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Contract)
+    if date_from:
+        query = query.filter(models.Contract.signing_date >= date_from)
+    if date_to:
+        query = query.filter(models.Contract.signing_date <= date_to)
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.Contract.employee_name.ilike(term),
+                models.Contract.personal_number.ilike(term),
+                models.Contract.residence.ilike(term)
+            )
+        )
+    return query.order_by(models.Contract.signing_date.desc(), models.Contract.id.desc()).all()
+
+
+@app.get("/contracts/years")
+def get_contract_years(db: Session = Depends(get_db)):
+    years = db.query(extract('year', models.Contract.signing_date).label("year")).distinct().order_by(extract('year', models.Contract.signing_date).desc()).all()
+    result = [str(int(y.year)) for y in years if y.year is not None]
+    if not result:
+        result = [str(date.today().year)]
+    return {"years": result}
+
+@app.post("/contracts", response_model=schemas.Contract)
+def create_contract(contract: schemas.ContractCreate, db: Session = Depends(get_db)):
+    data = contract.dict()
+    contract_date_val = data.pop("contract_date")
+    data["contract_start_date"] = data["work_start_date"] = data["signing_date"] = contract_date_val
+    db_contract = models.Contract(**data)
+    db.add(db_contract)
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
+
+@app.get("/contracts/{contract_id}", response_model=schemas.Contract)
+def get_contract(contract_id: int, db: Session = Depends(get_db)):
+    c = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    return c
+
+@app.put("/contracts/{contract_id}", response_model=schemas.Contract)
+def update_contract(contract_id: int, contract: schemas.ContractCreate, db: Session = Depends(get_db)):
+    db_contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    for key, value in contract.dict().items():
+        if key == "contract_date":
+            db_contract.contract_start_date = db_contract.work_start_date = db_contract.signing_date = value
+        elif key in ("qualification", "employer_representative"):
+            continue
+        else:
+            setattr(db_contract, key, value)
+    db_contract.pdf_path = None  # Invalidate PDF on edit
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
+
+@app.delete("/contracts/{contract_id}")
+def delete_contract(contract_id: int, db: Session = Depends(get_db)):
+    db_contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    db.delete(db_contract)
+    db.commit()
+    return {"message": "Contract deleted"}
+
+@app.get("/contracts/{contract_id}/pdf")
+def get_contract_pdf(contract_id: int, db: Session = Depends(get_db)):
+    db_contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if db_contract.pdf_path and os.path.exists(db_contract.pdf_path):
+        return FileResponse(
+            db_contract.pdf_path,
+            media_type='application/pdf',
+            filename=os.path.basename(db_contract.pdf_path),
+            headers={"Content-Disposition": f'inline; filename="{os.path.basename(db_contract.pdf_path)}"'}
+        )
+    db_company = db.query(models.Company).first()
+    pdf_path = pdf_generator.generate_contract_pdf(db_contract, db_company)
+    db_contract.pdf_path = pdf_path
+    db.commit()
+    return FileResponse(
+        pdf_path,
+        media_type='application/pdf',
+        filename=os.path.basename(pdf_path),
+        headers={"Content-Disposition": f'inline; filename="{os.path.basename(pdf_path)}"'}
+    )
+
 # --- OFFERS ---
 @app.get("/offers", response_model=List[schemas.Offer])
 def get_offers(
@@ -1292,6 +1392,28 @@ def update_feature_payment_status(payload: dict, db: Session = Depends(get_db)):
         setting.setting_value = value
     db.commit()
     return {"enabled": enabled}
+
+
+@app.get("/settings/navbar-combined")
+def get_navbar_combined(db: Session = Depends(get_db)):
+    setting = db.query(models.Setting).filter(models.Setting.setting_key == "navbar_combined").first()
+    combined = True if not setting else (setting.setting_value == "true")
+    return {"combined": combined}
+
+
+@app.put("/settings/navbar-combined")
+def update_navbar_combined(payload: dict, db: Session = Depends(get_db)):
+    combined = payload.get("combined", True)
+    value = "true" if combined else "false"
+    setting = db.query(models.Setting).filter(models.Setting.setting_key == "navbar_combined").first()
+    if not setting:
+        setting = models.Setting(setting_key="navbar_combined", setting_value=value)
+        db.add(setting)
+    else:
+        setting.setting_value = value
+    db.commit()
+    return {"combined": combined}
+
 
 # --- TEMPLATES ---
 @app.get("/templates", response_model=List[schemas.Template])

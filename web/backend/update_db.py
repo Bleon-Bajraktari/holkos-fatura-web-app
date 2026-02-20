@@ -82,8 +82,38 @@ def update_db():
         except Exception as ex:
             print("offers check skipped:", ex)
 
-        # Offers and OfferItems should have been created by create_all if они missing.
-        
+        # Contracts table – krijo nëse mungon; shto qualification dhe employer_representative nëse mungojnë
+        try:
+            conn.execute(text("SELECT 1 FROM contracts LIMIT 1"))
+            rows = conn.execute(text("SHOW COLUMNS FROM contracts")).fetchall()
+            cols = [row[0] for row in rows] if rows else []
+            if "qualification" not in cols:
+                print("Adding 'qualification' to contracts...")
+                conn.execute(text("ALTER TABLE contracts ADD COLUMN qualification VARCHAR(255)"))
+            if "employer_representative" not in cols:
+                print("Adding 'employer_representative' to contracts...")
+                conn.execute(text("ALTER TABLE contracts ADD COLUMN employer_representative VARCHAR(255)"))
+        except Exception:
+            print("Creating 'contracts' table...")
+            conn.execute(text("""
+                CREATE TABLE contracts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    employee_name VARCHAR(255) NOT NULL,
+                    personal_number VARCHAR(50),
+                    residence VARCHAR(255),
+                    qualification VARCHAR(255),
+                    employer_representative VARCHAR(255),
+                    contract_start_date DATE NOT NULL,
+                    work_start_date DATE NOT NULL,
+                    signing_date DATE NOT NULL,
+                    gross_salary DECIMAL(10, 2) NOT NULL,
+                    pdf_path VARCHAR(500),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """))
+            print("Table 'contracts' created.")
+
         # 3. Hiq indekset e vjeter qe kerkonin unike globale
         # Numrat e fatures jane unike per vit, jo globale (FATURA NR.1 2025 + FATURA NR.1 2026 OK)
         try:

@@ -145,6 +145,27 @@ class Offer(OfferBase):
     class Config:
         orm_mode = True
 
+# Contract Schemas – një datë për të gjitha (Neni 4, 5, 22). Përfaqësuesi fiks: Mustafë Bajraktari.
+class ContractBase(BaseModel):
+    employee_name: str
+    personal_number: Optional[str] = None
+    residence: Optional[str] = None
+    contract_date: date  # e vetmja datë, përdoret për Neni 4, 5, 22
+    gross_salary: Decimal
+
+class ContractCreate(ContractBase):
+    pass
+
+class Contract(ContractBase):
+    id: int
+    pdf_path: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
 # Settings Schemas
 class SettingBase(BaseModel):
     setting_key: str
