@@ -27,7 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) return false;
     try {
       const { data } = await api.post<{ access_token: string }>('/auth/refresh', {}, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
       });
       if (data?.access_token) {
         localStorage.setItem(TOKEN_KEY, data.access_token);
@@ -52,7 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const { data } = await api.post<{ access_token: string }>('/auth/login', { username, password });
+    const { data } = await api.post<{ access_token: string }>('/auth/login', { username, password }, {
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+    });
     if (data?.access_token) {
       localStorage.setItem(TOKEN_KEY, data.access_token);
       setIsAuthenticated(true);

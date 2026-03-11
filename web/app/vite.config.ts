@@ -32,6 +32,12 @@ export default defineConfig({
                 globPatterns: ['**/*.{js,css,html,png,svg,woff2,ico,json}'],
 
                 runtimeCaching: [
+                    // 0. Auth: NUK cache – gjithmonë server, shmang probleme me token/cache
+                    {
+                        urlPattern: /\/api\/auth\/.*/i,
+                        handler: 'NetworkOnly',
+                        options: { cacheName: 'auth-bypass' }
+                    },
                     // 1. Critical Static Assets (Manifest, Icons) - StaleWhileRevalidate
                     // Load fast from cache, check update in background
                     {
@@ -60,10 +66,10 @@ export default defineConfig({
                             expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 365 }
                         }
                     },
-                    // 4. API Data (Invoices, Dashboard) - NetworkFirst
+                    // 4. API Data (Invoices, Dashboard) - NetworkFirst (jo /api/auth/)
                     // Try network. If fails, use Cached response.
                     {
-                        urlPattern: /\/api\/.*/i,
+                        urlPattern: /\/api\/(?!auth\/).*/i,
                         handler: 'NetworkFirst',
                         options: {
                             cacheName: 'api-data-cache',

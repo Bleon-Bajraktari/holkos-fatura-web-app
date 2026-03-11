@@ -46,7 +46,8 @@ export default function Login() {
             setError(isTimeout || isNetwork
               ? 'Serveri po ngrohet. Ju lutemi prisni 30–60 sekonda dhe provoni përsëri.'
               : (err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail : null) || 'Emri i përdoruesit ose fjalëkalimi është i gabuar.');
-            autofillHandled.current = false;
+            // Mos përsërit autofill pas 401 – lër përdoruesin të futet me butonin
+            if (isTimeout || isNetwork) autofillHandled.current = false;
           })
           .finally(() => setLoading(false));
       }
