@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, FileDown, MoveUp, MoveDown, X, Eye, Search, UserPlus, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfferService, ClientService, openPdf, openPdfPost } from '../services/api'
+import { parseDecimal } from '../utils/numbers'
 
 type OfferRowType = 'item' | 'header' | 'text'
 
@@ -163,7 +164,7 @@ const OfferForm = () => {
     const calculateRowSubtotal = (row: OfferRow) => {
         if (row.row_type !== 'item') return 0
         const nums = row.modules
-            .map(m => parseFloat(String(m.value).replace(',', '.')))
+            .map(m => parseDecimal(m.value))
             .filter(v => !Number.isNaN(v))
         if (nums.length === 0) return 0
         return nums.reduce((acc, v) => acc * v, 1)
@@ -487,6 +488,7 @@ const OfferForm = () => {
                                                 <div key={mod.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                                                     <input
                                                         type="text"
+                                                        inputMode="decimal"
                                                         value={mod.value}
                                                         onChange={(e) => updateModule(row.id, mod.id, { value: e.target.value })}
                                                         className="w-16 bg-transparent text-sm font-bold outline-none"

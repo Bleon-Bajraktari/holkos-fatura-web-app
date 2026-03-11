@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
 import api from '../services/api';
 
@@ -10,6 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const userRef = useRef<HTMLInputElement>(null);
@@ -105,14 +108,17 @@ export default function Login() {
   const logoUrl = '/login-logo.png';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8 sm:py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-[420px]"
       >
-        <div className="bg-white/90 backdrop-blur-sm rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 pt-0 px-6 pb-6 sm:pt-0 sm:px-8 sm:pb-8">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 pt-0 px-6 pb-6 sm:pt-0 sm:px-8 sm:pb-8 relative">
+          <button type="button" onClick={toggleTheme} className="absolute top-4 right-4 p-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors" title={isDark ? 'Dritë' : 'Errësirë'}>
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
           <div className="flex flex-col items-center text-center -mt-0 mb-0">
             <div className="w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center overflow-hidden">
               {logoError ? (
@@ -130,7 +136,7 @@ export default function Login() {
 
           <form id="login-form" onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-slate-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-semibold text-foreground mb-2">
                 Emri i përdoruesit
               </label>
               <input
@@ -140,7 +146,7 @@ export default function Login() {
                 type="text"
                 defaultValue=""
                 autoComplete="username"
-                className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-white outline-none transition-all text-base min-h-[48px]"
+                className="w-full px-4 py-3.5 rounded-2xl border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-card outline-none transition-all text-base min-h-[48px]"
                 placeholder="Username"
                 required
                 disabled={loading}
@@ -163,7 +169,7 @@ export default function Login() {
               />
             </div>
             {error && (
-              <p className="text-rose-600 text-sm font-medium bg-rose-50 px-4 py-2 rounded-xl">
+              <p className="text-destructive text-sm font-medium bg-destructive/10 px-4 py-2 rounded-xl">
                 {error}
               </p>
             )}

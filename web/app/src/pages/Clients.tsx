@@ -78,110 +78,110 @@ const ClientsPage = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/')}
-                        className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-gray-800 hover:border-gray-300 transition-all shadow-sm"
+                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold">Menaxhimi i Klientëve</h1>
-                        <p className="text-gray-500 text-sm mt-1">Shtoni dhe menaxhoni klientët tuaj</p>
+                        <h1 className="text-2xl font-bold text-foreground">Menaxhimi i Klientëve</h1>
+                        <p className="text-muted-foreground text-sm mt-1">Shtoni dhe menaxhoni klientët tuaj</p>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-4 sm:p-6 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="text-xs font-bold text-gray-500">Emri i Klientit</label>
+                        <label className="text-xs font-bold text-muted-foreground">Emri i Klientit</label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={e => setForm({ ...form, name: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-4 text-sm mt-1"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500">Adresa</label>
+                        <label className="text-xs font-bold text-muted-foreground">Adresa</label>
                         <input
                             type="text"
                             value={form.address}
                             onChange={e => setForm({ ...form, address: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-4 text-sm mt-1"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500">Numri Unik</label>
+                        <label className="text-xs font-bold text-muted-foreground">Numri Unik</label>
                         <input
                             type="text"
                             value={form.unique_number}
                             onChange={e => setForm({ ...form, unique_number: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-4 text-sm mt-1"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500">Telefoni</label>
+                        <label className="text-xs font-bold text-muted-foreground">Telefoni</label>
                         <input
                             type="text"
                             value={form.phone}
                             onChange={e => setForm({ ...form, phone: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-4 text-sm mt-1"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500">Email</label>
+                        <label className="text-xs font-bold text-muted-foreground">Email</label>
                         <input
                             type="email"
                             value={form.email}
                             onChange={e => setForm({ ...form, email: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-4 text-sm mt-1"
+                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground placeholder:text-muted-foreground"
                         />
                     </div>
                 </div>
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button onClick={handleSave} className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 inline-flex items-center justify-center gap-2">
+                    <button onClick={handleSave} className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary/90 inline-flex items-center justify-center gap-2">
                         <Save size={16} /> {selectedId ? 'Përditëso' : 'Ruaj Klientin'}
                     </button>
-                    <button onClick={clearForm} className="w-full sm:w-auto px-4 py-2 bg-gray-50 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-100">
+                    <button onClick={clearForm} className="w-full sm:w-auto px-4 py-2 bg-muted text-muted-foreground rounded-xl text-sm font-bold hover:bg-muted/80">
                         Pastro
                     </button>
                 </div>
             </div>
 
             <div className="mb-4 relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
                 <input
                     type="text"
                     placeholder="Kërko klientët..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full bg-white border border-gray-100 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm"
+                    className="w-full bg-card border border-border rounded-xl py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:bg-card transition-all shadow-sm"
                 />
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="md:hidden divide-y divide-gray-100">
+            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                <div className="md:hidden divide-y divide-border">
                     {loading ? (
-                        <div className="p-6 text-center text-gray-400">Duke u ngarkuar...</div>
+                        <div className="p-6 text-center text-muted-foreground">Duke u ngarkuar...</div>
                     ) : filtered.length === 0 ? (
-                        <div className="p-6 text-center text-gray-400">Nuk u gjet asnjë klient.</div>
+                        <div className="p-6 text-center text-muted-foreground">Nuk u gjet asnjë klient.</div>
                     ) : (
                         filtered.map((client: any) => (
                             <div key={client.id} className="p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <div className="font-bold text-gray-900">{client.name}</div>
-                                        <div className="text-xs text-gray-500">{client.unique_number || '-'}</div>
+                                        <div className="font-bold text-foreground">{client.name}</div>
+                                        <div className="text-xs text-muted-foreground">{client.unique_number || '-'}</div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => handleEdit(client)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                        <button onClick={() => handleEdit(client)} className="p-2 text-primary hover:bg-primary/10 rounded-lg">
                                             <Edit3 size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(client.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                        <button onClick={() => handleDelete(client.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
-                                <div className="mt-3 text-sm text-gray-600 space-y-1">
+                                <div className="mt-3 text-sm text-muted-foreground space-y-1">
                                     <div>Adresa: {client.address || '-'}</div>
                                     <div>Telefoni: {client.phone || '-'}</div>
                                     <div>Email: {client.email || '-'}</div>
@@ -193,7 +193,7 @@ const ClientsPage = () => {
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-gray-50/50 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                            <tr className="bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                                 <th className="px-6 py-4">Emri</th>
                                 <th className="px-6 py-4">Adresa</th>
                                 <th className="px-6 py-4">Numri Unik</th>
@@ -202,25 +202,25 @@ const ClientsPage = () => {
                                 <th className="px-6 py-4 text-right">Veprimet</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
-                                <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">Duke u ngarkuar...</td></tr>
+                                <tr><td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">Duke u ngarkuar...</td></tr>
                             ) : filtered.length === 0 ? (
-                                <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">Nuk u gjet asnjë klient.</td></tr>
+                                <tr><td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">Nuk u gjet asnjë klient.</td></tr>
                             ) : (
                                 filtered.map((client: any) => (
-                                    <tr key={client.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{client.name}</td>
-                                        <td className="px-6 py-4 text-gray-600">{client.address || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-600">{client.unique_number || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-600">{client.phone || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-600">{client.email || '-'}</td>
+                                    <tr key={client.id} className="hover:bg-muted/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-foreground">{client.name}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{client.address || '-'}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{client.unique_number || '-'}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{client.phone || '-'}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{client.email || '-'}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="inline-flex items-center gap-2">
-                                                <button onClick={() => handleEdit(client)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                                <button onClick={() => handleEdit(client)} className="p-2 text-primary hover:bg-primary/10 rounded-lg">
                                                     <Edit3 size={16} />
                                                 </button>
-                                                <button onClick={() => handleDelete(client.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                                <button onClick={() => handleDelete(client.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>

@@ -35,13 +35,13 @@ const TemplatesPage = () => {
             <div className="mb-8 flex items-center gap-3">
                 <button
                     onClick={() => navigate('/')}
-                    className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-gray-800 hover:border-gray-300 transition-all shadow-sm"
+                    className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
                 >
                     <ArrowLeft size={20} />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold">Menaxhimi i Shabllonave</h1>
-                    <p className="text-gray-500 text-sm mt-1">Shablloni default është i integruar në sistem.</p>
+                    <h1 className="text-2xl font-bold text-foreground">Menaxhimi i Shabllonave</h1>
+                    <p className="text-muted-foreground text-sm mt-1">Shablloni default është i integruar në sistem.</p>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@ const TemplatesPage = () => {
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-gray-50/50 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                            <tr className="bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                                 <th className="px-6 py-4">Emri</th>
                                 <th className="px-6 py-4">Përshkrimi</th>
                                 <th className="px-6 py-4">Aktiv</th>
@@ -100,32 +100,32 @@ const TemplatesPage = () => {
                                 <th className="px-6 py-4 text-right">Veprimet</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Duke u ngarkuar...</td>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">Duke u ngarkuar...</td>
                                 </tr>
                             ) : templates.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Nuk ka shabllona.</td>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">Nuk ka shabllona.</td>
                                 </tr>
                             ) : (
                                 templates.map(template => (
-                                    <tr key={template.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{template.name}</td>
-                                        <td className="px-6 py-4 text-gray-600">{template.description || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-600">
+                                    <tr key={template.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-foreground">{template.name}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{template.description || '-'}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">
                                             {template.is_active ? (
-                                                <span className="inline-flex items-center gap-1 text-green-600 font-semibold"><Check size={16} /> Po</span>
+                                                <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-semibold"><Check size={16} /> Po</span>
                                             ) : (
-                                                <span className="text-red-500 font-semibold">Jo</span>
+                                                <span className="text-destructive font-semibold">Jo</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600">
+                                        <td className="px-6 py-4 text-muted-foreground">
                                             {template.is_default ? (
-                                                <span className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Star size={16} /> Po</span>
+                                                <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold"><Star size={16} /> Po</span>
                                             ) : (
-                                                <span className="text-gray-400">Jo</span>
+                                                <span className="text-muted-foreground">Jo</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -133,14 +133,14 @@ const TemplatesPage = () => {
                                                 {!template.is_default && (
                                                     <button
                                                         onClick={() => handleSetDefault(template.id)}
-                                                        className="px-3 py-1.5 text-xs font-bold bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
+                                                        className="px-3 py-1.5 text-xs font-bold bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
                                                     >
                                                         Default
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleToggleActive(template.id)}
-                                                    className="px-3 py-1.5 text-xs font-bold bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors inline-flex items-center gap-1"
+                                                    className="px-3 py-1.5 text-xs font-bold bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors inline-flex items-center gap-1"
                                                 >
                                                     {template.is_active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
                                                     {template.is_active ? 'Aktiv' : 'Joaktiv'}

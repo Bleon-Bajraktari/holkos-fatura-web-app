@@ -3,6 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('holkos_theme');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" type="image/png" href="/icon-192.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
@@ -18,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 text-gray-900 font-inter">
+<body class="font-inter min-h-screen antialiased">
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

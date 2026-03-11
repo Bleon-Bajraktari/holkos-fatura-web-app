@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Download, ArrowLeft } from 'lucide-react'
 import { ContractService, CompanyService, openPdf } from '../services/api'
+import { parseDecimal } from '../utils/numbers'
 
 const defaultForm = {
     employee_name: '',
@@ -198,7 +199,7 @@ const ContractForm = () => {
 
     return (
         <div className="min-h-screen pb-16">
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-20">
+            <div className="bg-card border-b border-border sticky top-0 z-20">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -236,7 +237,7 @@ const ContractForm = () => {
             </div>
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Të dhënat e ndryshueshme</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2 relative" ref={suggestionRef}>
@@ -313,19 +314,20 @@ const ContractForm = () => {
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">Paga bruto (euro)</label>
                             <input
-                                type="number"
-                                inputMode="numeric"
-                                min={0}
-                                step={1}
-                                value={form.gross_salary}
-                                onChange={e => setForm(f => ({ ...f, gross_salary: e.target.value === '' ? 0 : Number(e.target.value) }))}
+                                type="text"
+                                inputMode="decimal"
+                                value={form.gross_salary === 0 ? '' : String(form.gross_salary)}
+                                onChange={e => {
+                                    const parsed = parseDecimal(e.target.value)
+                                    setForm(f => ({ ...f, gross_salary: parsed }))
+                                }}
                                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm"
                             />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Parashikim i kontratës</h2>
                     <div className="text-sm text-gray-700 leading-relaxed space-y-3 max-h-[60vh] overflow-y-auto pr-2 contract-preview whitespace-pre-line">
                         <p className="font-bold">Kontratë e Re.</p>

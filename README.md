@@ -78,3 +78,7 @@ npm run dev
 - `assets/` - Imazhe dhe fonta
 - `web/app/` - Frontend React application
 - `web/backend/` - Backend FastAPI application
+
+## Punë në vazhdim (WIP)
+
+- **Dark / Light mode (web):** Tema ndërron dhe pjesa më e madhe e komponenteve përdorin variablat e temës, por implementimi nuk është ende i përfunduar. Duhet vazhduar: kontrolli i të gjitha faqave/komponenteve në të dyja temat dhe përsosja e stilizimit ku mungon.

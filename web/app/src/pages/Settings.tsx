@@ -4,11 +4,13 @@ import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield,
 import PasswordInput from '../components/PasswordInput'
 import { CompanyService, SettingsService, AuthService, API_BASE } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { db } from '../services/db'
 
 const SettingsPage = () => {
     const navigate = useNavigate()
     const { user, updateSession } = useAuth()
+    const { isDark, toggleTheme } = useTheme()
     const [company, setCompany] = useState<any>({
         name: '',
         address: '',
@@ -170,7 +172,7 @@ const SettingsPage = () => {
         }
     }
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
         <div className="p-4 sm:p-6 md:p-10 max-w-5xl mx-auto w-full pb-20">
@@ -178,13 +180,13 @@ const SettingsPage = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/')}
-                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Cilësimet</h1>
-                        <p className="text-sm text-slate-400 font-medium">Menaxhoni profilin e kompanisë suaj dhe sistemin</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Cilësimet</h1>
+                        <p className="text-sm text-muted-foreground font-medium">Menaxhoni profilin e kompanisë suaj dhe sistemin</p>
                     </div>
                 </div>
                 <button
@@ -208,9 +210,26 @@ const SettingsPage = () => {
                 </div>
             )}
 
+            {/* Pamje / Dark mode */}
+            <div className="mb-8 bg-card p-6 rounded-3xl border border-border shadow-sm">
+                <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">Pamje</h3>
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Modaliteti i errët (dark mode)</span>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isDark}
+                        onClick={toggleTheme}
+                        className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isDark ? 'bg-primary' : 'bg-muted'}`}
+                    >
+                        <span className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Profile Section */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <Building2 size={20} className="text-blue-500" />
                         Profili i Biznesit
@@ -227,7 +246,7 @@ const SettingsPage = () => {
                                         const file = e.target.files?.[0]
                                         if (file) handleLogoUpload(file)
                                     }}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-2.5 px-4 text-sm font-bold text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
+                                    className="w-full bg-muted border border-border rounded-2xl py-2.5 px-4 text-sm font-bold text-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
                                 />
                                 <div className="text-xs text-slate-400 font-medium">
                                     {logoUploading ? 'Duke ngarkuar...' : (company.logo_path ? `Logo: ${company.logo_path}` : 'Nuk ka logo')}
@@ -253,7 +272,7 @@ const SettingsPage = () => {
                                     type="text"
                                     value={company.name}
                                     onChange={e => setCompany({ ...company, name: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -267,7 +286,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.phone}
                                         onChange={e => setCompany({ ...company, phone: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -279,7 +298,7 @@ const SettingsPage = () => {
                                         type="email"
                                         value={company.email}
                                         onChange={e => setCompany({ ...company, email: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -293,7 +312,7 @@ const SettingsPage = () => {
                                     rows={2}
                                     value={company.address}
                                     onChange={e => setCompany({ ...company, address: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -301,7 +320,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Fiscal Section */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <CreditCard size={20} className="text-blue-500" />
                         Të dhënat Fiskale
@@ -317,7 +336,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.unique_number}
                                         onChange={e => setCompany({ ...company, unique_number: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -329,7 +348,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.fiscal_number}
                                         onChange={e => setCompany({ ...company, fiscal_number: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -343,7 +362,7 @@ const SettingsPage = () => {
                                     type="text"
                                     value={company.account_nib}
                                     onChange={e => setCompany({ ...company, account_nib: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -351,7 +370,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* SMTP Section */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6 lg:col-span-2">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6 lg:col-span-2">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <Server size={20} className="text-blue-500" />
                         Konfigurimi i Email-it (SMTP)
@@ -364,7 +383,7 @@ const SettingsPage = () => {
                                 type="text"
                                 value={company.smtp_server}
                                 onChange={e => setCompany({ ...company, smtp_server: e.target.value })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -373,7 +392,7 @@ const SettingsPage = () => {
                                 type="number"
                                 value={company.smtp_port}
                                 onChange={e => setCompany({ ...company, smtp_port: parseInt(e.target.value) || 587 })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div className="hidden lg:block"></div>
@@ -384,7 +403,7 @@ const SettingsPage = () => {
                                 type="text"
                                 value={company.smtp_user}
                                 onChange={e => setCompany({ ...company, smtp_user: e.target.value })}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -394,7 +413,7 @@ const SettingsPage = () => {
                                 <PasswordInput
                                     value={company.smtp_password}
                                     onChange={e => setCompany({ ...company, smtp_password: e.target.value })}
-                                    inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    inputClassName="w-full bg-muted border border-border rounded-2xl py-3 pl-12 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -403,7 +422,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* App Settings */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <Shield size={20} className="text-blue-500" />
                         Cilësimet e Aplikacionit
@@ -429,7 +448,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Change Username */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <User size={20} className="text-blue-500" />
                         Ndrysho Emrin e Përdoruesit
@@ -445,7 +464,7 @@ const SettingsPage = () => {
                                 value={newUsername}
                                 onChange={(e) => setNewUsername(e.target.value)}
                                 placeholder="p.sh. admin"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -454,7 +473,7 @@ const SettingsPage = () => {
                                 value={usernamePassword}
                                 onChange={(e) => setUsernamePassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                     </div>
@@ -502,7 +521,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Change Password */}
-                <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 lg:col-span-2">
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
                         <Lock size={20} className="text-blue-500" />
                         Ndrysho Fjalëkalimin
@@ -514,7 +533,7 @@ const SettingsPage = () => {
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -523,7 +542,7 @@ const SettingsPage = () => {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -532,7 +551,7 @@ const SettingsPage = () => {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                     </div>
@@ -581,14 +600,14 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Advanced & Troubleshooting Section */}
-                <div className="bg-white p-8 rounded-3xl border border-rose-200 shadow-sm space-y-4 lg:col-span-2 border-dashed bg-rose-50/10">
+                <div className="bg-card p-8 rounded-3xl border border-border border-dashed border-rose-200 dark:border-rose-800 shadow-sm space-y-4 lg:col-span-2 bg-rose-50/10 dark:bg-rose-950/20">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-1">
-                                <Server size={20} className="text-rose-600" />
+                            <h3 className="font-bold text-foreground flex items-center gap-2 mb-1">
+                                <Server size={20} className="text-rose-600 dark:text-rose-400" />
                                 Zgjidhja e Problemeve (PWA & Cache)
                             </h3>
-                            <p className="text-xs text-slate-500 max-w-xl">
+                            <p className="text-xs text-muted-foreground max-w-xl">
                                 Përdoreni këtë buton nëse keni probleme me: <span className="font-bold">të dhëna të vjetra në listat e faturave/ofertave, logon, ose hapjen offline.</span> Pastron cache-in, IndexedDB (fatura, oferta, klientë) dhe Service Worker. Cilësimet mbeten. Për fshirje totale përdorni Reset Total.
                             </p>
                         </div>

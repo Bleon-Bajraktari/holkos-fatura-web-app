@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { InvoiceService, OfferService, ClientService, CompanyService, openPdf } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
+import { parseDecimal } from '../utils/numbers'
 
 interface InvoiceItem {
     id?: number
@@ -47,6 +48,7 @@ const InvoiceForm = () => {
         price: {}
     })
     const [priceDrafts, setPriceDrafts] = useState<Record<number, string>>({})
+    const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
     const [vatEnabled, setVatEnabled] = useState(true)
     const [lastVatPercentage, setLastVatPercentage] = useState(18)
     const [useNumericPad, setUseNumericPad] = useState(() => {
@@ -267,7 +269,7 @@ const InvoiceForm = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/')}
-                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-slate-800 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-500 transition-all shadow-sm"
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -285,7 +287,7 @@ const InvoiceForm = () => {
             {/* Form Content */}
             <div className="space-y-8">
                 {/* Info Card - Combined Client & Doc Details */}
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
                     <div className="flex flex-col lg:flex-row lg:items-end gap-6">
                         {/* Client Selection */}
                         <div className="relative space-y-3 lg:w-[45%]">
@@ -429,7 +431,7 @@ const InvoiceForm = () => {
                 </div>
 
                 {/* Items Table */}
-                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+                <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-slate-800 flex items-center gap-2">
 
@@ -488,19 +490,29 @@ const InvoiceForm = () => {
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-quantity-${index}`}
-                                                    type={useNumericPad ? 'number' : 'text'}
-                                                    inputMode={useNumericPad ? 'decimal' : 'text'}
-                                                    pattern={useNumericPad ? '[0-9]*' : undefined}
-                                                    value={useNumericPad
-                                                        ? (item.quantity === 0 ? (showZeroFields.quantity[index] ? 0 : '') : item.quantity)
-                                                        : (item.quantity === 0 ? '' : String(item.quantity))}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={quantityDrafts[index] ?? (item.quantity === 0 ? '' : String(item.quantity))}
                                                     onChange={(e) => {
                                                         const value = e.target.value
+                                                        setQuantityDrafts(prev => ({ ...prev, [index]: value }))
                                                         setShowZeroFields(prev => ({
                                                             ...prev,
                                                             quantity: { ...prev.quantity, [index]: value !== '' }
                                                         }))
-                                                        updateItem(index, 'quantity', value === '' ? 0 : parseFloat(value) || 0)
+                                                        updateItem(index, 'quantity', value === '' ? 0 : parseDecimal(value))
+                                                    }}
+                                                    onBlur={() => {
+                                                        const raw = quantityDrafts[index]
+                                                        if (raw !== undefined) {
+                                                            const parsed = raw === '' ? 0 : parseDecimal(raw)
+                                                            updateItem(index, 'quantity', parsed)
+                                                            setQuantityDrafts(prev => {
+                                                                const next = { ...prev }
+                                                                delete next[index]
+                                                                return next
+                                                            })
+                                                        }
                                                     }}
                                                     className="w-full max-w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 pr-7 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                                                 />
@@ -512,12 +524,9 @@ const InvoiceForm = () => {
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-price-${index}`}
-                                                    type={useNumericPad ? 'number' : 'text'}
-                                                    inputMode={useNumericPad ? 'decimal' : 'text'}
-                                                    pattern={useNumericPad ? '[0-9]*' : undefined}
-                                                    value={useNumericPad
-                                                        ? (priceDrafts[index] ?? (item.unit_price === 0 ? '' : String(item.unit_price)))
-                                                        : (priceDrafts[index] ?? (item.unit_price === 0 ? '' : String(item.unit_price)))}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={priceDrafts[index] ?? (item.unit_price === 0 ? '' : String(item.unit_price))}
                                                     onChange={(e) => {
                                                         const value = e.target.value
                                                         setPriceDraft(index, value)
@@ -525,12 +534,12 @@ const InvoiceForm = () => {
                                                             ...prev,
                                                             price: { ...prev.price, [index]: value !== '' }
                                                         }))
-                                                        updateItem(index, 'unit_price', value === '' ? 0 : parseFloat(value) || 0)
+                                                        updateItem(index, 'unit_price', value === '' ? 0 : parseDecimal(value))
                                                     }}
                                                     onBlur={() => {
                                                         const raw = priceDrafts[index]
                                                         if (raw !== undefined) {
-                                                            const parsed = raw === '' ? 0 : parseFloat(raw) || 0
+                                                            const parsed = raw === '' ? 0 : parseDecimal(raw)
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
@@ -594,10 +603,11 @@ const InvoiceForm = () => {
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
-                                    type="number"
-                                    value={invoice.vat_percentage}
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={invoice.vat_percentage === 0 && !vatEnabled ? '' : String(invoice.vat_percentage)}
                                     onChange={(e) => {
-                                        const value = parseFloat(e.target.value) || 0
+                                        const value = parseDecimal(e.target.value)
                                         setInvoice(prev => ({ ...prev, vat_percentage: value }))
                                         setLastVatPercentage(value || lastVatPercentage)
                                     }}
@@ -616,7 +626,7 @@ const InvoiceForm = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
                     <button
                         onClick={() => handleSave('save')}
                         disabled={saving}

@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Dritë: variablat për html (kur nuk ka .dark) */
+  html {
+    color-scheme: light;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -26,7 +28,9 @@
     --radius: 0.5rem;
   }
 
-  .dark {
+  /* Errësirë: vetëm kur html ka klasën .dark */
+  html.dark {
+    color-scheme: dark;
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -73,8 +77,8 @@
   @apply bg-white/70 backdrop-blur-md border border-white/20;
 }
 
-.dark .glass {
-  @apply bg-gray-900/70 border-gray-800/50;
+html.dark .glass {
+  @apply bg-slate-800 border-slate-600;
 }
 
 .card-premium {
@@ -106,6 +110,20 @@
   @apply px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5;
 }
 
-body {
-  @apply bg-[#F8FAFC];
+/* body uses bg-background / text-foreground from @layer base so dark mode works */
+
+/* Dark mode scrollbar - vetëm kur html.dark */
+html.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 5px;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
