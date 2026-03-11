@@ -43,10 +43,6 @@ const InvoiceForm = () => {
     const [searchTerm, setSearchTerm] = useState('')
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [emailModalOpen, setEmailModalOpen] = useState(false)
-    const [showZeroFields, setShowZeroFields] = useState<{ quantity: Record<number, boolean>; price: Record<number, boolean> }>({
-        quantity: {},
-        price: {}
-    })
     const [priceDrafts, setPriceDrafts] = useState<Record<number, string>>({})
     const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
     const [vatEnabled, setVatEnabled] = useState(true)
@@ -182,10 +178,6 @@ const InvoiceForm = () => {
         const nextValue = Number((current / 1.18).toFixed(4))
         updateItem(index, 'unit_price', nextValue)
         setPriceDraft(index, nextValue === 0 ? '' : nextValue.toFixed(4))
-        setShowZeroFields(prev => ({
-            ...prev,
-            price: { ...prev.price, [index]: nextValue !== 0 }
-        }))
     }
 
     const handleSave = async (action: 'save' | 'pdf' | 'email', destEmail?: string) => {
@@ -496,10 +488,6 @@ const InvoiceForm = () => {
                                                     onChange={(e) => {
                                                         const value = e.target.value
                                                         setQuantityDrafts(prev => ({ ...prev, [index]: value }))
-                                                        setShowZeroFields(prev => ({
-                                                            ...prev,
-                                                            quantity: { ...prev.quantity, [index]: value !== '' }
-                                                        }))
                                                         updateItem(index, 'quantity', value === '' ? 0 : parseDecimal(value))
                                                     }}
                                                     onBlur={() => {
@@ -530,10 +518,6 @@ const InvoiceForm = () => {
                                                     onChange={(e) => {
                                                         const value = e.target.value
                                                         setPriceDraft(index, value)
-                                                        setShowZeroFields(prev => ({
-                                                            ...prev,
-                                                            price: { ...prev.price, [index]: value !== '' }
-                                                        }))
                                                         updateItem(index, 'unit_price', value === '' ? 0 : parseDecimal(value))
                                                     }}
                                                     onBlur={() => {
