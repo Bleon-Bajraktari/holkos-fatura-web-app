@@ -252,7 +252,7 @@ const InvoiceForm = () => {
 
     const selectedClientEmail = clients.find(c => c.id === invoice.client_id)?.email || ''
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
         <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-32">
@@ -266,10 +266,10 @@ const InvoiceForm = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
                             {isEdit ? 'Redakto Faturën' : 'Krijo Faturë të Re'}
                         </h1>
-                        <p className="text-sm text-slate-400 font-medium">Plotësoni detajet e faturës më poshtë</p>
+                        <p className="text-sm text-muted-foreground font-medium">Plotësoni detajet e faturës më poshtë</p>
                     </div>
                 </div>
 
@@ -284,7 +284,7 @@ const InvoiceForm = () => {
                         {/* Client Selection */}
                         <div className="relative space-y-3 lg:w-[45%]">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <h3 className="font-bold text-foreground flex items-center gap-2">
                                     <Users size={18} className="text-blue-500" />
                                     Informacioni i Klientit
                                 </h3>
@@ -299,7 +299,7 @@ const InvoiceForm = () => {
                             </div>
 
                             <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                                 <input
                                     type="text"
                                     placeholder="Kërko klientin sipas emrit ose numrit unik..."
@@ -322,12 +322,12 @@ const InvoiceForm = () => {
                                     }}
                                     onFocus={() => setShowSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
+                                    className="w-full bg-muted/50 border border-border rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowSuggestions(prev => !prev)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-slate-50"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-card border border-border text-muted-foreground flex items-center justify-center hover:bg-muted/50"
                                 >
                                     ▼
                                 </button>
@@ -338,10 +338,10 @@ const InvoiceForm = () => {
                                             initial={{ opacity: 0, y: 6 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 6 }}
-                                            className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-64 overflow-auto"
+                                            className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl z-50 max-h-64 overflow-auto"
                                         >
                                             {filteredClients.length === 0 ? (
-                                                <div className="px-4 py-3 text-sm text-slate-400">Nuk u gjet asnjë klient</div>
+                                                <div className="px-4 py-3 text-sm text-muted-foreground">Nuk u gjet asnjë klient</div>
                                             ) : (
                                                 filteredClients.map(client => (
                                                     <div
@@ -351,10 +351,10 @@ const InvoiceForm = () => {
                                                             setSearchTerm(client.name)
                                                             setShowSuggestions(false)
                                                         }}
-                                                        className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0"
+                                                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-border last:border-0"
                                                     >
-                                                        <div className="text-sm font-bold text-slate-800">{client.name}</div>
-                                                        <div className="text-xs text-slate-400">{client.unique_number}</div>
+                                                        <div className="text-sm font-bold text-foreground">{client.name}</div>
+                                                        <div className="text-xs text-muted-foreground">{client.unique_number}</div>
                                                     </div>
                                                 ))
                                             )}
@@ -367,40 +367,40 @@ const InvoiceForm = () => {
                         {/* Doc Details Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1 lg:pt-0 lg:w-[55%] min-w-0">
                             <div className="min-w-0">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Numri i {isOffer ? 'Ofertës' : 'Faturës'}</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Numri i {isOffer ? 'Ofertës' : 'Faturës'}</label>
                                 <input
                                     type="text"
                                     value={isOffer ? invoice.offer_number : invoice.invoice_number}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, [isOffer ? 'offer_number' : 'invoice_number']: e.target.value }))}
-                                    className="w-full min-w-0 bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                    className="w-full min-w-0 bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                                 />
                             </div>
                             <div className="min-w-0">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Data e Lëshimit</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Data e Lëshimit</label>
                                 <input
                                     type="date"
                                     value={invoice.date}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, date: e.target.value }))}
-                                    className="w-full min-w-0 max-w-full bg-slate-50 border border-slate-100 rounded-xl h-10 px-3 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all appearance-none"
+                                    className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-xl h-10 px-3 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none"
                                 />
                             </div>
                             <div className="min-w-0">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Afati i Pagesës</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Afati i Pagesës</label>
                                 <div className="relative">
                                     <input
                                         type="date"
                                         value={invoice.payment_due_date}
                                         onChange={(e) => setInvoice(prev => ({ ...prev, payment_due_date: e.target.value }))}
-                                        className="w-full min-w-0 max-w-full bg-slate-50 border border-slate-100 rounded-xl h-10 px-3 pr-10 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all appearance-none"
+                                        className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-xl h-10 px-3 pr-10 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none"
                                     />
                                     {invoice.payment_due_date && (
                                         <button
                                             type="button"
                                             onClick={() => setInvoice(prev => ({ ...prev, payment_due_date: '' }))}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                                             title="Reset"
                                         >
-                                            <X size={14} className="text-slate-500" />
+                                            <X size={14} className="text-muted-foreground" />
                                         </button>
                                     )}
                                 </div>
@@ -409,14 +409,14 @@ const InvoiceForm = () => {
                     </div>
 
                     {isOffer && (
-                        <div className="pt-6 border-t border-slate-100">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subjekti i Ofertës</label>
+                        <div className="pt-6 border-t border-border">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Subjekti i Ofertës</label>
                             <input
                                 type="text"
                                 placeholder="Psh: Instalimi i rrjetit elektrik..."
                                 value={invoice.subject}
                                 onChange={(e) => setInvoice(prev => ({ ...prev, subject: e.target.value }))}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all"
+                                className="w-full bg-muted/50 border border-border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
                             />
                         </div>
                     )}
@@ -425,7 +425,7 @@ const InvoiceForm = () => {
                 {/* Items Table */}
                 <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <h3 className="font-bold text-foreground flex items-center gap-2">
 
                             Artikujt e {isOffer ? 'Ofertës' : 'Faturës'}
                         </h3>
@@ -434,13 +434,13 @@ const InvoiceForm = () => {
                                 onClick={() => {
                                     setUseNumericPad(prev => !prev)
                                 }}
-                                className="px-3 py-2 bg-white text-slate-600 rounded-xl text-[11px] font-bold border border-slate-200 hover:bg-slate-50 transition-all"
+                                className="px-3 py-2 bg-card text-foreground rounded-xl text-[11px] font-bold border border-border hover:bg-muted/50 transition-all"
                             >
                                 {useNumericPad ? 'ABC' : '123'}
                             </button>
                             <button
                                 onClick={addItemRow}
-                                className="w-full sm:w-auto px-5 py-2 bg-slate-50 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2 border border-slate-200"
+                                className="w-full sm:w-auto px-5 py-2 bg-muted/50 text-foreground rounded-xl text-xs font-bold hover:bg-muted transition-all flex items-center justify-center gap-2 border border-border"
                             >
                                 <Plus size={14} />
                                 Shto Rresht
@@ -450,7 +450,7 @@ const InvoiceForm = () => {
 
                     <div className="space-y-3">
                         {/* Table Header (desktop only) */}
-                        <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-lg">
+                        <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 py-2 rounded-lg">
                             <div className="col-span-6">Përshkrimi</div>
                             <div className="col-span-2 text-center">Sasia</div>
                             <div className="col-span-2 text-center">Çmimi</div>
@@ -464,21 +464,21 @@ const InvoiceForm = () => {
                                     key={index}
                                     initial={{ opacity: 0, y: 6 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="group bg-white border border-slate-100 p-3 rounded-xl overflow-hidden"
+                                    className="group bg-card border border-border p-3 rounded-xl overflow-hidden"
                                 >
                                     <div className="flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center min-w-0">
                                         <div className="sm:col-span-6 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Përshkrimi</label>
+                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Përshkrimi</label>
                                             <input
                                                 type="text"
                                                 placeholder="Përshkrimi i artikullit..."
                                                 value={item.description}
                                                 onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                                className="w-full max-w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-[16px] sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all placeholder:text-slate-300"
+                                                className="w-full max-w-full bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-[16px] sm:text-sm font-semibold text-foreground focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all placeholder:text-muted-foreground/50"
                                             />
                                         </div>
                                         <div className="sm:col-span-2 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Sasia</label>
+                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Sasia</label>
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-quantity-${index}`}
@@ -502,13 +502,13 @@ const InvoiceForm = () => {
                                                             })
                                                         }
                                                     }}
-                                                    className="w-full max-w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 pr-7 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                                                    className="w-full max-w-full bg-muted/50 border border-border rounded-lg py-1.5 pr-7 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">m2</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">m2</span>
                                             </div>
                                         </div>
                                         <div className="sm:col-span-2 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Çmimi</label>
+                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Çmimi</label>
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-price-${index}`}
@@ -527,7 +527,7 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="w-full max-w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 pr-24 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                                                    className="w-full max-w-full bg-muted/50 border border-border rounded-lg py-1.5 pr-24 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all"
                                                 />
                                                 <button
                                                     type="button"
@@ -537,13 +537,13 @@ const InvoiceForm = () => {
                                                 >
                                                     ÷1.18
                                                 </button>
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">€</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">€</span>
                                             </div>
                                         </div>
                                         <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-4">
                                             <div>
-                                                <label className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Totali</label>
-                                                <span className="text-sm font-black text-slate-800">
+                                                <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Totali</label>
+                                                <span className="text-sm font-black text-foreground">
                                                     {(item.quantity * item.unit_price).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
                                                 </span>
                                             </div>
@@ -562,12 +562,12 @@ const InvoiceForm = () => {
 
                     {/* Compact Totals */}
                     <div className="mt-3 grid grid-cols-1 gap-2 max-w-xs ml-auto">
-                        <div className="border border-slate-200 rounded-lg px-3 py-2 flex items-center justify-between">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nëntotali</span>
-                            <span className="text-xs font-bold text-slate-900">{subtotal.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                        <div className="border border-border rounded-lg px-3 py-2 flex items-center justify-between">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nëntotali</span>
+                            <span className="text-xs font-bold text-foreground">{subtotal.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                         </div>
-                        <div className="border border-slate-200 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div className="border border-border rounded-lg px-3 py-2 flex items-center justify-between gap-2">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                 <input
                                     type="checkbox"
                                     checked={vatEnabled}
@@ -596,13 +596,13 @@ const InvoiceForm = () => {
                                         setLastVatPercentage(value || lastVatPercentage)
                                     }}
                                     disabled={!vatEnabled}
-                                    className={`w-14 bg-slate-50 border border-slate-200 rounded-md text-center py-0.5 text-[11px] font-bold focus:ring-2 focus:ring-blue-500/30 focus:bg-white ${vatEnabled ? '' : 'opacity-50 cursor-not-allowed'}`}
+                                    className={`w-14 bg-muted/50 border border-border rounded-md text-center py-0.5 text-[11px] font-bold focus:ring-2 focus:ring-blue-500/30 focus:bg-card ${vatEnabled ? '' : 'opacity-50 cursor-not-allowed'}`}
                                 />
-                                <span className="text-[11px] font-semibold text-slate-500">{vatAmount.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                                <span className="text-[11px] font-semibold text-muted-foreground">{vatAmount.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                             </div>
                         </div>
-                        <div className="border border-slate-900 bg-slate-900 text-white rounded-lg px-3 py-2 flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Për Pagesë</span>
+                        <div className="border border-foreground bg-foreground text-background rounded-lg px-3 py-2 flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Për Pagesë</span>
                             <span className="text-xs font-black">{total.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                         </div>
                     </div>
