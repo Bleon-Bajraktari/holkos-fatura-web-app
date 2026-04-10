@@ -97,21 +97,40 @@ def get_db():
     finally:
         db.close()
 
-# --- AUTH ---
+# --- AUTH CACHE (kredencialet në memorie – shmang DB queries gjatë login) ---
+_auth_cache: dict = {"username": None, "password_hash": None}
+
+def _refresh_auth_cache(db: Session):
+    """Ngarko kredencialet nga DB në memorie. Thirret në startup dhe pas ndryshimit."""
+    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
+    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+    _auth_cache["username"] = (username_row.setting_value or "").strip() if username_row else None
+    _auth_cache["password_hash"] = (password_row.setting_value or "") if password_row else None
+
 def _ensure_auth_credentials(db: Session):
-    """Krijo admin/holkos2025 vetëm nëse mungojnë. Thirret vetëm gjatë startup."""
-    from auth import hash_password
+    """Krijo kredencialet fillestare nëse mungojnë. Thirret vetëm gjatë startup."""
+    from auth import hash_password, verify_password
     import os
-    # Kontroho nëse kredencialet tashmë ekzistojnë para se të bëjmë hash (bcrypt është i ngadaltë)
     username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
     password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
     username_exists = username_row and (username_row.setting_value or "").strip()
     password_exists = password_row and (password_row.setting_value or "").strip()
+    initial_password = os.getenv("APP_INITIAL_PASSWORD", "holkos2025")
     if username_exists and password_exists:
-        return  # Kredencialet ekzistojnë, mos humb kohë me bcrypt
+        # Re-hash me rounds të ulët nëse hash-i aktual është i ngadaltë (rounds > 6)
+        stored_hash = password_row.setting_value or ""
+        try:
+            import bcrypt as _bcrypt
+            current_rounds = int(stored_hash.split("$")[2]) if stored_hash.startswith("$2") else 99
+            if current_rounds > 6 and verify_password(initial_password, stored_hash):
+                password_row.setting_value = hash_password(initial_password)
+                db.commit()
+        except Exception:
+            pass
+        _refresh_auth_cache(db)
+        return
     username = os.getenv("APP_INITIAL_USERNAME", "admin")
-    password = os.getenv("APP_INITIAL_PASSWORD", "holkos2025")
-    pw_hash = hash_password(password)  # Bcrypt vetëm kur duhet
+    pw_hash = hash_password(initial_password)
     changed = False
     for key, val in [("app_login_username", username), ("app_login_password", pw_hash)]:
         row = db.query(models.Setting).filter(models.Setting.setting_key == key).first()
@@ -124,16 +143,18 @@ def _ensure_auth_credentials(db: Session):
             changed = True
     if changed:
         db.commit()
+    _refresh_auth_cache(db)
 
 @app.post("/auth/login", response_model=schemas.TokenResponse)
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     from auth import verify_password, create_access_token
-    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
-    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
-    if not username_row or not password_row or not (username_row.setting_value or "").strip():
-        raise HTTPException(status_code=401, detail="Kredencialet nuk janë konfiguruar.")
-    stored_username = (username_row.setting_value or "").strip()
-    stored_hash = password_row.setting_value or ""
+    stored_username = _auth_cache.get("username") or ""
+    stored_hash = _auth_cache.get("password_hash") or ""
+    if not stored_username or not stored_hash:
+        # Fallback: ngarko nga DB nëse cache është bosh (p.sh. pas restart)
+        _refresh_auth_cache(db)
+        stored_username = _auth_cache.get("username") or ""
+        stored_hash = _auth_cache.get("password_hash") or ""
     if not stored_username or not stored_hash:
         raise HTTPException(status_code=401, detail="Kredencialet nuk janë konfiguruar.")
     if login_data.username.strip().lower() != stored_username.lower():
@@ -167,6 +188,7 @@ def change_password(
         raise HTTPException(status_code=400, detail="Fjalëkalimi i ri duhet të ketë të paktën 4 karaktere.")
     password_row.setting_value = hash_password(payload.new_password)
     db.commit()
+    _refresh_auth_cache(db)
     return {"message": "Fjalëkalimi u ndryshua me sukses."}
 
 @app.put("/auth/change-username")
@@ -194,6 +216,7 @@ def change_username(
         raise HTTPException(status_code=400, detail="Emri i përdoruesit duhet të ketë të paktën 2 karaktere.")
     username_row.setting_value = new_username
     db.commit()
+    _refresh_auth_cache(db)
     new_token = create_access_token(new_username)
     return {"message": "Emri i përdoruesit u ndryshua me sukses.", "access_token": new_token, "token_type": "bearer", "expires_in": 1800}
 
