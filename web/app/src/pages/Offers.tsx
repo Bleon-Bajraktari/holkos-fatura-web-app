@@ -345,9 +345,9 @@ const OffersPage = () => {
                                     {dateFrom && (
                                         <button
                                             onClick={() => setDateFrom('')}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                                         >
-                                            <X size={12} className="text-gray-400" />
+                                            <X size={12} className="text-muted-foreground" />
                                         </button>
                                     )}
                                 </div>
@@ -364,9 +364,9 @@ const OffersPage = () => {
                                     {dateTo && (
                                         <button
                                             onClick={() => setDateTo('')}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                                         >
-                                            <X size={12} className="text-gray-400" />
+                                            <X size={12} className="text-muted-foreground" />
                                         </button>
                                     )}
                                 </div>
@@ -398,17 +398,17 @@ const OffersPage = () => {
                 {/* Content Section */}
                 <div className="space-y-2 sm:space-y-3">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-4">
+                        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
                             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                             <p className="font-bold animate-pulse">Duke ngarkuar ofertat...</p>
                         </div>
                     ) : Object.keys(grouped).length === 0 ? (
                         <div className="bg-card rounded-[2rem] p-16 text-center shadow-sm border border-gray-100 dark:border-slate-700">
-                            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Search size={32} className="text-gray-300" />
+                            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search size={32} className="text-muted-foreground/40" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800">Nuk u gjet asnjë ofertë</h3>
-                            <p className="text-gray-500 mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
+                            <h3 className="text-xl font-bold text-foreground">Nuk u gjet asnjë ofertë</h3>
+                            <p className="text-muted-foreground mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
                         </div>
                     ) : (
                         Object.entries(grouped).map(([clientName, group]) => {
@@ -427,7 +427,7 @@ const OffersPage = () => {
                                                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
                                                     <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md border border-gray-100 dark:border-slate-600 uppercase">{group.offers.length} oferta</span>
                                                     <div className="flex items-center gap-1 sm:gap-1.5">
-                                                        <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Gjithsej:</span>
+                                                        <span className="text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">Gjithsej:</span>
                                                         <span className="text-xs sm:text-sm font-black text-blue-600 whitespace-nowrap">{group.total.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                                                     </div>
                                                 </div>
@@ -455,8 +455,8 @@ const OffersPage = () => {
                                                         key={off.id}
                                                         className={`relative overflow-hidden transition-all duration-300 ${selectionMode ? 'cursor-pointer' : ''
                                                             } ${selectionMode && isSelected
-                                                                ? 'bg-blue-50/80 border-blue-200'
-                                                                : 'bg-white border border-gray-100/50 hover:border-blue-100/50 shadow-sm hover:shadow-md'
+                                                                ? 'bg-blue-50/80 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
+                                                                : 'bg-white border border-gray-100/50 hover:border-blue-100/50 shadow-sm hover:shadow-md dark:bg-slate-800 dark:border-slate-700'
                                                             } rounded-2xl`}
                                                     >
                                                         {/* Summary Row */}
@@ -468,14 +468,14 @@ const OffersPage = () => {
                                                                 {selectionMode && (
                                                                     <div className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
                                                                         ? 'bg-blue-600 border-blue-600'
-                                                                        : 'border-gray-200 bg-white'
+                                                                        : 'border-gray-200 bg-white dark:border-slate-600 dark:bg-slate-700'
                                                                         }`}>
                                                                         {isSelected && <CheckSquare size={12} className="text-white" />}
                                                                     </div>
                                                                 )}
                                                                 <div className="min-w-0">
                                                                     <div className="font-bold text-foreground text-sm truncate">{off.offer_number}</div>
-                                                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{new Date(off.date).toLocaleDateString('sq-AL')}</div>
+                                                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{new Date(off.date).toLocaleDateString('sq-AL')}</div>
                                                                 </div>
                                                             </div>
 
@@ -560,12 +560,12 @@ const OffersPage = () => {
             {/* Selection Bar */}
             {selectionMode && (
                 <div
-                    className="fixed left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:max-w-md bg-white/95 backdrop-blur-xl border border-blue-100 rounded-[2rem] shadow-2xl shadow-blue-500/20 px-6 py-4 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8"
+                    className="fixed left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] sm:max-w-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 rounded-[2rem] shadow-2xl shadow-blue-500/20 px-6 py-4 transition-all duration-500 animate-in fade-in slide-in-from-bottom-8"
                     style={actionBarStyle}
                 >
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Të zgjedhura</span>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Të zgjedhura</span>
                             <span className="text-xl font-black text-blue-600">{selectedIds.size}</span>
                         </div>
                         <div className="flex items-center gap-2">

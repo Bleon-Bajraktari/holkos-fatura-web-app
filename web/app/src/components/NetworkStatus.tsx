@@ -79,7 +79,7 @@ export default function NetworkStatus() {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -50, opacity: 0 }}
                     onClick={() => setSyncError(null)}
-                    className={`fixed top-4 left-1/2 -track-x-1/2 z-[9999] px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-sm cursor-pointer max-w-[90vw] whitespace-normal ${syncError ? 'bg-rose-600 text-white' : (isOnline ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-white')
+                    className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-sm cursor-pointer max-w-[90vw] whitespace-normal ${syncError ? 'bg-rose-600 text-white' : (isOnline ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-white')
                         }`}
                     style={{ left: '50%', transform: 'translateX(-50%)' }}
                 >
@@ -109,7 +109,7 @@ export default function NetworkStatus() {
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -50, opacity: 0 }}
-                    className={`fixed top-16 left-1/2 -track-x-1/2 z-[9999] px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-sm max-w-[90vw] whitespace-normal ${lastSyncedTitle ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'
+                    className={`fixed top-16 left-1/2 -translate-x-1/2 z-[9999] px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-sm max-w-[90vw] whitespace-normal ${lastSyncedTitle ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'
                         }`}
                     style={{ left: '50%', transform: 'translateX(-50%)' }}
                 >
