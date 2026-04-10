@@ -410,23 +410,23 @@ const InvoicesPage = () => {
                 {/* Content Section */}
                 <div className="space-y-2 sm:space-y-3">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-4">
+                        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
                             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                             <p className="font-bold animate-pulse">Duke ngarkuar faturat...</p>
                         </div>
                     ) : Object.keys(grouped).length === 0 ? (
-                        <div className="bg-white rounded-[2rem] p-16 text-center shadow-sm border border-gray-100">
-                            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Search size={32} className="text-gray-300" />
+                        <div className="bg-card rounded-[2rem] p-16 text-center shadow-sm border border-border">
+                            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search size={32} className="text-muted-foreground/40" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800">Nuk u gjet asnjë faturë</h3>
-                            <p className="text-gray-500 mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
+                            <h3 className="text-xl font-bold text-foreground">Nuk u gjet asnjë faturë</h3>
+                            <p className="text-muted-foreground mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
                         </div>
                     ) : (
                         Object.entries(grouped).map(([clientName, group]) => {
                             const isExpanded = expandedClients.has(clientName)
                             return (
-                                <div key={clientName} className="bg-white rounded-xl sm:rounded-2xl border border-gray-100/80 overflow-hidden group/card shadow-sm hover:shadow-md transition-all duration-300">
+                                <div key={clientName} className="bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden group/card shadow-sm hover:shadow-md transition-all duration-300">
                                     <button
                                         onClick={() => toggleClient(clientName)}
                                         className={`w-full min-h-[4rem] sm:min-h-[4.5rem] flex items-center justify-between px-3 sm:px-5 py-2.5 text-left transition-all ${isExpanded ? 'bg-muted/50' : 'hover:bg-gray-50/30 dark:hover:bg-slate-700/30'
@@ -481,7 +481,7 @@ const InvoicesPage = () => {
                                                                 {selectionMode && (
                                                                     <div className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
                                                                         ? 'bg-blue-600 border-blue-600'
-                                                                        : 'border-gray-200 bg-white'
+                                                                        : 'border-border bg-card'
                                                                         }`}>
                                                                         {isSelected && <CheckSquare size={12} className="text-white" />}
                                                                     </div>
@@ -509,9 +509,9 @@ const InvoicesPage = () => {
 
                                                             {/* Mobile: TVSH% + Shuma + expand (right side) */}
                                                             <div className="flex sm:hidden items-center gap-2">
-                                                                <span className="text-xs font-bold text-gray-500">{parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%</span>
-                                                                <span className="text-sm font-black text-gray-900">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
-                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                                <span className="text-xs font-bold text-muted-foreground">{parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%</span>
+                                                                <span className="text-sm font-black text-foreground">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                                                                <div className={`p-1.5 rounded-lg bg-muted text-muted-foreground transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 dark:bg-blue-900/30 text-blue-600' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
                                                             </div>
@@ -521,10 +521,10 @@ const InvoicesPage = () => {
                                                                 <span className="text-sm font-black text-foreground">{parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%</span>
                                                             </div>
                                                             <div className="hidden sm:block col-span-2 text-right">
-                                                                <span className="text-sm font-black text-gray-900">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
+                                                                <span className="text-sm font-black text-foreground">{parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                                                             </div>
                                                             <div className="hidden sm:flex col-span-3 items-center justify-end">
-                                                                <div className={`p-1.5 rounded-lg bg-gray-50 text-gray-400 transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                                <div className={`p-1.5 rounded-lg bg-muted text-muted-foreground transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 dark:bg-blue-900/30 text-blue-600' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
                                                             </div>
