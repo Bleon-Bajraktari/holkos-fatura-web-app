@@ -161,6 +161,18 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Emri i përdoruesit ose fjalëkalimi është i gabuar.")
     if not verify_password(login_data.password, stored_hash):
         raise HTTPException(status_code=401, detail="Emri i përdoruesit ose fjalëkalimi është i gabuar.")
+    # Re-hash me rounds=6 nëse hash-i aktual ka rounds më të larta (njëherë, transparent)
+    try:
+        if stored_hash.startswith("$2") and int(stored_hash.split("$")[2]) > 6:
+            from auth import hash_password
+            new_hash = hash_password(login_data.password)
+            password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+            if password_row:
+                password_row.setting_value = new_hash
+                db.commit()
+                _refresh_auth_cache(db)
+    except Exception:
+        pass
     token = create_access_token(login_data.username)
     return schemas.TokenResponse(access_token=token, expires_in=1800)
 
