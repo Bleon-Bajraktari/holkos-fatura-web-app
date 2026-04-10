@@ -11,7 +11,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def hash_password(password: str) -> str:
     pwd = (password[:72] if len(password.encode("utf-8")) > 72 else password).encode("utf-8")
-    return bcrypt.hashpw(pwd, bcrypt.gensalt()).decode("utf-8")
+    return bcrypt.hashpw(pwd, bcrypt.gensalt(rounds=10)).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
