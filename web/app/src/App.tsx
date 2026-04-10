@@ -66,7 +66,7 @@ const Dashboard = () => {
         fetchStats()
     }, [])
 
-    if (loading) return <div className="p-8 text-center text-slate-500 font-medium">Duke u ngarkuar...</div>
+    if (loading) return <div className="p-8 text-center text-muted-foreground font-medium">Duke u ngarkuar...</div>
 
     const statCards = [
         { label: 'Totali i Faturave', value: stats?.total_invoices || 0, icon: <FileText size={20} />, color: 'bg-blue-500', trend: 'Gjithsej' },
@@ -76,11 +76,11 @@ const Dashboard = () => {
     ]
 
     const quickActions = [
-        { label: 'Faturat', href: '/invoices', icon: <FileText size={18} />, color: 'text-blue-600 bg-blue-50' },
-        { label: 'Ofertat', href: '/offers', icon: <Layers size={18} />, color: 'text-amber-600 bg-amber-50' },
-        { label: 'Kontratat', href: '/contracts', icon: <FileSignature size={18} />, color: 'text-indigo-600 bg-indigo-50' },
-        { label: 'Klientë', href: '/clients', icon: <Users size={18} />, color: 'text-emerald-600 bg-emerald-50' },
-        { label: 'Cilësime', href: '/settings', icon: <Settings size={18} />, color: 'text-rose-600 bg-rose-50' },
+        { label: 'Faturat', href: '/invoices', icon: <FileText size={18} />, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' },
+        { label: 'Ofertat', href: '/offers', icon: <Layers size={18} />, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30' },
+        { label: 'Kontratat', href: '/contracts', icon: <FileSignature size={18} />, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' },
+        { label: 'Klientë', href: '/clients', icon: <Users size={18} />, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30' },
+        { label: 'Cilësime', href: '/settings', icon: <Settings size={18} />, color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30' },
     ]
 
     return (

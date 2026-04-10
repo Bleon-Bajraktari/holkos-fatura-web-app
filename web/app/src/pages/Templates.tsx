@@ -45,32 +45,32 @@ const TemplatesPage = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="md:hidden divide-y divide-gray-100">
+            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                <div className="md:hidden divide-y divide-border">
                     {loading ? (
-                        <div className="px-6 py-10 text-center text-gray-400">Duke u ngarkuar...</div>
+                        <div className="px-6 py-10 text-center text-muted-foreground">Duke u ngarkuar...</div>
                     ) : templates.length === 0 ? (
-                        <div className="px-6 py-10 text-center text-gray-400">Nuk ka shabllona.</div>
+                        <div className="px-6 py-10 text-center text-muted-foreground">Nuk ka shabllona.</div>
                     ) : (
                         templates.map(template => (
                             <div key={template.id} className="p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <div className="font-bold text-gray-900">{template.name}</div>
-                                        <div className="text-xs text-gray-500">{template.description || '-'}</div>
+                                        <div className="font-bold text-foreground">{template.name}</div>
+                                        <div className="text-xs text-muted-foreground">{template.description || '-'}</div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {!template.is_default && (
                                             <button
                                                 onClick={() => handleSetDefault(template.id)}
-                                                className="px-3 py-1.5 text-xs font-bold bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
+                                                className="px-3 py-1.5 text-xs font-bold bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
                                             >
                                                 Default
                                             </button>
                                         )}
                                         <button
                                             onClick={() => handleToggleActive(template.id)}
-                                            className="px-3 py-1.5 text-xs font-bold bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors inline-flex items-center gap-1"
+                                            className="px-3 py-1.5 text-xs font-bold bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors inline-flex items-center gap-1"
                                         >
                                             {template.is_active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
                                             {template.is_active ? 'Aktiv' : 'Joaktiv'}
@@ -78,10 +78,10 @@ const TemplatesPage = () => {
                                     </div>
                                 </div>
                                 <div className="mt-3 flex items-center gap-4 text-sm">
-                                    <span className={`inline-flex items-center gap-1 font-semibold ${template.is_active ? 'text-green-600' : 'text-red-500'}`}>
+                                    <span className={`inline-flex items-center gap-1 font-semibold ${template.is_active ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}>
                                         <Check size={16} /> {template.is_active ? 'Aktiv' : 'Joaktiv'}
                                     </span>
-                                    <span className={`inline-flex items-center gap-1 font-semibold ${template.is_default ? 'text-amber-600' : 'text-gray-400'}`}>
+                                    <span className={`inline-flex items-center gap-1 font-semibold ${template.is_default ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                                         <Star size={16} /> {template.is_default ? 'Default' : 'Jo default'}
                                     </span>
                                 </div>

@@ -285,7 +285,7 @@ const OfferForm = () => {
         }
     }
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Duke u ngarkuar...</div>
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
         <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-24">
@@ -294,26 +294,26 @@ const OfferForm = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/')}
-                        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
                             {isEdit ? 'Redakto Ofertën' : 'Krijo Ofertë të Re'}
                         </h1>
-                        <p className="text-sm text-slate-400 font-medium">Plotësoni detajet e ofertës më poshtë</p>
+                        <p className="text-sm text-muted-foreground font-medium">Plotësoni detajet e ofertës më poshtë</p>
                     </div>
                 </div>
 
                 <div />
             </div>
 
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+            <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="relative space-y-3">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                            <h3 className="font-bold text-foreground flex items-center gap-2">
                                 <Users size={18} className="text-blue-500" />
                                 Informacioni i Klientit
                             </h3>
@@ -327,7 +327,7 @@ const OfferForm = () => {
                             </button>
                         </div>
                         <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                             <input
                                 type="text"
                                 placeholder="Kërko klientin sipas emrit ose numrit unik..."
@@ -350,12 +350,12 @@ const OfferForm = () => {
                                 }}
                                 onFocus={() => setShowSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
+                                className="w-full bg-muted/50 border border-border rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowSuggestions(prev => !prev)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-slate-50"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-card border border-border text-muted-foreground flex items-center justify-center hover:bg-muted/50"
                             >
                                 ▼
                             </button>
@@ -366,10 +366,10 @@ const OfferForm = () => {
                                         initial={{ opacity: 0, y: 6 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 6 }}
-                                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-64 overflow-auto"
+                                        className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl z-50 max-h-64 overflow-auto"
                                     >
                                         {filteredClients.length === 0 ? (
-                                            <div className="px-4 py-3 text-sm text-slate-400">Nuk u gjet asnjë klient</div>
+                                            <div className="px-4 py-3 text-sm text-muted-foreground">Nuk u gjet asnjë klient</div>
                                         ) : (
                                             filteredClients.map(client => (
                                                 <div
@@ -379,10 +379,10 @@ const OfferForm = () => {
                                                         setSearchTerm(client.name)
                                                         setShowSuggestions(false)
                                                     }}
-                                                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0"
+                                                    className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-border last:border-0"
                                                 >
-                                                    <div className="text-sm font-bold text-slate-800">{client.name}</div>
-                                                    <div className="text-xs text-slate-400">{client.unique_number}</div>
+                                                    <div className="text-sm font-bold text-foreground">{client.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{client.unique_number}</div>
                                                 </div>
                                             ))
                                         )}
@@ -394,21 +394,21 @@ const OfferForm = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Numri i Ofertës</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Numri i Ofertës</label>
                             <input
                                 type="text"
                                 value={offer.offer_number}
                                 onChange={(e) => setOffer(prev => ({ ...prev, offer_number: e.target.value }))}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
+                                className="w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
                             />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Data e Ofertës</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Data e Ofertës</label>
                             <input
                                 type="date"
                                 value={offer.date}
                                 onChange={(e) => setOffer(prev => ({ ...prev, date: e.target.value }))}
-                                className="w-full min-w-0 max-w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all appearance-none"
+                                className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all appearance-none"
                             />
                         </div>
                     </div>
@@ -416,20 +416,20 @@ const OfferForm = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titulli / Subjekti</label>
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Titulli / Subjekti</label>
                         <input
                             type="text"
                             value={offer.subject}
                             onChange={(e) => setOffer(prev => ({ ...prev, subject: e.target.value }))}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
+                            className="w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
                         />
                     </div>
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Madhësia e Tekstit</label>
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Madhësia e Tekstit</label>
                         <select
                             value={fontSize}
                             onChange={(e) => setFontSize(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
+                            className="w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
                         >
                             <option value="Auto">Auto</option>
                             <option value="10">10</option>
@@ -444,23 +444,23 @@ const OfferForm = () => {
                 </div>
             </div>
 
-            <div className="mt-6 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+            <div className="mt-6 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Përshkrimi i Artikujve dhe Kalkulimet</h3>
+                    <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest">Përshkrimi i Artikujve dhe Kalkulimet</h3>
                     <div className="flex flex-wrap items-center gap-2">
-                        <button onClick={() => addRow('item')} className="w-full sm:w-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all">+ Artikull</button>
-                        <button onClick={() => addRow('header')} className="w-full sm:w-auto px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all">+ Titull</button>
-                        <button onClick={() => addRow('text')} className="w-full sm:w-auto px-4 py-2 bg-purple-50 text-purple-600 rounded-xl text-xs font-bold hover:bg-purple-100 transition-all">+ Tekst</button>
+                        <button onClick={() => addRow('item')} className="w-full sm:w-auto px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all">+ Artikull</button>
+                        <button onClick={() => addRow('header')} className="w-full sm:w-auto px-4 py-2 bg-muted text-foreground rounded-xl text-xs font-bold hover:bg-muted/80 transition-all">+ Titull</button>
+                        <button onClick={() => addRow('text')} className="w-full sm:w-auto px-4 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-bold hover:bg-purple-100 transition-all">+ Tekst</button>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     {rows.map((row) => (
-                        <div key={row.id} className={`border ${row.has_border ? 'border-slate-200' : 'border-transparent'} rounded-2xl p-4`}>
+                        <div key={row.id} className={`border ${row.has_border ? 'border-border' : 'border-transparent'} rounded-2xl p-4`}>
                             <div className="flex items-start gap-3">
                                 <div className="flex flex-col gap-2">
-                                    <button onClick={() => moveRow(row.id, -1)} className="p-1 text-slate-400 hover:text-slate-700"><MoveUp size={16} /></button>
-                                    <button onClick={() => moveRow(row.id, 1)} className="p-1 text-slate-400 hover:text-slate-700"><MoveDown size={16} /></button>
+                                    <button onClick={() => moveRow(row.id, -1)} className="p-1 text-muted-foreground hover:text-foreground"><MoveUp size={16} /></button>
+                                    <button onClick={() => moveRow(row.id, 1)} className="p-1 text-muted-foreground hover:text-foreground"><MoveDown size={16} /></button>
                                 </div>
 
                                 <div className="flex-1 space-y-3 min-w-0">
@@ -470,7 +470,7 @@ const OfferForm = () => {
                                             value={row.description}
                                             onChange={(e) => updateRow(row.id, { description: e.target.value })}
                                             placeholder="TITULLI I SEKSIONIT..."
-                                            className="w-full bg-blue-50 border border-blue-100 rounded-xl py-3 px-4 text-sm font-bold text-blue-700"
+                                            className="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl py-3 px-4 text-sm font-bold text-blue-700 dark:text-blue-300"
                                         />
                                     ) : (
                                         <textarea
@@ -478,14 +478,14 @@ const OfferForm = () => {
                                             onChange={(e) => updateRow(row.id, { description: e.target.value })}
                                             placeholder={row.row_type === 'text' ? 'Tekst informativ...' : 'Përshkrimi...'}
                                             rows={row.row_type === 'text' ? 2 : 1}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium"
+                                            className="w-full bg-muted/50 border border-border rounded-xl py-3 px-4 text-sm font-medium"
                                         />
                                     )}
 
                                     {row.row_type === 'item' && (
                                         <div className="flex flex-wrap items-center gap-3">
                                             {row.modules.map((mod) => (
-                                                <div key={mod.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                                                <div key={mod.id} className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2">
                                                     <input
                                                         type="text"
                                                         inputMode="decimal"
@@ -498,16 +498,16 @@ const OfferForm = () => {
                                                         type="text"
                                                         value={mod.unit}
                                                         onChange={(e) => updateModule(row.id, mod.id, { unit: e.target.value })}
-                                                        className="w-12 bg-transparent text-sm font-bold text-blue-600 outline-none"
+                                                        className="w-12 bg-transparent text-sm font-bold text-blue-600 dark:text-blue-400 outline-none"
                                                         placeholder="m²"
                                                     />
-                                                    <button onClick={() => removeModule(row.id, mod.id)} className="text-slate-400 hover:text-red-500">
+                                                    <button onClick={() => removeModule(row.id, mod.id)} className="text-muted-foreground hover:text-red-500">
                                                         <X size={14} />
                                                     </button>
                                                 </div>
                                             ))}
-                                            <button onClick={() => addModule(row.id)} className="px-3 py-2 text-xs font-bold bg-slate-100 rounded-xl hover:bg-slate-200">+</button>
-                                            <div className="ml-auto text-sm font-bold text-slate-700">
+                                            <button onClick={() => addModule(row.id)} className="px-3 py-2 text-xs font-bold bg-muted rounded-xl hover:bg-muted/80">+</button>
+                                            <div className="ml-auto text-sm font-bold text-foreground">
                                                 {calculateRowSubtotal(row).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
                                             </div>
                                         </div>
@@ -515,7 +515,7 @@ const OfferForm = () => {
                                 </div>
 
                                 <div className="flex flex-col items-end gap-2">
-                                    <label className="text-xs text-slate-500 flex items-center gap-2">
+                                    <label className="text-xs text-muted-foreground flex items-center gap-2">
                                         <input
                                             type="checkbox"
                                             checked={row.has_border}
@@ -523,7 +523,7 @@ const OfferForm = () => {
                                         />
                                         Kornizë
                                     </label>
-                                    <button onClick={() => removeRow(row.id)} className="p-2 text-slate-400 hover:text-red-500">
+                                    <button onClick={() => removeRow(row.id)} className="p-2 text-muted-foreground hover:text-red-500">
                                         <X size={16} />
                                     </button>
                                 </div>
@@ -534,11 +534,11 @@ const OfferForm = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm mt-8">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm mt-8">
                 <button
                     onClick={handlePreview}
                     disabled={saving}
-                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-100 text-slate-700 rounded-2xl text-sm font-black hover:bg-slate-200 transition-all shadow-sm disabled:opacity-50"
+                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-muted text-foreground rounded-2xl text-sm font-black hover:bg-muted/80 transition-all shadow-sm disabled:opacity-50"
                 >
                     <Eye size={20} />
                     <span>SHIKO</span>
@@ -546,7 +546,7 @@ const OfferForm = () => {
                 <button
                     onClick={() => handleSave('save')}
                     disabled={saving}
-                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white rounded-2xl text-sm font-black hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
+                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 dark:bg-slate-600 text-white rounded-2xl text-sm font-black hover:bg-slate-900 dark:hover:bg-slate-500 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
                 >
                     <Save size={20} />
                     <span>RUAJ</span>

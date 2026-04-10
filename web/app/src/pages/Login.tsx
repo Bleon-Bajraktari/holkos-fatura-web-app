@@ -154,7 +154,7 @@ export default function Login() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2">
                 Fjalëkalimi
               </label>
               <PasswordInput
@@ -163,7 +163,7 @@ export default function Login() {
                 name="password"
                 defaultValue=""
                 autoComplete="current-password"
-                inputClassName="w-full px-4 py-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-white outline-none transition-all text-base min-h-[48px]"
+                inputClassName="w-full px-4 py-3.5 rounded-2xl border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-card outline-none transition-all text-base min-h-[48px]"
                 placeholder="Password"
                 required
                 disabled={loading}
