@@ -70,7 +70,7 @@ UPLOADS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads"
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-# Startup: ekzekuto migrimin e DB (shto kolona qe mungojne)
+# Startup: ekzekuto migrimin e DB dhe siguro kredencialet (njëherë, jo çdo login)
 @app.on_event("startup")
 def run_db_migration():
     try:
@@ -79,6 +79,15 @@ def run_db_migration():
     except Exception as e:
         import logging
         logging.warning(f"DB migration skipped or failed: {e}")
+    # Siguro kredencialet gjatë startup, jo gjatë çdo login
+    db = database.SessionLocal()
+    try:
+        _ensure_auth_credentials(db)
+    except Exception as e:
+        import logging
+        logging.warning(f"Auth credentials init skipped: {e}")
+    finally:
+        db.close()
 
 # Dependency to get DB session
 def get_db():
@@ -90,12 +99,19 @@ def get_db():
 
 # --- AUTH ---
 def _ensure_auth_credentials(db: Session):
-    """Krijo admin/holkos2025 vetëm nëse mungojnë. APP_FORCE_RESET_CREDENTIALS mbishkruan vetëm kur kredencialet janë bosh."""
+    """Krijo admin/holkos2025 vetëm nëse mungojnë. Thirret vetëm gjatë startup."""
     from auth import hash_password
     import os
+    # Kontroho nëse kredencialet tashmë ekzistojnë para se të bëjmë hash (bcrypt është i ngadaltë)
+    username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
+    password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
+    username_exists = username_row and (username_row.setting_value or "").strip()
+    password_exists = password_row and (password_row.setting_value or "").strip()
+    if username_exists and password_exists:
+        return  # Kredencialet ekzistojnë, mos humb kohë me bcrypt
     username = os.getenv("APP_INITIAL_USERNAME", "admin")
     password = os.getenv("APP_INITIAL_PASSWORD", "holkos2025")
-    pw_hash = hash_password(password)
+    pw_hash = hash_password(password)  # Bcrypt vetëm kur duhet
     changed = False
     for key, val in [("app_login_username", username), ("app_login_password", pw_hash)]:
         row = db.query(models.Setting).filter(models.Setting.setting_key == key).first()
@@ -112,7 +128,6 @@ def _ensure_auth_credentials(db: Session):
 @app.post("/auth/login", response_model=schemas.TokenResponse)
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     from auth import verify_password, create_access_token
-    _ensure_auth_credentials(db)
     username_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_username").first()
     password_row = db.query(models.Setting).filter(models.Setting.setting_key == "app_login_password").first()
     if not username_row or not password_row or not (username_row.setting_value or "").strip():
