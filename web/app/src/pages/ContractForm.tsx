@@ -193,7 +193,7 @@ const ContractForm = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-gray-500 font-medium">Duke u ngarkuar...</div>
+            <div className="min-h-screen flex items-center justify-center text-muted-foreground font-medium">Duke u ngarkuar...</div>
         )
     }
 
@@ -205,11 +205,11 @@ const ContractForm = () => {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => navigate('/contracts')}
-                                className="p-2.5 bg-gray-50 text-gray-500 hover:text-blue-600 rounded-xl"
+                                className="p-2.5 bg-muted text-muted-foreground hover:text-blue-600 rounded-xl"
                             >
                                 <ArrowLeft size={18} />
                             </button>
-                            <h1 className="text-xl font-black text-gray-900">
+                            <h1 className="text-xl font-black text-foreground">
                                 {isEdit ? 'Redakto kontratën' : 'Kontratë e re'}
                             </h1>
                         </div>
@@ -225,7 +225,7 @@ const ContractForm = () => {
                             {canPdf && (
                                 <button
                                     onClick={handleDownloadPdf}
-                                    className="bg-gray-100 text-gray-700 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5"
+                                    className="bg-muted text-foreground px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5"
                                 >
                                     <Download size={14} />
                                     <span className="hidden sm:inline">Shkarko </span>PDF
@@ -238,26 +238,26 @@ const ContractForm = () => {
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
                 <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Të dhënat e ndryshueshme</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">Të dhënat e ndryshueshme</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2 relative" ref={suggestionRef}>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Emri dhe mbiemri i punonjësit</label>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1">Emri dhe mbiemri i punonjësit</label>
                             <input
                                 type="text"
                                 value={form.employee_name}
                                 onChange={e => setForm(f => ({ ...f, employee_name: e.target.value }))}
                                 onFocus={() => { setShowSuggestions(true); setSuggestionField('name'); }}
-                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-muted/50 focus:bg-card"
                                 placeholder="Emri dhe Mbiemri"
                             />
                             {showSuggestions && suggestionField === 'name' && suggestions.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-auto">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-10 max-h-48 overflow-auto">
                                     {suggestions.map(c => (
                                         <button
                                             key={c.id}
                                             type="button"
                                             onClick={() => applySuggestion(c)}
-                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
+                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
                                         >
                                             {c.employee_name} {c.personal_number ? `(${c.personal_number})` : ''}
                                         </button>
@@ -266,7 +266,7 @@ const ContractForm = () => {
                             )}
                         </div>
                         <div className="relative" ref={suggestionField === 'number' ? suggestionRef : undefined}>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Numri personal</label>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1">Numri personal</label>
                             <input
                                 type="text"
                                 inputMode="numeric"
@@ -274,17 +274,17 @@ const ContractForm = () => {
                                 value={form.personal_number}
                                 onChange={e => setForm(f => ({ ...f, personal_number: e.target.value }))}
                                 onFocus={() => { setShowSuggestions(true); setSuggestionField('number'); }}
-                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-muted/50 focus:bg-card"
                                 placeholder="Nr. Personal"
                             />
                             {showSuggestions && suggestionField === 'number' && suggestions.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-auto">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-10 max-h-48 overflow-auto">
                                     {suggestions.map(c => (
                                         <button
                                             key={c.id}
                                             type="button"
                                             onClick={() => applySuggestion(c)}
-                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
+                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
                                         >
                                             {c.personal_number} – {c.employee_name}
                                         </button>
@@ -293,26 +293,26 @@ const ContractForm = () => {
                             )}
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Vendbanimi</label>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1">Vendbanimi</label>
                             <input
                                 type="text"
                                 value={form.residence}
                                 onChange={e => setForm(f => ({ ...f, residence: e.target.value }))}
-                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-muted/50 focus:bg-card"
                                 placeholder="Vendbanimi"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Data e kontratës</label>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1">Data e kontratës</label>
                             <input
                                 type="date"
                                 value={form.contract_date}
                                 onChange={e => setForm(f => ({ ...f, contract_date: e.target.value }))}
-                                className="w-full min-w-0 max-w-full border border-gray-200 rounded-xl h-10 px-3 text-[13px] font-medium focus:ring-2 focus:ring-blue-600/10 focus:bg-white transition-all appearance-none"
+                                className="w-full min-w-0 max-w-full border border-border rounded-xl h-10 px-3 text-[13px] font-medium focus:ring-2 focus:ring-blue-600/10 focus:bg-card bg-muted/50 transition-all appearance-none"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Paga bruto (euro)</label>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1">Paga bruto (euro)</label>
                             <input
                                 type="text"
                                 inputMode="decimal"
@@ -321,14 +321,14 @@ const ContractForm = () => {
                                     const parsed = parseDecimal(e.target.value)
                                     setForm(f => ({ ...f, gross_salary: parsed }))
                                 }}
-                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm"
+                                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-muted/50 focus:bg-card"
                             />
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Parashikim i kontratës</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">Parashikim i kontratës</h2>
                     <div className="text-sm text-gray-700 leading-relaxed space-y-3 max-h-[60vh] overflow-y-auto pr-2 contract-preview whitespace-pre-line">
                         <p className="font-bold">Kontratë e Re.</p>
                         <p>Në bazë të nenit 10 paragrafi 2, pikat 2.1 dhe 2.2. dhe nenit 11 të Ligjit të Punës Nr. 03/L-212 i shpallur në Gazetën Zyrtare të Republikës së Kosovës me dt.01.12.2010, Punëdhënësi dhe i Punësuari, si subjekte të mardhënies juridike të punës lidhin:</p>

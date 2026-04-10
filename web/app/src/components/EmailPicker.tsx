@@ -93,44 +93,44 @@ const EmailPicker = ({
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-slate-800 font-bold">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/60">
+            <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl border border-border">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                    <div className="flex items-center gap-2 text-foreground font-bold">
                         <Mail size={18} />
                         <span>{title}</span>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">
+                    <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
                         <X size={18} />
                     </button>
                 </div>
 
                 <div className="p-5 space-y-4">
                     <div>
-                        <label className="text-xs font-bold text-slate-500">Emaili</label>
+                        <label className="text-xs font-bold text-muted-foreground">Emaili</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="shembull@email.com"
                             disabled={sending}
-                            className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all disabled:opacity-60"
+                            className="mt-2 w-full bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-600/20 focus:bg-card focus:border-blue-500 transition-all disabled:opacity-60 outline-none text-foreground placeholder:text-muted-foreground"
                         />
                     </div>
 
                     {emails.length > 0 && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 mb-2">Email-at e ruajtur</p>
+                            <p className="text-xs font-bold text-muted-foreground mb-2">Email-at e ruajtur</p>
                             <div className="space-y-2 max-h-40 overflow-auto">
                                 {emails.map(e => (
-                                    <div key={e} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                                    <div key={e} className="flex items-center justify-between bg-muted/50 border border-border rounded-xl px-3 py-2">
                                         <button
                                             onClick={() => setEmail(e)}
-                                            className="text-sm font-semibold text-slate-700 text-left"
+                                            className="text-sm font-semibold text-foreground text-left"
                                         >
                                             {e}
                                         </button>
-                                        <button onClick={() => handleDelete(e)} className="p-1 text-slate-400 hover:text-red-500">
+                                        <button onClick={() => handleDelete(e)} className="p-1 text-muted-foreground hover:text-red-500 transition-colors">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -139,7 +139,7 @@ const EmailPicker = ({
                         </div>
                     )}
 
-                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
                         <input
                             type="checkbox"
                             checked={remember}
@@ -150,12 +150,12 @@ const EmailPicker = ({
                     </label>
 
                     {error && (
-                        <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+                        <div className="px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-400 font-medium">
                             {error}
                         </div>
                     )}
                     {success && (
-                        <div className="px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
+                        <div className="px-3 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-400 font-medium">
                             Email u dërgua me sukses!
                         </div>
                     )}
@@ -165,7 +165,7 @@ const EmailPicker = ({
                     <button
                         onClick={handleConfirm}
                         disabled={!isValid || sending}
-                        className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
                     >
                         {sending ? <Loader2 size={16} className="animate-spin" /> : null}
                         {sending ? 'Duke dërguar...' : 'Dërgo me email'}
