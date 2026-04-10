@@ -128,7 +128,7 @@ export default function Login() {
                 <img
                   src={logoUrl}
                   alt="Holkos Fatura"
-                  className="max-w-full max-h-full w-auto h-auto object-contain"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 dark:brightness-0 dark:invert"
                   onError={() => setLogoError(true)}
                 />
               )}
