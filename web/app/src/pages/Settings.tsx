@@ -192,7 +192,7 @@ const SettingsPage = () => {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+                    className="btn-primary-premium w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5"
                 >
                     <Save size={18} />
                     <span>{saving ? 'Duke Ruajtur...' : 'Ruaj Ndryshimet'}</span>
@@ -211,7 +211,7 @@ const SettingsPage = () => {
             )}
 
             {/* Pamje / Dark mode */}
-            <div className="mb-8 bg-card p-6 rounded-3xl border border-border shadow-sm">
+            <div className="mb-8 section-card">
                 <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">Pamje</h3>
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-foreground">Modaliteti i errët (dark mode)</span>
@@ -220,7 +220,7 @@ const SettingsPage = () => {
                         role="switch"
                         aria-checked={isDark}
                         onClick={toggleTheme}
-                        className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isDark ? 'bg-primary' : 'bg-muted'}`}
+                        className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${isDark ? 'bg-primary' : 'bg-muted'}`}
                     >
                         <span className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${isDark ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </button>
@@ -229,9 +229,9 @@ const SettingsPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Profile Section */}
-                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6">
+                <div className="section-card space-y-6">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <Building2 size={20} className="text-blue-500" />
+                        <Building2 size={20} className="text-primary" />
                         Profili i Biznesit
                     </h3>
 
@@ -246,7 +246,7 @@ const SettingsPage = () => {
                                         const file = e.target.files?.[0]
                                         if (file) handleLogoUpload(file)
                                     }}
-                                    className="w-full bg-muted border border-border rounded-2xl py-2.5 px-4 text-sm font-bold text-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-blue-700"
+                                    className="w-full bg-muted border border-border rounded-2xl py-2.5 px-4 text-sm font-bold text-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-primary/90"
                                 />
                                 <div className="text-xs text-muted-foreground font-medium">
                                     {logoUploading ? 'Duke ngarkuar...' : (company.logo_path ? `Logo: ${company.logo_path}` : 'Nuk ka logo')}
@@ -272,7 +272,7 @@ const SettingsPage = () => {
                                     type="text"
                                     value={company.name}
                                     onChange={e => setCompany({ ...company, name: e.target.value })}
-                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -286,7 +286,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.phone}
                                         onChange={e => setCompany({ ...company, phone: e.target.value })}
-                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -298,7 +298,7 @@ const SettingsPage = () => {
                                         type="email"
                                         value={company.email}
                                         onChange={e => setCompany({ ...company, email: e.target.value })}
-                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -312,7 +312,7 @@ const SettingsPage = () => {
                                     rows={2}
                                     value={company.address}
                                     onChange={e => setCompany({ ...company, address: e.target.value })}
-                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -320,9 +320,9 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Fiscal Section */}
-                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6">
+                <div className="section-card space-y-6">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <CreditCard size={20} className="text-blue-500" />
+                        <CreditCard size={20} className="text-primary" />
                         Të dhënat Fiskale
                     </h3>
 
@@ -336,7 +336,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.unique_number}
                                         onChange={e => setCompany({ ...company, unique_number: e.target.value })}
-                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -348,7 +348,7 @@ const SettingsPage = () => {
                                         type="text"
                                         value={company.fiscal_number}
                                         onChange={e => setCompany({ ...company, fiscal_number: e.target.value })}
-                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                        className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                     />
                                 </div>
                             </div>
@@ -362,7 +362,7 @@ const SettingsPage = () => {
                                     type="text"
                                     value={company.account_nib}
                                     onChange={e => setCompany({ ...company, account_nib: e.target.value })}
-                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -372,7 +372,7 @@ const SettingsPage = () => {
                 {/* SMTP Section */}
                 <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6 lg:col-span-2">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <Server size={20} className="text-blue-500" />
+                        <Server size={20} className="text-primary" />
                         Konfigurimi i Email-it (SMTP)
                     </h3>
 
@@ -383,7 +383,7 @@ const SettingsPage = () => {
                                 type="text"
                                 value={company.smtp_server}
                                 onChange={e => setCompany({ ...company, smtp_server: e.target.value })}
-                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -392,7 +392,7 @@ const SettingsPage = () => {
                                 type="number"
                                 value={company.smtp_port}
                                 onChange={e => setCompany({ ...company, smtp_port: parseInt(e.target.value) || 587 })}
-                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div className="hidden lg:block"></div>
@@ -403,7 +403,7 @@ const SettingsPage = () => {
                                 type="text"
                                 value={company.smtp_user}
                                 onChange={e => setCompany({ ...company, smtp_user: e.target.value })}
-                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -413,7 +413,7 @@ const SettingsPage = () => {
                                 <PasswordInput
                                     value={company.smtp_password}
                                     onChange={e => setCompany({ ...company, smtp_password: e.target.value })}
-                                    inputClassName="w-full bg-muted border border-border rounded-2xl py-3 pl-12 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                    inputClassName="w-full bg-muted border border-border rounded-2xl py-3 pl-12 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
                         </div>
@@ -422,9 +422,9 @@ const SettingsPage = () => {
                 </div>
 
                 {/* App Settings */}
-                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
+                <div className="section-card space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <Shield size={20} className="text-blue-500" />
+                        <Shield size={20} className="text-primary" />
                         Cilësimet e Aplikacionit
                     </h3>
                     <label className="flex items-center gap-3 text-sm font-semibold text-foreground">
@@ -432,7 +432,7 @@ const SettingsPage = () => {
                             type="checkbox"
                             checked={paymentStatusEnabled}
                             onChange={(e) => setPaymentStatusEnabled(e.target.checked)}
-                            className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500/30"
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
                         />
                         Aktivizo Menaxhimin e Statusit (Paguar/Pa Paguar)
                     </label>
@@ -441,16 +441,16 @@ const SettingsPage = () => {
                             type="checkbox"
                             checked={navbarCombined}
                             onChange={(e) => setNavbarCombined(e.target.checked)}
-                            className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500/30"
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
                         />
                         Menyja e bashkuar (një link për Faturat, Ofertat, Kontratat). Çaktivizo për të ndarë: Faturë e re, Lista e faturave, Ofertë e re, Lista e ofertave, Kontratë e re, Lista e kontratave.
                     </label>
                 </div>
 
                 {/* Change Username */}
-                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
+                <div className="section-card space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <User size={20} className="text-blue-500" />
+                        <User size={20} className="text-primary" />
                         Ndrysho Emrin e Përdoruesit
                     </h3>
                     {user && (
@@ -464,7 +464,7 @@ const SettingsPage = () => {
                                 value={newUsername}
                                 onChange={(e) => setNewUsername(e.target.value)}
                                 placeholder="p.sh. admin"
-                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                className="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -473,7 +473,7 @@ const SettingsPage = () => {
                                 value={usernamePassword}
                                 onChange={(e) => setUsernamePassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                     </div>
@@ -510,7 +510,7 @@ const SettingsPage = () => {
                                     setChangingUsername(false)
                                 }
                             }}
-                            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-primary-premium flex items-center justify-center gap-2 px-5 py-3"
                         >
                             {changingUsername ? 'Duke ndryshuar...' : 'Ndrysho Emrin'}
                         </button>
@@ -521,9 +521,9 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Change Password */}
-                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-4 lg:col-span-2">
+                <div className="section-card space-y-4 lg:col-span-2">
                     <h3 className="font-bold text-foreground flex items-center gap-2 mb-2">
-                        <Lock size={20} className="text-blue-500" />
+                        <Lock size={20} className="text-primary" />
                         Ndrysho Fjalëkalimin
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -533,7 +533,7 @@ const SettingsPage = () => {
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -542,7 +542,7 @@ const SettingsPage = () => {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                         <div>
@@ -551,7 +551,7 @@ const SettingsPage = () => {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                inputClassName="w-full bg-muted border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                             />
                         </div>
                     </div>
@@ -589,7 +589,7 @@ const SettingsPage = () => {
                                     setChangingPassword(false)
                                 }
                             }}
-                            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-primary-premium flex items-center justify-center gap-2 px-5 py-3"
                         >
                             {changingPassword ? 'Duke ndryshuar...' : 'Ndrysho Fjalëkalimin'}
                         </button>

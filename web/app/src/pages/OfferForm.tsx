@@ -288,14 +288,11 @@ const OfferForm = () => {
     if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
-        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-24">
+        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-[calc(var(--nav-height,60px)+2rem)]">
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
-                    >
+                    <button onClick={() => navigate('/offers')} className="btn-icon">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
@@ -309,7 +306,7 @@ const OfferForm = () => {
                 <div />
             </div>
 
-            <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
+            <div className="section-card space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="relative space-y-3">
                         <div className="flex items-center justify-between mb-4">
@@ -320,7 +317,7 @@ const OfferForm = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate('/clients')}
-                                className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                                className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
                             >
                                 <UserPlus size={14} />
                                 Klient i Ri
@@ -350,7 +347,7 @@ const OfferForm = () => {
                                 }}
                                 onFocus={() => setShowSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                                className="w-full bg-muted/50 border border-border rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
+                                className="w-full bg-muted/60 border border-border rounded-xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:bg-card transition-all outline-none text-foreground placeholder:text-muted-foreground"
                             />
                             <button
                                 type="button"
@@ -379,7 +376,7 @@ const OfferForm = () => {
                                                         setSearchTerm(client.name)
                                                         setShowSuggestions(false)
                                                     }}
-                                                    className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-border last:border-0"
+                                                    className="px-4 py-3 hover:bg-accent hover:text-accent-foreground cursor-pointer border-b border-border last:border-0 transition-colors"
                                                 >
                                                     <div className="text-sm font-bold text-foreground">{client.name}</div>
                                                     <div className="text-xs text-muted-foreground">{client.unique_number}</div>
@@ -394,21 +391,21 @@ const OfferForm = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Numri i Ofertës</label>
+                            <label className="input-label">Numri i Ofertës</label>
                             <input
                                 type="text"
                                 value={offer.offer_number}
                                 onChange={(e) => setOffer(prev => ({ ...prev, offer_number: e.target.value }))}
-                                className="w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
+                                className="input-premium font-bold"
                             />
                         </div>
                         <div className="min-w-0">
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Data e Ofertës</label>
+                            <label className="input-label">Data e Ofertës</label>
                             <input
                                 type="date"
                                 value={offer.date}
                                 onChange={(e) => setOffer(prev => ({ ...prev, date: e.target.value }))}
-                                className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-2xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all appearance-none"
+                                className="input-premium font-bold"
                             />
                         </div>
                     </div>
@@ -444,13 +441,13 @@ const OfferForm = () => {
                 </div>
             </div>
 
-            <div className="mt-6 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
+            <div className="section-card mt-6 space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black text-muted-foreground uppercase tracking-widest">Përshkrimi i Artikujve dhe Kalkulimet</h3>
                     <div className="flex flex-wrap items-center gap-2">
-                        <button onClick={() => addRow('item')} className="w-full sm:w-auto px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all">+ Artikull</button>
-                        <button onClick={() => addRow('header')} className="w-full sm:w-auto px-4 py-2 bg-muted text-foreground rounded-xl text-xs font-bold hover:bg-muted/80 transition-all">+ Titull</button>
-                        <button onClick={() => addRow('text')} className="w-full sm:w-auto px-4 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-bold hover:bg-purple-100 transition-all">+ Tekst</button>
+                        <button onClick={() => addRow('item')} className="px-4 py-2 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition-all">+ Artikull</button>
+                        <button onClick={() => addRow('header')} className="px-4 py-2 bg-muted text-foreground rounded-xl text-xs font-bold hover:bg-muted/80 transition-all">+ Titull</button>
+                        <button onClick={() => addRow('text')} className="px-4 py-2 bg-muted text-muted-foreground rounded-xl text-xs font-bold hover:bg-muted/80 transition-all">+ Tekst</button>
                     </div>
                 </div>
 
@@ -534,29 +531,17 @@ const OfferForm = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm mt-8">
-                <button
-                    onClick={handlePreview}
-                    disabled={saving}
-                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-muted text-foreground rounded-2xl text-sm font-black hover:bg-muted/80 transition-all shadow-sm disabled:opacity-50"
-                >
-                    <Eye size={20} />
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 section-card mt-8">
+                <button onClick={handlePreview} disabled={saving} className="btn-secondary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                    <Eye size={18} />
                     <span>SHIKO</span>
                 </button>
-                <button
-                    onClick={() => handleSave('save')}
-                    disabled={saving}
-                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 dark:bg-slate-600 text-white rounded-2xl text-sm font-black hover:bg-slate-900 dark:hover:bg-slate-500 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
-                >
-                    <Save size={20} />
+                <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                    <Save size={18} />
                     <span>RUAJ</span>
                 </button>
-                <button
-                    onClick={() => handleSave('pdf')}
-                    disabled={saving}
-                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-orange-600 text-white rounded-2xl text-sm font-black hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 disabled:opacity-50"
-                >
-                    <FileDown size={20} />
+                <button onClick={() => handleSave('pdf')} disabled={saving} className="w-full sm:flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-amber-600 text-white rounded-xl text-sm font-black hover:bg-amber-700 transition-all disabled:opacity-50">
+                    <FileDown size={18} />
                     <span>RUAJ & PDF</span>
                 </button>
             </div>

@@ -89,76 +89,76 @@ const ClientsPage = () => {
                 </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-4 sm:p-6 mb-6">
+            <div className="section-card mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="text-xs font-bold text-muted-foreground">Emri i Klientit</label>
+                        <label className="input-label">Emri i Klientit</label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={e => setForm({ ...form, name: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
+                            className="input-premium mt-1"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-muted-foreground">Adresa</label>
+                        <label className="input-label">Adresa</label>
                         <input
                             type="text"
                             value={form.address}
                             onChange={e => setForm({ ...form, address: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
+                            className="input-premium mt-1"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-muted-foreground">Numri Unik</label>
+                        <label className="input-label">Numri Unik</label>
                         <input
                             type="text"
                             value={form.unique_number}
                             onChange={e => setForm({ ...form, unique_number: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
+                            className="input-premium mt-1"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-muted-foreground">Telefoni</label>
+                        <label className="input-label">Telefoni</label>
                         <input
                             type="text"
                             value={form.phone}
                             onChange={e => setForm({ ...form, phone: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground"
+                            className="input-premium mt-1"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-muted-foreground">Email</label>
+                        <label className="input-label">Email</label>
                         <input
                             type="email"
                             value={form.email}
                             onChange={e => setForm({ ...form, email: e.target.value })}
-                            className="w-full bg-muted border border-border rounded-xl py-2.5 px-4 text-sm mt-1 text-foreground placeholder:text-muted-foreground"
+                            className="input-premium mt-1"
                         />
                     </div>
                 </div>
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button onClick={handleSave} className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary/90 inline-flex items-center justify-center gap-2">
+                    <button onClick={handleSave} className="btn-primary-premium w-full sm:w-auto px-4 py-2.5 inline-flex items-center justify-center gap-2">
                         <Save size={16} /> {selectedId ? 'Përditëso' : 'Ruaj Klientin'}
                     </button>
-                    <button onClick={clearForm} className="w-full sm:w-auto px-4 py-2 bg-muted text-muted-foreground rounded-xl text-sm font-bold hover:bg-muted/80">
+                    <button onClick={clearForm} className="btn-secondary-premium w-full sm:w-auto px-4 py-2.5">
                         Pastro
                     </button>
                 </div>
             </div>
 
-            <div className="mb-4 relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
+            <div className="search-bar mb-4 max-w-md">
+                <Search className="text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" size={18} />
                 <input
                     type="text"
                     placeholder="Kërko klientët..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full bg-card border border-border rounded-xl py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:bg-card transition-all shadow-sm"
+                    className="flex-1 bg-transparent border-none outline-none pl-2 text-sm font-medium h-full w-full text-foreground placeholder:text-muted-foreground"
                 />
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="card-base overflow-hidden">
                 <div className="md:hidden divide-y divide-border">
                     {loading ? (
                         <div className="p-6 text-center text-muted-foreground">Duke u ngarkuar...</div>

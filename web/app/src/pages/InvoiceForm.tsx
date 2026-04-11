@@ -255,14 +255,11 @@ const InvoiceForm = () => {
     if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
-        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-32">
+        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full pb-[calc(var(--nav-height,60px)+2rem)]">
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-slate-800 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-500 transition-all shadow-sm"
-                    >
+                    <button onClick={() => navigate(isOffer ? '/offers' : '/invoices')} className="btn-icon">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
@@ -279,7 +276,7 @@ const InvoiceForm = () => {
             {/* Form Content */}
             <div className="space-y-8">
                 {/* Info Card - Combined Client & Doc Details */}
-                <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm space-y-6">
+                <div className="section-card space-y-6">
                     <div className="flex flex-col lg:flex-row lg:items-end gap-6">
                         {/* Client Selection */}
                         <div className="relative space-y-3 lg:w-[45%]">
@@ -291,7 +288,7 @@ const InvoiceForm = () => {
                                 <button
                                     type="button"
                                     onClick={() => navigate('/clients')}
-                                    className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                                    className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
                                 >
                                     <UserPlus size={14} />
                                     Klient i Ri
@@ -322,7 +319,7 @@ const InvoiceForm = () => {
                                     }}
                                     onFocus={() => setShowSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                                    className="w-full bg-muted/50 border border-border rounded-2xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-blue-600/20 focus:bg-card transition-all"
+                                    className="w-full bg-muted/60 border border-border rounded-xl py-3 pl-12 pr-12 text-[16px] sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:bg-card transition-all outline-none text-foreground placeholder:text-muted-foreground"
                                 />
                                 <button
                                     type="button"
@@ -351,7 +348,7 @@ const InvoiceForm = () => {
                                                             setSearchTerm(client.name)
                                                             setShowSuggestions(false)
                                                         }}
-                                                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-border last:border-0"
+                                                        className="px-4 py-3 hover:bg-accent hover:text-accent-foreground cursor-pointer border-b border-border last:border-0 transition-colors"
                                                     >
                                                         <div className="text-sm font-bold text-foreground">{client.name}</div>
                                                         <div className="text-xs text-muted-foreground">{client.unique_number}</div>
@@ -367,12 +364,12 @@ const InvoiceForm = () => {
                         {/* Doc Details Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1 lg:pt-0 lg:w-[55%] min-w-0">
                             <div className="min-w-0">
-                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Numri i {isOffer ? 'Ofertës' : 'Faturës'}</label>
+                                <label className="input-label">Numri i {isOffer ? 'Ofertës' : 'Faturës'}</label>
                                 <input
                                     type="text"
                                     value={isOffer ? invoice.offer_number : invoice.invoice_number}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, [isOffer ? 'offer_number' : 'invoice_number']: e.target.value }))}
-                                    className="w-full min-w-0 bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                    className="input-premium font-bold"
                                 />
                             </div>
                             <div className="min-w-0">
@@ -381,7 +378,7 @@ const InvoiceForm = () => {
                                     type="date"
                                     value={invoice.date}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, date: e.target.value }))}
-                                    className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-xl h-10 px-3 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none"
+                                    className="input-premium font-bold"
                                 />
                             </div>
                             <div className="min-w-0">
@@ -391,7 +388,7 @@ const InvoiceForm = () => {
                                         type="date"
                                         value={invoice.payment_due_date}
                                         onChange={(e) => setInvoice(prev => ({ ...prev, payment_due_date: e.target.value }))}
-                                        className="w-full min-w-0 max-w-full bg-muted/50 border border-border rounded-xl h-10 px-3 pr-10 text-[13px] font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none"
+                                        className="input-premium font-bold pr-10"
                                     />
                                     {invoice.payment_due_date && (
                                         <button
@@ -410,20 +407,20 @@ const InvoiceForm = () => {
 
                     {isOffer && (
                         <div className="pt-6 border-t border-border">
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Subjekti i Ofertës</label>
+                            <label className="input-label">Subjekti i Ofertës</label>
                             <input
                                 type="text"
                                 placeholder="Psh: Instalimi i rrjetit elektrik..."
                                 value={invoice.subject}
                                 onChange={(e) => setInvoice(prev => ({ ...prev, subject: e.target.value }))}
-                                className="w-full bg-muted/50 border border-border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all"
+                                className="input-premium font-bold"
                             />
                         </div>
                     )}
                 </div>
 
                 {/* Items Table */}
-                <div className="bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
+                <div className="section-card">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-foreground flex items-center gap-2">
 
@@ -438,10 +435,7 @@ const InvoiceForm = () => {
                             >
                                 {useNumericPad ? 'ABC' : '123'}
                             </button>
-                            <button
-                                onClick={addItemRow}
-                                className="w-full sm:w-auto px-5 py-2 bg-muted/50 text-foreground rounded-xl text-xs font-bold hover:bg-muted transition-all flex items-center justify-center gap-2 border border-border"
-                            >
+                            <button onClick={addItemRow} className="btn-secondary-premium text-xs px-4 py-2">
                                 <Plus size={14} />
                                 Shto Rresht
                             </button>
@@ -464,7 +458,7 @@ const InvoiceForm = () => {
                                     key={index}
                                     initial={{ opacity: 0, y: 6 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="group bg-card border border-border p-3 rounded-xl overflow-hidden"
+                                    className="group card-base p-3 overflow-hidden"
                                 >
                                     <div className="flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center min-w-0">
                                         <div className="sm:col-span-6 min-w-0">
@@ -474,7 +468,7 @@ const InvoiceForm = () => {
                                                 placeholder="Përshkrimi i artikullit..."
                                                 value={item.description}
                                                 onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                                className="w-full max-w-full bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-[16px] sm:text-sm font-semibold text-foreground focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all placeholder:text-muted-foreground/50"
+                                                className="input-premium py-2 font-semibold"
                                             />
                                         </div>
                                         <div className="sm:col-span-2 min-w-0">
@@ -502,7 +496,7 @@ const InvoiceForm = () => {
                                                             })
                                                         }
                                                     }}
-                                                    className="w-full max-w-full bg-muted/50 border border-border rounded-lg py-1.5 pr-7 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all"
+                                                    className="input-premium py-2 pr-7 text-right font-bold"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">m2</span>
                                             </div>
@@ -527,7 +521,7 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="w-full max-w-full bg-muted/50 border border-border rounded-lg py-1.5 pr-24 text-right text-[16px] sm:text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-card transition-all"
+                                                    className="input-premium py-2 pr-24 text-right font-bold"
                                                 />
                                                 <button
                                                     type="button"
@@ -610,29 +604,17 @@ const InvoiceForm = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 bg-card p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
-                    <button
-                        onClick={() => handleSave('save')}
-                        disabled={saving}
-                        className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white rounded-2xl text-sm font-black hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
-                    >
-                        <Save size={20} />
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 section-card">
+                    <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                        <Save size={18} />
                         <span>RUAJ</span>
                     </button>
-                    <button
-                        onClick={() => handleSave('pdf')}
-                        disabled={saving}
-                        className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-orange-600 text-white rounded-2xl text-sm font-black hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 disabled:opacity-50"
-                    >
-                        <FileDown size={20} />
+                    <button onClick={() => handleSave('pdf')} disabled={saving} className="w-full sm:flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-amber-600 text-white rounded-xl text-sm font-black hover:bg-amber-700 transition-all disabled:opacity-50">
+                        <FileDown size={18} />
                         <span>RUAJ & PDF</span>
                     </button>
-                    <button
-                        onClick={() => setEmailModalOpen(true)}
-                        disabled={saving}
-                        className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-2xl text-sm font-black hover:bg-green-700 transition-all shadow-lg shadow-green-200 disabled:opacity-50"
-                    >
-                        <Mail size={20} />
+                    <button onClick={() => setEmailModalOpen(true)} disabled={saving} className="w-full sm:flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-emerald-600 text-white rounded-xl text-sm font-black hover:bg-emerald-700 transition-all disabled:opacity-50">
+                        <Mail size={18} />
                         <span>RUAJ & EMAIL</span>
                     </button>
                 </div>

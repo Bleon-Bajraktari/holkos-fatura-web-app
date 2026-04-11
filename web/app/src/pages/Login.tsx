@@ -116,14 +116,14 @@ export default function Login() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-[420px]"
       >
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 pt-0 px-6 pb-6 sm:pt-0 sm:px-8 sm:pb-8 relative">
+        <div className="section-card backdrop-blur-sm px-6 pb-6 sm:px-8 sm:pb-8 relative">
           <button type="button" onClick={toggleTheme} className="absolute top-4 right-4 p-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors" title={isDark ? 'Dritë' : 'Errësirë'}>
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           <div className="flex flex-col items-center text-center -mt-0 mb-0">
             <div className="w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center overflow-hidden">
               {logoError ? (
-                <span className="text-9xl sm:text-[10rem] font-black text-blue-600">H</span>
+                <span className="text-9xl sm:text-[10rem] font-black text-primary">H</span>
               ) : (
                 <img
                   src={logoUrl}
@@ -147,7 +147,7 @@ export default function Login() {
                 type="text"
                 defaultValue=""
                 autoComplete="username"
-                className="w-full px-4 py-3.5 rounded-2xl border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-card outline-none transition-all text-base min-h-[48px]"
+                className="input-premium"
                 placeholder="Username"
                 required
                 disabled={loading}
@@ -163,7 +163,7 @@ export default function Login() {
                 name="password"
                 defaultValue=""
                 autoComplete="current-password"
-                inputClassName="w-full px-4 py-3.5 rounded-2xl border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:bg-card outline-none transition-all text-base min-h-[48px]"
+                inputClassName="input-premium"
                 placeholder="Password"
                 required
                 disabled={loading}
@@ -179,7 +179,7 @@ export default function Login() {
               disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed text-base"
+              className="btn-primary-premium w-full py-4 text-base"
             >
               {loading ? 'Duke hyrë...' : 'Hyr'}
             </motion.button>
