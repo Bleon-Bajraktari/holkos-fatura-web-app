@@ -7,7 +7,6 @@ import {
     Users,
     Settings,
     Briefcase,
-    Menu,
     X,
     Bell,
     Search,
