@@ -3,53 +3,56 @@
 @tailwind utilities;
 
 @layer base {
-  /* Dritë: variablat për html (kur nuk ka .dark) */
   html {
     color-scheme: light;
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --popover-foreground: 222 47% 11%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 226 57% 96%;
+    --secondary-foreground: 239 84% 40%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 239 84% 95%;
+    --accent-foreground: 239 84% 40%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 239 84% 67%;
+    --radius: 0.75rem;
+    --nav-height: 60px;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(99,102,241,0.06);
+    --card-shadow-hover: 0 8px 30px rgba(99,102,241,0.14);
   }
 
-  /* Errësirë: vetëm kur html ka klasën .dark */
   html.dark {
     color-scheme: dark;
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 20% 58%;
+    --accent: 222 47% 17%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 47% 18%;
+    --input: 222 47% 14%;
+    --ring: 239 84% 67%;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+    --card-shadow-hover: 0 8px 30px rgba(99,102,241,0.18);
   }
 }
 
@@ -60,12 +63,17 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   }
 }
 
+/* Prevent iOS font zoom on inputs */
 @media (max-width: 768px) {
-
   input,
   select,
   textarea {
@@ -73,57 +81,188 @@
   }
 }
 
+/* =====================
+   GLASS
+   ===================== */
 .glass {
   @apply bg-white/70 backdrop-blur-md border border-white/20;
 }
-
 html.dark .glass {
-  @apply bg-slate-800 border-slate-600;
+  @apply bg-card border-border;
+}
+
+/* =====================
+   CARDS
+   ===================== */
+.card-base {
+  @apply bg-card rounded-2xl border border-border transition-all duration-200;
+  box-shadow: var(--card-shadow);
+}
+.card-base:hover {
+  box-shadow: var(--card-shadow-hover);
 }
 
 .card-premium {
-  @apply bg-card rounded-[2rem] border border-border transition-all duration-300;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  @apply bg-card rounded-3xl border border-border transition-all duration-300;
+  box-shadow: var(--card-shadow);
+}
+.card-premium:hover {
+  box-shadow: var(--card-shadow-hover);
 }
 
+.section-card {
+  @apply bg-card p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-border;
+  box-shadow: var(--card-shadow);
+}
+
+/* =====================
+   TYPOGRAPHY
+   ===================== */
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-br from-blue-600 to-indigo-600;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500;
+}
+html.dark .gradient-text {
+  @apply bg-gradient-to-r from-indigo-400 to-blue-400;
 }
 
+/* =====================
+   BUTTONS
+   ===================== */
 .btn-primary-premium {
-  @apply bg-gradient-to-br from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2;
+  @apply bg-indigo-600 text-white px-5 py-3 rounded-xl font-semibold text-sm
+         shadow-md shadow-indigo-500/25
+         hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-px
+         active:scale-95 active:translate-y-0
+         transition-all duration-150
+         flex items-center justify-center gap-2
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none;
+}
+html.dark .btn-primary-premium {
+  @apply bg-indigo-500 hover:bg-indigo-400;
 }
 
 .btn-secondary-premium {
-  @apply bg-card border border-border text-foreground px-6 py-3 rounded-2xl font-semibold shadow-sm hover:bg-muted transition-all active:scale-95 flex items-center justify-center gap-2;
+  @apply bg-card border border-border text-foreground px-5 py-3 rounded-xl
+         font-semibold text-sm shadow-sm
+         hover:bg-muted
+         active:scale-95
+         transition-all duration-150
+         flex items-center justify-center gap-2;
 }
 
+.btn-ghost {
+  @apply text-muted-foreground hover:text-foreground hover:bg-muted
+         px-3 py-2.5 rounded-xl transition-all duration-150
+         flex items-center gap-2 text-sm font-medium;
+}
+
+.btn-icon {
+  @apply p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted
+         rounded-xl transition-all duration-150 active:scale-90
+         flex items-center justify-center;
+}
+
+/* =====================
+   INPUTS
+   ===================== */
 .input-premium {
-  @apply bg-muted/50 border border-border rounded-2xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-card transition-all outline-none;
+  @apply w-full bg-muted/60 border border-border rounded-xl
+         px-4 py-3 text-sm text-foreground
+         placeholder:text-muted-foreground
+         focus:ring-2 focus:ring-primary/20 focus:border-primary/50
+         focus:bg-card
+         transition-all outline-none;
+  min-height: 44px;
+}
+
+.input-label {
+  @apply text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block;
+}
+
+.search-bar {
+  @apply flex items-center bg-muted/50 border border-border rounded-xl px-4 h-11
+         focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40
+         focus-within:bg-card transition-all;
+}
+.search-bar input {
+  @apply flex-1 bg-transparent border-none outline-none text-sm text-foreground
+         placeholder:text-muted-foreground ml-3;
+}
+
+/* =====================
+   BADGES
+   ===================== */
+.badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide;
 }
 
 .status-badge-paid {
-  @apply px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5;
+  @apply badge bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400
+         border border-emerald-200 dark:border-emerald-800/50;
 }
 
 .status-badge-unpaid {
-  @apply px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1.5;
+  @apply badge bg-rose-50 dark:bg-rose-900/25 text-rose-700 dark:text-rose-400
+         border border-rose-200 dark:border-rose-800/50;
 }
 
-/* body uses bg-background / text-foreground from @layer base so dark mode works */
+.status-badge-pending {
+  @apply badge bg-amber-50 dark:bg-amber-900/25 text-amber-700 dark:text-amber-400
+         border border-amber-200 dark:border-amber-800/50;
+}
 
-/* Dark mode scrollbar - vetëm kur html.dark */
+/* =====================
+   BOTTOM NAV (mobile)
+   ===================== */
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 z-40
+         bg-card/95 backdrop-blur-xl
+         border-t border-border
+         flex items-center justify-around
+         px-2
+         lg:hidden;
+  height: var(--nav-height);
+  box-shadow: 0 -1px 0 hsl(var(--border)), 0 -8px 24px rgba(0,0,0,0.08);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4px);
+  }
+}
+
+.bottom-nav-item {
+  @apply flex flex-col items-center justify-center gap-0.5
+         flex-1 h-full py-2
+         text-muted-foreground
+         transition-all duration-150 active:scale-90
+         rounded-xl cursor-pointer;
+}
+
+.bottom-nav-item.active {
+  @apply text-primary;
+}
+
+.bottom-nav-item span {
+  @apply text-[9px] font-bold uppercase tracking-wide;
+}
+
+/* =====================
+   SCROLLBAR (dark mode)
+   ===================== */
 html.dark ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 html.dark ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: hsl(var(--background));
 }
 html.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 5px;
+  background: hsl(var(--border));
+  border-radius: 4px;
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: hsl(var(--muted-foreground));
 }

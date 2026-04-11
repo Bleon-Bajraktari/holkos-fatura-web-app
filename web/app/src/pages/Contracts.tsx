@@ -139,13 +139,13 @@ const ContractsPage = () => {
     return (
         <div className="min-h-screen pb-12">
             {/* Header Section - si Faturat / Ofertat */}
-            <div className="bg-card border-b border-gray-100 dark:border-slate-700 sticky top-0 z-30 transition-all duration-300">
+            <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30 transition-all duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-6">
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => navigate('/')}
-                                className="p-2 bg-muted text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-300 active:scale-95"
+                                className="btn-icon"
                             >
                                 <ArrowLeft size={18} />
                             </button>
@@ -158,12 +158,12 @@ const ContractsPage = () => {
                             <button
                                 onClick={loadContracts}
                                 title="Rifresko"
-                                className="p-2.5 bg-muted text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center shrink-0"
+                                className="btn-icon"
                             >
                                 <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                             </button>
                             <Link to="/contracts/new" className="w-full sm:w-auto">
-                                <button className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white px-8 py-2.5 sm:px-14 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 dark:shadow-blue-900/30 flex items-center justify-center gap-2 w-full active:scale-95 transition-all">
+                                <button className="btn-primary-premium flex items-center justify-center gap-2 w-full px-6 py-2.5">
                                     <Plus size={16} />
                                     <span>Krijo kontratë</span>
                                 </button>
@@ -175,9 +175,9 @@ const ContractsPage = () => {
 
             <div className="max-w-7xl mx-auto px-2 sm:px-6 mt-3 sm:mt-8">
                 {/* Search and Filters - si Faturat / Ofertat */}
-                <div className="bg-card border border-border p-2 sm:p-5 rounded-2xl sm:rounded-[2.5rem] mb-3 sm:mb-8 shadow-xl shadow-primary/5">
+                <div className="section-card mb-3 sm:mb-8">
                     <div className="flex flex-col gap-2 sm:gap-5">
-                        <div className="flex items-center bg-muted/50 border border-border rounded-xl px-3 sm:px-5 h-10 sm:h-14 group focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 focus-within:bg-card transition-all shadow-inner">
+                        <div className="search-bar">
                             <Search className="text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" size={16} />
                             <input
                                 type="text"
@@ -194,7 +194,7 @@ const ContractsPage = () => {
                                 <select
                                     value={year}
                                     onChange={e => setYear(e.target.value)}
-                                    className="w-full bg-muted/50 border border-border rounded-lg sm:rounded-xl h-9 sm:h-11 py-1.5 sm:py-0 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold text-foreground focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none outline-none text-center"
+                                    className="input-premium text-center py-1.5 sm:py-0 text-[11px] sm:text-xs"
                                 >
                                     <option value="">Viti</option>
                                     {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -205,7 +205,7 @@ const ContractsPage = () => {
                                 <select
                                     value={month}
                                     onChange={e => setMonth(e.target.value)}
-                                    className="w-full bg-muted/50 border border-border rounded-lg sm:rounded-xl h-9 sm:h-11 py-1.5 sm:py-0 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold text-foreground focus:ring-2 focus:ring-blue-600/10 focus:bg-card transition-all appearance-none outline-none text-center"
+                                    className="input-premium text-center py-1.5 sm:py-0 text-[11px] sm:text-xs"
                                 >
                                     {months.map(m => <option key={m} value={m}>{m}</option>)}
                                 </select>
@@ -217,7 +217,7 @@ const ContractsPage = () => {
                                         type="date"
                                         value={dateFrom}
                                         onChange={e => setDateFrom(e.target.value)}
-                                        className="w-full bg-muted/50 border border-border rounded-lg sm:rounded-xl h-9 sm:h-11 px-2 sm:px-3 pr-8 sm:pr-10 text-[11px] font-medium focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all appearance-none outline-none text-center"
+                                        className="input-premium text-center text-[11px]"
                                     />
                                     {dateFrom && (
                                         <button
@@ -237,7 +237,7 @@ const ContractsPage = () => {
                                         type="date"
                                         value={dateTo}
                                         onChange={e => setDateTo(e.target.value)}
-                                        className="w-full bg-muted/50 border border-border rounded-lg sm:rounded-xl h-9 sm:h-11 px-2 sm:px-3 pr-8 sm:pr-10 text-[11px] font-medium focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all appearance-none outline-none text-center"
+                                        className="input-premium text-center text-[11px]"
                                     />
                                     {dateTo && (
                                         <button
@@ -267,18 +267,18 @@ const ContractsPage = () => {
                 <div className="space-y-2 sm:space-y-3">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
-                            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                             <p className="font-bold animate-pulse">Duke ngarkuar kontratat...</p>
                         </div>
                     ) : personList.length === 0 ? (
-                        <div className="bg-card rounded-[2rem] p-16 text-center shadow-sm border border-gray-100 dark:border-slate-700">
+                        <div className="card-base p-16 text-center">
                             <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Search size={32} className="text-muted-foreground" />
                             </div>
                             <h3 className="text-xl font-bold text-foreground">Nuk u gjet asnjë kontratë</h3>
-                            <p className="text-gray-500 dark:text-slate-400 mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
+                            <p className="text-muted-foreground mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
                             <Link to="/contracts/new">
-                                <button className="mt-4 text-blue-600 dark:text-blue-400 font-bold hover:underline">Krijo kontratë</button>
+                                <button className="mt-4 text-primary font-bold hover:underline">Krijo kontratë</button>
                             </Link>
                         </div>
                     ) : (
@@ -297,7 +297,7 @@ const ContractsPage = () => {
                                         className={`w-full min-h-[4rem] sm:min-h-[4.5rem] flex items-center justify-between px-3 sm:px-5 py-2.5 text-left transition-all ${isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'}`}
                                     >
                                         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-                                            <div className="w-1 self-stretch min-h-[1.5rem] bg-blue-600 rounded-full shrink-0"></div>
+                                            <div className="w-1 self-stretch min-h-[1.5rem] bg-primary rounded-full shrink-0"></div>
                                             <div className="flex flex-col gap-y-1 min-w-0">
                                                 <span className="text-[13px] sm:text-sm font-black text-foreground uppercase tracking-wide leading-tight break-words">{person.name}</span>
                                                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
@@ -339,7 +339,7 @@ const ContractsPage = () => {
                                                                 <span className="text-sm font-black text-foreground">{Number(c.gross_salary)?.toLocaleString('sq-AL')} €</span>
                                                             </div>
                                                             <div className="flex sm:justify-end col-span-2 sm:col-span-4 items-center justify-end">
-                                                                <div className={`p-1.5 rounded-lg bg-muted text-muted-foreground transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                                                                <div className={`p-1.5 rounded-lg bg-muted text-muted-foreground transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
                                                                     <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
                                                                 </div>
                                                             </div>
@@ -357,13 +357,13 @@ const ContractsPage = () => {
                                                                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                                                             <button
                                                                                 onClick={() => handleDownloadPdf(c.id)}
-                                                                                className="flex-1 sm:flex-none h-9 px-4 bg-card border border-border text-foreground rounded-xl text-xs font-bold hover:bg-muted transition-all flex items-center justify-center gap-2"
+                                                                                className="btn-secondary-premium flex-1 sm:flex-none h-9 px-4 text-xs flex items-center justify-center gap-2"
                                                                             >
                                                                                 <Download size={16} /> PDF
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => navigate(`/contracts/edit/${c.id}`)}
-                                                                                className="flex-1 sm:flex-none h-9 px-4 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                                                                                className="btn-primary-premium flex-1 sm:flex-none h-9 px-4 text-xs flex items-center justify-center gap-2"
                                                                             >
                                                                                 NDRYSHO
                                                                             </button>

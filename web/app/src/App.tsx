@@ -222,9 +222,11 @@ const ScrollToTop = () => {
 
 const SidebarItem = ({ icon: Icon, label, href, active }: any) => (
     <Link to={href}>
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${active ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-slate-100'
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${active
+            ? 'bg-primary/10 text-primary font-semibold shadow-sm'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}>
-            <Icon size={20} />
+            <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
             <span className="text-sm">{label}</span>
         </div>
     </Link>
@@ -271,6 +273,14 @@ const Layout = () => {
 
     const isNavItemActive = (href: string) =>
         href === '/' ? location.pathname === '/' : (location.pathname === href || location.pathname.startsWith(href + '/'))
+
+    const bottomNavItems = [
+        { icon: LayoutDashboard, label: 'Raporte', href: '/' },
+        { icon: FileText, label: 'Faturat', href: '/invoices' },
+        { icon: Layers, label: 'Ofertat', href: '/offers' },
+        { icon: Users, label: 'Klientë', href: '/clients' },
+        { icon: Settings, label: 'Cilësime', href: '/settings' },
+    ]
 
     useEffect(() => {
         if (sidebarOpen) {
@@ -355,7 +365,7 @@ const Layout = () => {
                             className="w-10 h-10 rounded-xl object-contain bg-muted border border-border shadow-sm"
                         />
                     ) : (
-                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-primary/20">H</div>
+                        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/25">H</div>
                     )}
                     <span className="text-xl font-bold tracking-tight text-foreground">Holkos</span>
                 </div>
@@ -415,7 +425,7 @@ const Layout = () => {
                                             className="w-10 h-10 rounded-xl object-contain bg-muted border border-border shadow-sm"
                                         />
                                     ) : (
-                                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-200">H</div>
+                                        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/25">H</div>
                                     )}
                                     <span className="text-xl font-bold tracking-tight text-foreground">Holkos</span>
                                 </div>
@@ -444,37 +454,48 @@ const Layout = () => {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 sm:h-20 bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-10 sticky top-0 z-30">
-                    <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2.5 text-muted-foreground hover:bg-muted rounded-xl transition-colors">
-                        <Menu size={22} />
-                    </button>
+                <header className="h-14 sm:h-16 bg-card/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-10 sticky top-0 z-30">
+                    {/* Mobile: logo + brand name */}
+                    <div className="flex items-center gap-2.5 lg:hidden">
+                        {logoUrl ? (
+                            <img
+                                src={logoUrl}
+                                alt="Holkos"
+                                className="w-8 h-8 rounded-lg object-contain dark:brightness-0 dark:invert"
+                            />
+                        ) : (
+                            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/30">H</div>
+                        )}
+                        <span className="text-base font-bold text-foreground tracking-tight">Holkos</span>
+                    </div>
 
+                    {/* Desktop: search bar */}
                     <div className="hidden lg:flex items-center relative max-w-md w-full">
                         <Search className="absolute left-4 text-muted-foreground" size={18} />
                         <input
                             type="text"
                             placeholder="Kërko fatura, klientë..."
-                            className="w-full bg-muted/50 border border-border rounded-2xl py-2.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-card transition-all placeholder:text-muted-foreground text-foreground"
+                            className="w-full bg-muted/50 border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-card transition-all placeholder:text-muted-foreground text-foreground outline-none"
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 md:gap-3">
+                    <div className="flex items-center gap-1.5 md:gap-2">
                         <button
                             type="button"
                             onClick={() => toggleTheme()}
-                            className="p-2.5 text-muted-foreground hover:bg-muted rounded-xl transition-colors"
+                            className="btn-icon"
                             title={isDark ? 'Ndërro në dritë' : 'Ndërro në errësirë'}
                             aria-label={isDark ? 'Ndërro në dritë' : 'Ndërro në errësirë'}
                         >
-                            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                            {isDark ? <Sun size={19} /> : <Moon size={19} />}
                         </button>
-                        <button className="p-2.5 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl relative transition-all">
-                            <Bell size={20} />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full ring-2 ring-card"></span>
+                        <button className="btn-icon relative">
+                            <Bell size={19} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-card"></span>
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-2 px-3 py-2.5 text-foreground hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all text-sm font-medium"
+                            className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all text-sm font-medium"
                             title="Dil"
                         >
                             <LogOut size={18} />
@@ -483,7 +504,7 @@ const Layout = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-auto bg-background">
+                <div className="flex-1 overflow-auto bg-background pb-[var(--nav-height)] lg:pb-0">
                     <motion.div
                         key={location.pathname}
                         initial={{ opacity: 0, y: 10 }}
@@ -495,6 +516,26 @@ const Layout = () => {
                     </motion.div>
                 </div>
             </main>
+
+            {/* Bottom Navigation — mobile only */}
+            <nav className="bottom-nav">
+                {bottomNavItems.map((item) => {
+                    const active = isNavItemActive(item.href)
+                    return (
+                        <Link
+                            key={item.href}
+                            to={item.href}
+                            className={`bottom-nav-item ${active ? 'active' : ''}`}
+                        >
+                            <item.icon
+                                size={22}
+                                strokeWidth={active ? 2.5 : 1.8}
+                            />
+                            <span>{item.label}</span>
+                        </Link>
+                    )
+                })}
+            </nav>
         </div>
     )
 }
