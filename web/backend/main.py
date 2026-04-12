@@ -1035,15 +1035,25 @@ def get_stats(db: Session = Depends(get_db)):
     elif current_month_revenue > 0:
         growth = 100
         
+    # Status counts
+    paid_count = db.query(func.count(models.Invoice.id)).filter(
+        models.Invoice.status == 'paid'
+    ).scalar() or 0
+    unpaid_count = db.query(func.count(models.Invoice.id)).filter(
+        models.Invoice.status != 'paid'
+    ).scalar() or 0
+
     # Recent Activity (simplified)
     recent_invoices = db.query(models.Invoice).order_by(models.Invoice.created_at.desc()).limit(3).all()
     recent_offers = db.query(models.Offer).order_by(models.Offer.created_at.desc()).limit(2).all()
-    
+
     activity = []
     for inv in recent_invoices:
         client_name = (inv.client.name if inv.client else None) or "Klient"
         activity.append({
             "type": "invoice",
+            "id": inv.id,
+            "status": getattr(inv, 'status', None),
             "number": inv.invoice_number,
             "amount": float(inv.total),
             "date": (inv.created_at or inv.date).isoformat() if inv.created_at or inv.date else "",
@@ -1053,12 +1063,14 @@ def get_stats(db: Session = Depends(get_db)):
         client_name = (off.client.name if off.client else None) or "Klient"
         activity.append({
             "type": "offer",
+            "id": off.id,
+            "status": None,
             "number": off.offer_number,
             "amount": float(off.total),
             "date": (off.created_at or off.date).isoformat() if off.created_at or off.date else "",
             "client": client_name
         })
-    
+
     # Sort activity by date
     activity.sort(key=lambda x: x['date'], reverse=True)
 
@@ -1071,8 +1083,41 @@ def get_stats(db: Session = Depends(get_db)):
         "current_month_revenue": float(current_month_revenue),
         "month_invoices": current_month_invoices,
         "growth": round(growth, 1),
+        "paid_count": paid_count,
+        "unpaid_count": unpaid_count,
         "recent_activity": activity[:5]
     }
+
+@app.get("/dashboard/monthly")
+def get_monthly_stats(db: Session = Depends(get_db)):
+    from calendar import monthrange
+    from datetime import date, datetime
+    now = datetime.now()
+    month_names = ['Jan','Shk','Mar','Pri','Maj','Qer','Kor','Gus','Sht','Tet','Nën','Dhj']
+    result = []
+    for i in range(11, -1, -1):
+        m = now.month - i
+        y = now.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        _, last = monthrange(y, m)
+        start = date(y, m, 1)
+        end = date(y, m, last)
+        revenue = db.query(func.sum(models.Invoice.total)).filter(
+            models.Invoice.date >= start,
+            models.Invoice.date <= end
+        ).scalar() or 0
+        count = db.query(func.count(models.Invoice.id)).filter(
+            models.Invoice.date >= start,
+            models.Invoice.date <= end
+        ).scalar() or 0
+        result.append({
+            "month": month_names[m - 1],
+            "revenue": round(float(revenue), 2),
+            "count": count
+        })
+    return result
 
 # --- COMPANY ---
 @app.get("/company", response_model=schemas.Company)
