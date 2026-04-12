@@ -407,6 +407,8 @@ api.interceptors.response.use(
                     localStorage.setItem('company_cache', JSON.stringify(data));
                 } else if (url === '/dashboard/stats') {
                     localStorage.setItem('dashboard_cache', JSON.stringify(data));
+                } else if (url === '/dashboard/monthly') {
+                    localStorage.setItem('dashboard_monthly_cache', JSON.stringify(data));
                 } else if (url.includes('/years')) {
                     localStorage.setItem(`years_cache_${url}`, JSON.stringify(data));
                 }
@@ -482,6 +484,9 @@ api.interceptors.response.use(
                         // --- Stats ---
                     } else if (url === '/dashboard/stats') {
                         const cached = localStorage.getItem('dashboard_cache');
+                        recoveredData = cached ? JSON.parse(cached) : null;
+                    } else if (url === '/dashboard/monthly') {
+                        const cached = localStorage.getItem('dashboard_monthly_cache');
                         recoveredData = cached ? JSON.parse(cached) : null;
                     } else if (url === '/company') {
                         const cached = localStorage.getItem('company_cache');
@@ -666,6 +671,7 @@ export const CompanyService = {
 
 export const DashboardService = {
     getStats: () => api.get('/dashboard/stats', { timeout: 45000 }).then(res => res.data),
+    getMonthly: () => api.get('/dashboard/monthly', { timeout: 30000 }).then(res => res.data),
 };
 
 export const SettingsService = {

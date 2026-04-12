@@ -10,10 +10,6 @@ import {
     X,
     Bell,
     Search,
-    TrendingUp,
-    Calendar,
-    Clock,
-    Shield,
     Layers,
     FilePlus,
     Plus,
@@ -22,7 +18,7 @@ import {
     Sun
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CompanyService, DashboardService, SettingsService, API_BASE } from './services/api'
+import { CompanyService, SettingsService, API_BASE } from './services/api'
 import InvoicesPage from './pages/Invoices'
 import OffersPage from './pages/Offers'
 import ClientsPage from './pages/Clients'
@@ -38,178 +34,6 @@ import { ToastProvider } from './components/Toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { useActivityTracker } from './hooks/useActivityTracker'
-
-// Dashboard Component
-const Dashboard = () => {
-    const [stats, setStats] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const fetchStats = async (retries = 1) => {
-            try {
-                const data = await DashboardService.getStats()
-                setStats(data)
-                if (data) localStorage.setItem('dashboard_cache', JSON.stringify(data))
-            } catch (error) {
-                console.error('Error fetching stats:', error)
-                if (retries > 0) {
-                    await new Promise(r => setTimeout(r, 2500))
-                    return fetchStats(retries - 1)
-                }
-                try {
-                    const cached = localStorage.getItem('dashboard_cache')
-                    if (cached) setStats(JSON.parse(cached))
-                } catch (_) {}
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchStats()
-    }, [])
-
-    if (loading) return <div className="p-8 text-center text-muted-foreground font-medium">Duke u ngarkuar...</div>
-
-    const statCards = [
-        { label: 'Totali i Faturave', value: stats?.total_invoices || 0, icon: <FileText size={20} />, color: 'bg-blue-500', trend: 'Gjithsej' },
-        { label: 'Faturat këtë Muaj', value: stats?.month_invoices || 0, icon: <Calendar size={20} />, color: 'bg-purple-500', trend: 'Muaji aktual' },
-        { label: 'Ardhura Totale', value: `${(stats?.total_revenue || 0).toLocaleString('sq-AL')} €`, icon: <TrendingUp size={20} />, color: 'bg-green-500', trend: stats?.growth > 0 ? `+${stats.growth}% këtë muaj` : `${stats?.growth || 0}% këtë muaj` },
-        { label: 'TVSH e Grumbulluar', value: `${(stats?.total_vat || 0).toLocaleString('sq-AL')} €`, icon: <Shield size={20} />, color: 'bg-amber-500', trend: 'Totali TVSH' },
-    ]
-
-    const quickActions = [
-        { label: 'Faturat', href: '/invoices', icon: <FileText size={18} />, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' },
-        { label: 'Ofertat', href: '/offers', icon: <Layers size={18} />, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30' },
-        { label: 'Kontratat', href: '/contracts', icon: <FileSignature size={18} />, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' },
-        { label: 'Klientë', href: '/clients', icon: <Users size={18} />, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30' },
-        { label: 'Cilësime', href: '/settings', icon: <Settings size={18} />, color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30' },
-    ]
-
-    return (
-        <div className="p-4 sm:p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
-            <header>
-                <h1 className="text-3xl font-black text-foreground tracking-tight">Përmbledhja e Biznesit</h1>
-                <p className="text-muted-foreground font-medium mt-1">Statistikat kryesore dhe aktiviteti i fundit.</p>
-            </header>
-
-            <div className="bg-card p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border border-border shadow-sm">
-                <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-black text-foreground flex items-center gap-2">
-                        <LayoutDashboard size={20} className="text-blue-500" />
-                        Veprime të shpejta
-                    </h3>
-
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {quickActions.map((action) => (
-                        <Link key={action.href} to={action.href}>
-                            <div className="flex items-center gap-3 px-3 py-3 rounded-2xl border border-border hover:border-primary/40 hover:shadow-sm transition-all bg-card">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${action.color}`}>
-                                    {action.icon}
-                                </div>
-                                <span className="text-xs font-bold text-foreground">{action.label}</span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((card, idx) => (
-                    <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="bg-card p-6 rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all group"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`${card.color} w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-current/20 group-hover:scale-110 transition-transform`}>
-                                {card.icon}
-                            </div>
-                        </div>
-                        <h3 className="text-muted-foreground text-xs font-black uppercase tracking-widest mb-1">{card.label}</h3>
-                        <p className="text-2xl font-black text-foreground leading-tight">{card.value}</p>
-                        <div className="mt-4 flex items-center gap-1.5">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${String(stats?.growth).includes('+') || stats?.growth > 0 ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
-                                {card.trend}
-                            </span>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-card p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border border-border shadow-sm space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <h3 className="text-lg font-black text-foreground flex items-center gap-2">
-                            <Clock size={20} className="text-blue-500" />
-                            Faturat e Fundit
-                        </h3>
-                        <Link to="/invoices">
-                            <button className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest">Shiko të Gjitha</button>
-                        </Link>
-                    </div>
-
-                    <div className="space-y-4">
-                        {stats?.recent_activity?.filter((act: any) => act.type === 'invoice')?.map((act: any, idx: number) => (
-                            <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-3xl hover:bg-muted/50 transition-colors border border-transparent hover:border-border group">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${act.type === 'invoice' ? 'bg-primary/10 text-primary' : 'bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'}`}>
-                                        {act.type === 'invoice' ? <FileText size={18} /> : <Briefcase size={18} />}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-foreground">{act.client}</p>
-                                        <p className="text-xs text-muted-foreground font-medium">#{act.number} • {new Date(act.date).toLocaleDateString('sq-AL')}</p>
-                                    </div>
-                                </div>
-                                <div className="text-left sm:text-right">
-                                    <p className="text-sm font-black text-foreground">{act.amount.toLocaleString('sq-AL')} €</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{act.type === 'invoice' ? 'Faturë' : 'Ofertë'}</p>
-                                </div>
-                            </div>
-                        ))}
-                        {(!stats?.recent_activity || stats.recent_activity.filter((act: any) => act.type === 'invoice').length === 0) && (
-                            <p className="text-center py-10 text-muted-foreground text-sm italic font-medium">Nuk ka aktivitet të fundit.</p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    <div className="bg-card p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border border-border shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-black text-foreground flex items-center gap-2">
-                                <Briefcase size={18} className="text-amber-500" />
-                                Ofertat e Fundit
-                            </h3>
-                            <Link to="/offers" className="text-[10px] font-bold text-amber-600 dark:text-amber-300 uppercase tracking-widest">Shiko</Link>
-                        </div>
-                        <div className="space-y-3">
-                            {stats?.recent_activity?.filter((act: any) => act.type === 'offer')?.map((act: any, idx: number) => (
-                                <div key={idx} className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                            <Briefcase size={14} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-bold text-foreground truncate">{act.client}</p>
-                                            <p className="text-[10px] text-muted-foreground font-medium truncate">#{act.number}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-black text-foreground">{act.amount.toLocaleString('sq-AL')} €</p>
-                                    </div>
-                                </div>
-                            ))}
-                            {(!stats?.recent_activity || stats.recent_activity.filter((act: any) => act.type === 'offer').length === 0) && (
-                                <p className="text-center py-6 text-muted-foreground text-xs italic font-medium">Nuk ka oferta të fundit.</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
 
 const ScrollToTop = () => {
     const location = useLocation()
@@ -505,7 +329,7 @@ const Layout = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-auto bg-background pb-[var(--nav-height)] lg:pb-0">
+                <div className="flex-1 overflow-auto bg-background pb-nav lg:pb-0">
                     <motion.div
                         key={location.pathname}
                         initial={{ opacity: 0, y: 10 }}
@@ -553,6 +377,7 @@ const Layout = () => {
 }
 
 import InvoiceForm from './pages/InvoiceForm'
+import Dashboard from './pages/Dashboard'
 
 function App() {
     return (
