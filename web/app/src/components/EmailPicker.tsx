@@ -114,7 +114,7 @@ const EmailPicker = ({
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="shembull@email.com"
                             disabled={sending}
-                            className="input-premium mt-2 disabled:opacity-60"
+                            className="input-base mt-2 disabled:opacity-60"
                         />
                     </div>
 
@@ -165,7 +165,7 @@ const EmailPicker = ({
                     <button
                         onClick={handleConfirm}
                         disabled={!isValid || sending}
-                        className="btn-primary-premium w-full sm:w-auto px-4 py-2.5 text-sm flex items-center justify-center gap-2"
+                        className="btn-primary w-full sm:w-auto px-4 py-2.5 text-sm flex items-center justify-center gap-2"
                     >
                         {sending ? <Loader2 size={16} className="animate-spin" /> : null}
                         {sending ? 'Duke dërguar...' : 'Dërgo me email'}

@@ -1,18 +1,40 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Download, Trash2, ArrowLeft, RefreshCw, X } from 'lucide-react'
+import { Plus, Search, Download, Trash2, ArrowLeft, RefreshCw, X, ChevronDown, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ContractService, openPdf } from '../services/api'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { SkeletonList } from '../components/Skeleton'
+import { useToast } from '../hooks/useToast'
 
 const months = [
     'Të gjithë', 'Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor',
     'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'
 ]
 
+const AVATAR_GRADIENTS = [
+    'from-violet-500 to-purple-600',
+    'from-indigo-500 to-blue-600',
+    'from-emerald-500 to-teal-600',
+    'from-rose-500 to-pink-600',
+    'from-amber-500 to-orange-600',
+    'from-cyan-500 to-sky-600',
+]
+
+function avatarGradient(name: string) {
+    return AVATAR_GRADIENTS[(name?.charCodeAt(0) || 0) % AVATAR_GRADIENTS.length]
+}
+
+function initials(name: string) {
+    return (name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+}
+
 const ContractsPage = () => {
     const navigate = useNavigate()
+    const toast = useToast()
     const [contracts, setContracts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id?: number }>({ open: false })
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [year, setYear] = useState('')
@@ -122,50 +144,46 @@ const ContractsPage = () => {
         try {
             await openPdf(ContractService.getPdfPath(id))
         } catch (e) {
-            alert('Gabim gjatë hapjes së PDF: ' + (e as any)?.response?.data?.detail || (e as Error)?.message)
+            toast.error('Gabim gjatë hapjes së PDF: ' + ((e as any)?.response?.data?.detail || (e as Error)?.message))
         }
     }
 
     const handleDelete = async (id: number) => {
-        if (!confirm('A jeni të sigurt që doni ta fshini këtë kontratë?')) return
         try {
             await ContractService.delete(id)
+            toast.success('Kontrata u fshi')
             loadContracts()
         } catch (e) {
-            alert('Gabim gjatë fshirjes: ' + (e as any)?.response?.data?.detail || (e as Error)?.message)
+            toast.error('Gabim gjatë fshirjes: ' + ((e as any)?.response?.data?.detail || (e as Error)?.message))
         }
     }
 
     return (
-        <div className="min-h-screen pb-12">
-            {/* Header Section - si Faturat / Ofertat */}
-            <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-6">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => navigate('/')}
-                                className="btn-icon"
-                            >
+        <div className="min-h-screen pb-24">
+            {/* Sticky Header */}
+            <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <button onClick={() => navigate('/')} className="btn-icon shrink-0">
                                 <ArrowLeft size={18} />
                             </button>
-                            <div>
-                                <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tight leading-none sm:leading-normal">Lista e <span className="gradient-text">Kontratave</span></h1>
-                                <p className="text-gray-500 dark:text-slate-400 text-[10px] sm:text-sm font-medium">Kontratat e punës për kohë të pacaktuar</p>
+                            <div className="min-w-0">
+                                <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-none">
+                                    Lista e <span className="text-primary">Kontratave</span>
+                                </h1>
+                                <p className="text-[11px] text-muted-foreground font-medium mt-0.5 hidden sm:block">
+                                    Kontratat e punës për kohë të pacaktuar
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={loadContracts}
-                                title="Rifresko"
-                                className="btn-icon"
-                            >
-                                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                            <button onClick={loadContracts} title="Rifresko" className="btn-icon shrink-0">
+                                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                             </button>
-                            <Link to="/contracts/new" className="w-full sm:w-auto">
-                                <button className="btn-primary-premium flex items-center justify-center gap-2 w-full px-6 py-2.5">
-                                    <Plus size={16} />
-                                    <span>Krijo kontratë</span>
+                            <Link to="/contracts/new" className="hidden sm:block">
+                                <button className="btn-primary flex items-center gap-2 px-4 py-2.5 text-sm">
+                                    <Plus size={15} /> Kontratë e Re
                                 </button>
                             </Link>
                         </div>
@@ -175,220 +193,186 @@ const ContractsPage = () => {
 
             <div className="max-w-7xl mx-auto px-2 sm:px-6 mt-3 sm:mt-8">
                 {/* Search and Filters - si Faturat / Ofertat */}
-                <div className="section-card mb-3 sm:mb-8">
-                    <div className="flex flex-col gap-2 sm:gap-5">
-                        <div className="search-bar">
-                            <Search className="text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" size={16} />
-                            <input
-                                type="text"
-                                placeholder="Kërko sipas emrit, numrit personal ose vendbanimit..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="flex-1 bg-transparent border-none outline-none pl-2 sm:pl-4 text-xs sm:text-[16px] font-medium h-full w-full text-foreground placeholder:text-muted-foreground"
-                            />
-                        </div>
+                {/* Search + filter chips */}
+                <div className="search-bar mb-3">
+                    <Search className="text-muted-foreground shrink-0 ml-1" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Kërko sipas emrit, numrit personal..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="flex-1 bg-transparent border-none outline-none px-3 text-sm font-medium text-foreground placeholder:text-muted-foreground h-full"
+                    />
+                    {search && (
+                        <button onClick={() => setSearch('')} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors mr-1">
+                            <X size={14} />
+                        </button>
+                    )}
+                </div>
 
-                        <div className="grid grid-cols-12 gap-1.5 sm:gap-4">
-                            <div className="col-span-6 sm:col-span-3 lg:col-span-2">
-                                <label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-2 mb-0.5 block text-center">Viti</label>
-                                <select
-                                    value={year}
-                                    onChange={e => setYear(e.target.value)}
-                                    className="input-premium text-center py-1.5 sm:py-0 text-[11px] sm:text-xs"
-                                >
-                                    <option value="">Viti</option>
-                                    {years.map(y => <option key={y} value={y}>{y}</option>)}
-                                </select>
-                            </div>
-                            <div className="col-span-6 sm:col-span-3 lg:col-span-2">
-                                <label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-2 mb-0.5 block text-center">Muaji</label>
-                                <select
-                                    value={month}
-                                    onChange={e => setMonth(e.target.value)}
-                                    className="input-premium text-center py-1.5 sm:py-0 text-[11px] sm:text-xs"
-                                >
-                                    {months.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                            </div>
-                            <div className="col-span-6 lg:col-span-3">
-                                <label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-2 mb-0.5 block text-center">Nga data</label>
-                                <div className="relative">
-                                    <input
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={e => setDateFrom(e.target.value)}
-                                        className="input-premium text-center text-[11px]"
-                                    />
-                                    {dateFrom && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setDateFrom('')}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
-                                        >
-                                            <X size={12} className="text-muted-foreground" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="col-span-6 lg:col-span-3">
-                                <label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-2 mb-0.5 block text-center">Deri më</label>
-                                <div className="relative">
-                                    <input
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={e => setDateTo(e.target.value)}
-                                        className="input-premium text-center text-[11px]"
-                                    />
-                                    {dateTo && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setDateTo('')}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
-                                        >
-                                            <X size={12} className="text-muted-foreground" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="col-span-12 sm:col-span-6 lg:col-span-2 flex items-end">
-                                <button
-                                    type="button"
-                                    onClick={handleReset}
-                                    className="h-9 sm:h-11 w-full rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black bg-muted/50 border border-border text-muted-foreground hover:bg-muted transition-all flex items-center justify-center gap-1 sm:gap-2 shadow-sm"
-                                >
-                                    RESET
-                                </button>
-                            </div>
-                        </div>
+                {/* Year/Month chips */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 mb-3">
+                    {years.map(y => (
+                        <button key={y} onClick={() => setYear(y)} className={`filter-chip shrink-0 ${year === y ? 'active' : ''}`}>{y}</button>
+                    ))}
+                    {years.length > 0 && <div className="w-px h-4 bg-border shrink-0 mx-1" />}
+                    {months.slice(1).map(m => (
+                        <button key={m} onClick={() => setMonth(month === m ? 'Të gjithë' : m)} className={`filter-chip shrink-0 ${month === m ? 'active' : ''}`}>{m}</button>
+                    ))}
+                </div>
+
+                {/* Date range (hidden by default — keep as compact row) */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <div className="relative flex-1 min-w-[120px]">
+                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input-base text-sm" placeholder="Nga data" />
+                        {dateFrom && (
+                            <button onClick={() => setDateFrom('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X size={12} className="text-muted-foreground" /></button>
+                        )}
                     </div>
+                    <div className="relative flex-1 min-w-[120px]">
+                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input-base text-sm" placeholder="Deri më" />
+                        {dateTo && (
+                            <button onClick={() => setDateTo('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X size={12} className="text-muted-foreground" /></button>
+                        )}
+                    </div>
+                    {(dateFrom || dateTo) && (
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="btn-secondary text-xs px-3 py-2"
+                        >
+                            Reset
+                        </button>
+                    )}
                 </div>
 
                 {/* Content Section */}
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
-                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <p className="font-bold animate-pulse">Duke ngarkuar kontratat...</p>
-                        </div>
+                        <SkeletonList count={4} />
                     ) : personList.length === 0 ? (
                         <div className="card-base p-16 text-center">
-                            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Search size={32} className="text-muted-foreground" />
+                            <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <FileText size={28} className="text-muted-foreground/50" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground">Nuk u gjet asnjë kontratë</h3>
-                            <p className="text-muted-foreground mt-2">Provo të ndryshosh filtrat ose kërkimin tuaj.</p>
+                            <h3 className="text-base font-bold text-foreground">Nuk u gjet asnjë kontratë</h3>
+                            <p className="text-sm text-muted-foreground mt-1">Provo të ndryshosh filtrat.</p>
                             <Link to="/contracts/new">
-                                <button className="mt-4 text-primary font-bold hover:underline">Krijo kontratë</button>
+                                <button className="btn-primary mt-4 px-5 py-2.5 text-sm flex items-center gap-2 mx-auto">
+                                    <Plus size={15} /> Krijo Kontratë
+                                </button>
                             </Link>
                         </div>
                     ) : (
                         personList.map((person) => {
                             const key = `${person.name}|${person.personalNumber}`
                             const isExpanded = expandedClients.has(key)
+                            const grad = avatarGradient(person.name)
                             const sortedContracts = [...person.contracts].sort((a: any, b: any) => {
                                 const da = a.contract_start_date || a.contract_date || ''
                                 const db = b.contract_start_date || b.contract_date || ''
                                 return db.localeCompare(da)
                             })
                             return (
-                                <div key={key} className="bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden group/card shadow-sm hover:shadow-md transition-all duration-300">
+                                <div key={key} className="card-base overflow-hidden">
                                     <button
                                         onClick={() => toggleClient(key)}
-                                        className={`w-full min-h-[4rem] sm:min-h-[4.5rem] flex items-center justify-between px-3 sm:px-5 py-2.5 text-left transition-all ${isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'}`}
+                                        className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-all ${isExpanded ? 'bg-muted/40 border-b border-border' : 'hover:bg-muted/30'}`}
                                     >
-                                        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-                                            <div className="w-1 self-stretch min-h-[1.5rem] bg-primary rounded-full shrink-0"></div>
-                                            <div className="flex flex-col gap-y-1 min-w-0">
-                                                <span className="text-[13px] sm:text-sm font-black text-foreground uppercase tracking-wide leading-tight break-words">{person.name}</span>
-                                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-                                                    <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md border border-border uppercase">{person.contracts.length} kontratë</span>
-                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">NP: {person.personalNumber}</span>
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-sm`}>
+                                                <span className="text-[11px] font-black text-white">{initials(person.name)}</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="text-sm font-black text-foreground uppercase tracking-wide block truncate">{person.name}</span>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{person.contracts.length} kontratë</span>
+                                                    <span className="text-[10px] text-muted-foreground/50">·</span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground mono">NP: {person.personalNumber}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`p-1 rounded-lg bg-muted border border-border text-muted-foreground transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
-                                            <Plus size={12} className={isExpanded ? 'rotate-45' : ''} />
-                                        </div>
+                                        <ChevronDown size={16} className={`text-muted-foreground transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
                                     </button>
 
-                                    {isExpanded && (
-                                        <div className="px-4 sm:px-8 pb-8 space-y-4 pt-2">
-                                            <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border-b border-border">
-                                                <div className="col-span-4">Data</div>
-                                                <div className="col-span-4 text-right">Paga (bruto)</div>
-                                                <div className="col-span-4 text-right">Veprimet</div>
-                                            </div>
-                                            {sortedContracts.map((c: any) => {
-                                                const isRowExpanded = expandedContractId === c.id
-                                                return (
-                                                    <div
-                                                        key={c.id}
-                                                        className="relative overflow-hidden transition-all duration-300 bg-card border border-border hover:border-primary/30 shadow-sm hover:shadow-md rounded-2xl"
-                                                    >
-                                                        <div
-                                                            onClick={() => toggleContractActions(c.id)}
-                                                            className="flex items-center justify-between sm:grid sm:grid-cols-12 sm:gap-4 gap-2 px-4 py-2.5 cursor-pointer"
-                                                        >
-                                                            <div className="flex items-center gap-3 min-w-0 sm:col-span-4">
-                                                                <div className="min-w-0">
-                                                                    <div className="font-bold text-foreground text-sm">{formatDate(c.contract_date || c.contract_start_date)}</div>
-                                                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight sm:hidden">Paga: {Number(c.gross_salary)?.toLocaleString('sq-AL')} €</div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="hidden sm:block col-span-4 text-right">
-                                                                <span className="text-sm font-black text-foreground">{Number(c.gross_salary)?.toLocaleString('sq-AL')} €</span>
-                                                            </div>
-                                                            <div className="flex sm:justify-end col-span-2 sm:col-span-4 items-center justify-end">
-                                                                <div className={`p-1.5 rounded-lg bg-muted text-muted-foreground transition-transform duration-300 shrink-0 ${isRowExpanded ? 'rotate-180 bg-primary/10 text-primary' : ''}`}>
-                                                                    <Plus size={14} className={isRowExpanded ? 'rotate-45' : ''} />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <AnimatePresence>
-                                                            {isRowExpanded && (
-                                                                <motion.div
-                                                                    initial={{ height: 0, opacity: 0 }}
-                                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                                    exit={{ height: 0, opacity: 0 }}
-                                                                    className="border-t border-border bg-muted/30 overflow-hidden"
+                                    <AnimatePresence initial={false}>
+                                        {isExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: 'auto' }}
+                                                exit={{ height: 0 }}
+                                                transition={{ duration: 0.25 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="p-2 space-y-1.5">
+                                                    {sortedContracts.map((c: any) => {
+                                                        const isRowExpanded = expandedContractId === c.id
+                                                        return (
+                                                            <div key={c.id} className="rounded-xl border border-border bg-background hover:bg-muted/30 transition-all overflow-hidden">
+                                                                <div
+                                                                    onClick={() => toggleContractActions(c.id)}
+                                                                    className="flex items-center gap-3 px-3 py-3 cursor-pointer"
                                                                 >
-                                                                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-end gap-2">
-                                                                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                                                            <button
-                                                                                onClick={() => handleDownloadPdf(c.id)}
-                                                                                className="btn-secondary-premium flex-1 sm:flex-none h-9 px-4 text-xs flex items-center justify-center gap-2"
-                                                                            >
-                                                                                <Download size={16} /> PDF
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => navigate(`/contracts/edit/${c.id}`)}
-                                                                                className="btn-primary-premium flex-1 sm:flex-none h-9 px-4 text-xs flex items-center justify-center gap-2"
-                                                                            >
-                                                                                NDRYSHO
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleDelete(c.id)}
-                                                                                className="flex-1 sm:flex-none h-9 px-4 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20"
-                                                                            >
-                                                                                <Trash2 size={16} /> FSHI
-                                                                            </button>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="text-sm font-black text-foreground mono">{formatDate(c.contract_date || c.contract_start_date)}</div>
+                                                                        <div className="text-[11px] text-muted-foreground font-medium mono mt-0.5">
+                                                                            Paga bruto: {Number(c.gross_salary)?.toLocaleString('sq-AL')} €
                                                                         </div>
                                                                     </div>
-                                                                </motion.div>
-                                                            )}
-                                                        </AnimatePresence>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    )}
+                                                                    <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 shrink-0 ${isRowExpanded ? 'rotate-180' : ''}`} />
+                                                                </div>
+
+                                                                <AnimatePresence>
+                                                                    {isRowExpanded && (
+                                                                        <motion.div
+                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                            transition={{ duration: 0.18 }}
+                                                                            className="border-t border-border bg-muted/20 overflow-hidden"
+                                                                        >
+                                                                            <div className="p-3 flex flex-wrap gap-2">
+                                                                                <button onClick={() => handleDownloadPdf(c.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
+                                                                                    <Download size={13} /> PDF
+                                                                                </button>
+                                                                                <button onClick={() => navigate(`/contracts/edit/${c.id}`)} className="btn-primary px-3 py-2 text-xs flex-1 sm:flex-none justify-center flex items-center">
+                                                                                    NDRYSHO
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => setConfirmDelete({ open: true, id: c.id })}
+                                                                                    className="btn-danger flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center"
+                                                                                >
+                                                                                    <Trash2 size={13} /> FSHI
+                                                                                </button>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             )
                         })
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmDelete.open}
+                title="Fshi kontratën"
+                message="A jeni të sigurt se doni të fshini këtë kontratë? Ky veprim është i pakthyeshëm."
+                confirmLabel="Fshi"
+                onConfirm={() => {
+                    if (confirmDelete.id != null) handleDelete(confirmDelete.id)
+                    setConfirmDelete({ open: false })
+                }}
+                onCancel={() => setConfirmDelete({ open: false })}
+            />
         </div>
     )
 }

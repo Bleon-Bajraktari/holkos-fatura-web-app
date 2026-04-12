@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { InvoiceService, OfferService, ClientService, CompanyService, openPdf } from '../services/api'
 import EmailPicker from '../components/EmailPicker'
 import { parseDecimal } from '../utils/numbers'
+import { useToast } from '../hooks/useToast'
 
 interface InvoiceItem {
     id?: number
@@ -38,6 +39,7 @@ const InvoiceForm = () => {
 
     const [clients, setClients] = useState<any[]>([])
     const [company, setCompany] = useState<any>(null)
+    const toast = useToast()
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -182,11 +184,11 @@ const InvoiceForm = () => {
 
     const handleSave = async (action: 'save' | 'pdf' | 'email', destEmail?: string) => {
         if (!invoice.client_id) {
-            alert('Ju lutem zgjidhni një klient!')
+            toast.error('Ju lutem zgjidhni një klient!')
             return
         }
         if (invoice.items.some(item => !item.description || item.quantity <= 0)) {
-            alert('Ju lutem plotësoni artikujt saktë!')
+            toast.error('Ju lutem plotësoni artikujt saktë!')
             return
         }
 
@@ -221,7 +223,7 @@ const InvoiceForm = () => {
                 await openPdf(path)
             } else if (action === 'email') {
                 if (!destEmail) {
-                    alert('Ju lutem zgjidhni një email!')
+                    toast.error('Ju lutem zgjidhni një email!')
                     return
                 }
                 const useSmtp = company?.smtp_user && company?.smtp_password && import.meta.env.PROD && !window.location.hostname.includes('localhost')
@@ -239,7 +241,7 @@ const InvoiceForm = () => {
             console.error('Error response:', error.response?.data)
             const detail = error.response?.data?.detail || error.message || 'Gabim gjatë ruajtjes!'
             if (action === 'email') throw error
-            alert(detail)
+            toast.error(detail)
         } finally {
             setSaving(false)
         }
@@ -369,7 +371,7 @@ const InvoiceForm = () => {
                                     type="text"
                                     value={isOffer ? invoice.offer_number : invoice.invoice_number}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, [isOffer ? 'offer_number' : 'invoice_number']: e.target.value }))}
-                                    className="input-premium font-bold"
+                                    className="input-base font-bold"
                                 />
                             </div>
                             <div className="min-w-0">
@@ -378,7 +380,7 @@ const InvoiceForm = () => {
                                     type="date"
                                     value={invoice.date}
                                     onChange={(e) => setInvoice(prev => ({ ...prev, date: e.target.value }))}
-                                    className="input-premium font-bold"
+                                    className="input-base font-bold"
                                 />
                             </div>
                             <div className="min-w-0">
@@ -388,7 +390,7 @@ const InvoiceForm = () => {
                                         type="date"
                                         value={invoice.payment_due_date}
                                         onChange={(e) => setInvoice(prev => ({ ...prev, payment_due_date: e.target.value }))}
-                                        className="input-premium font-bold pr-10"
+                                        className="input-base font-bold pr-10"
                                     />
                                     {invoice.payment_due_date && (
                                         <button
@@ -413,7 +415,7 @@ const InvoiceForm = () => {
                                 placeholder="Psh: Instalimi i rrjetit elektrik..."
                                 value={invoice.subject}
                                 onChange={(e) => setInvoice(prev => ({ ...prev, subject: e.target.value }))}
-                                className="input-premium font-bold"
+                                className="input-base font-bold"
                             />
                         </div>
                     )}
@@ -435,7 +437,7 @@ const InvoiceForm = () => {
                             >
                                 {useNumericPad ? 'ABC' : '123'}
                             </button>
-                            <button onClick={addItemRow} className="btn-secondary-premium text-xs px-4 py-2">
+                            <button onClick={addItemRow} className="btn-secondary text-xs px-4 py-2">
                                 <Plus size={14} />
                                 Shto Rresht
                             </button>
@@ -468,7 +470,7 @@ const InvoiceForm = () => {
                                                 placeholder="Përshkrimi i artikullit..."
                                                 value={item.description}
                                                 onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                                className="input-premium py-2 font-semibold"
+                                                className="input-base py-2 font-semibold"
                                             />
                                         </div>
                                         <div className="sm:col-span-2 min-w-0">
@@ -496,7 +498,7 @@ const InvoiceForm = () => {
                                                             })
                                                         }
                                                     }}
-                                                    className="input-premium py-2 pr-7 text-right font-bold"
+                                                    className="input-base py-2 pr-7 text-right font-bold"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">m2</span>
                                             </div>
@@ -521,7 +523,7 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="input-premium py-2 pr-24 text-right font-bold"
+                                                    className="input-base py-2 pr-24 text-right font-bold"
                                                 />
                                                 <button
                                                     type="button"
@@ -605,7 +607,7 @@ const InvoiceForm = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 section-card">
-                    <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                    <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary w-full sm:flex-1 py-4 text-sm font-black">
                         <Save size={18} />
                         <span>RUAJ</span>
                     </button>
