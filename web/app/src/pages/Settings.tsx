@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2, Lock, User } from 'lucide-react'
 import PasswordInput from '../components/PasswordInput'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { CompanyService, SettingsService, AuthService, API_BASE } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { db } from '../services/db'
+import { useToast } from '../hooks/useToast'
 
 const SettingsPage = () => {
     const navigate = useNavigate()
@@ -24,6 +26,7 @@ const SettingsPage = () => {
         smtp_user: '',
         smtp_password: ''
     })
+    const toast = useToast()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState({ type: '', text: '' })
@@ -33,6 +36,8 @@ const SettingsPage = () => {
     const [logoUploading, setLogoUploading] = useState(false)
     const [resettingCache, setResettingCache] = useState(false)
     const [resettingAll, setResettingAll] = useState(false)
+    const [confirmCache, setConfirmCache] = useState(false)
+    const [confirmReset, setConfirmReset] = useState(false)
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -175,6 +180,7 @@ const SettingsPage = () => {
     if (loading) return <div className="p-8 text-center text-muted-foreground">Duke u ngarkuar...</div>
 
     return (
+        <>
         <div className="p-4 sm:p-6 md:p-10 max-w-5xl mx-auto w-full pb-20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-3">
@@ -192,7 +198,7 @@ const SettingsPage = () => {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="btn-primary-premium w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5"
+                    className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5"
                 >
                     <Save size={18} />
                     <span>{saving ? 'Duke Ruajtur...' : 'Ruaj Ndryshimet'}</span>
@@ -510,7 +516,7 @@ const SettingsPage = () => {
                                     setChangingUsername(false)
                                 }
                             }}
-                            className="btn-primary-premium flex items-center justify-center gap-2 px-5 py-3"
+                            className="btn-primary flex items-center justify-center gap-2 px-5 py-3"
                         >
                             {changingUsername ? 'Duke ndryshuar...' : 'Ndrysho Emrin'}
                         </button>
@@ -589,7 +595,7 @@ const SettingsPage = () => {
                                     setChangingPassword(false)
                                 }
                             }}
-                            className="btn-primary-premium flex items-center justify-center gap-2 px-5 py-3"
+                            className="btn-primary flex items-center justify-center gap-2 px-5 py-3"
                         >
                             {changingPassword ? 'Duke ndryshuar...' : 'Ndrysho Fjalëkalimin'}
                         </button>
@@ -615,27 +621,7 @@ const SettingsPage = () => {
                             <button
                                 type="button"
                                 disabled={resettingCache || resettingAll}
-                                onClick={async () => {
-                                    if (confirm('Kjo do të pastrojë cache-in, të dhënat e listave (fatura, oferta, klientë) dhe Service Worker. Të dhënat e Cilësimeve mbeten. Vazhdoni?')) {
-                                        setResettingCache(true)
-                                        try {
-                                            await db.invoices.clear()
-                                            await db.offers.clear()
-                                            await db.clients.clear()
-                                            localStorage.removeItem('dashboard_cache')
-                                            Object.keys(localStorage).filter(k => k.startsWith('years_cache_')).forEach(k => { try { localStorage.removeItem(k) } catch (_) {} })
-                                            await clearCacheStorage()
-                                            await unregisterServiceWorkers()
-                                            alert('Cache u pastrua! Aplikacioni do të rifreskohet dhe do të ngarkojë të dhënat e reja.')
-                                            window.location.reload()
-                                        } catch (err) {
-                                            console.error('Cache reset failed:', err)
-                                            alert('Pati një gabim gjatë pastrimit të cache. Provoni manualisht.')
-                                        } finally {
-                                            setResettingCache(false)
-                                        }
-                                    }
-                                }}
+                                onClick={() => setConfirmCache(true)}
                                 className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl text-xs font-black hover:bg-slate-950 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-200 dark:shadow-none disabled:opacity-60"
                             >
                                 <Trash2 size={16} />
@@ -644,26 +630,7 @@ const SettingsPage = () => {
                             <button
                                 type="button"
                                 disabled={resettingCache || resettingAll}
-                                onClick={async () => {
-                                    if (confirm('KUJDES: Kjo do të fshijë të gjitha të dhënat lokale (IndexedDB + LocalStorage), do të çregjistrojë Service Worker dhe do të rifreskojë aplikacionin. Vazhdoni?')) {
-                                        setResettingAll(true)
-                                        try {
-                                            await db.invoices.clear()
-                                            await db.offers.clear()
-                                            await db.clients.clear()
-                                            localStorage.clear()
-                                            await clearCacheStorage()
-                                            await unregisterServiceWorkers()
-                                            alert('Reset total u krye! Aplikacioni do të rifreskohet.')
-                                            window.location.reload()
-                                        } catch (err) {
-                                            console.error('Reset failed:', err)
-                                            alert('Pati një gabim gjatë reset-it total. Provoni manualisht.')
-                                        } finally {
-                                            setResettingAll(false)
-                                        }
-                                    }
-                                }}
+                                onClick={() => setConfirmReset(true)}
                                 className="flex items-center justify-center gap-2 px-5 py-3 bg-rose-600 text-white rounded-xl text-xs font-black hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 disabled:opacity-60"
                             >
                                 <Trash2 size={16} />
@@ -674,6 +641,60 @@ const SettingsPage = () => {
                 </div>
             </div>
         </div>
+
+        <ConfirmDialog
+            isOpen={confirmCache}
+            title="Pastro Cache"
+            message="Kjo do të pastrojë cache-in, të dhënat e listave (fatura, oferta, klientë) dhe Service Worker. Të dhënat e Cilësimeve mbeten. Vazhdoni?"
+            confirmLabel="Pastro"
+            onCancel={() => setConfirmCache(false)}
+            onConfirm={async () => {
+                setConfirmCache(false)
+                setResettingCache(true)
+                try {
+                    await db.invoices.clear()
+                    await db.offers.clear()
+                    await db.clients.clear()
+                    localStorage.removeItem('dashboard_cache')
+                    Object.keys(localStorage).filter(k => k.startsWith('years_cache_')).forEach(k => { try { localStorage.removeItem(k) } catch (_) {} })
+                    await clearCacheStorage()
+                    await unregisterServiceWorkers()
+                    window.location.reload()
+                } catch (err) {
+                    console.error('Cache reset failed:', err)
+                    toast.error('Pati një gabim gjatë pastrimit të cache. Provoni manualisht.')
+                } finally {
+                    setResettingCache(false)
+                }
+            }}
+        />
+
+        <ConfirmDialog
+            isOpen={confirmReset}
+            title="Reset Total"
+            message="KUJDES: Kjo do të fshijë të gjitha të dhënat lokale (IndexedDB + LocalStorage), do të çregjistrojë Service Worker dhe do të rifreskojë aplikacionin. Vazhdoni?"
+            confirmLabel="Reset Total"
+            onCancel={() => setConfirmReset(false)}
+            onConfirm={async () => {
+                setConfirmReset(false)
+                setResettingAll(true)
+                try {
+                    await db.invoices.clear()
+                    await db.offers.clear()
+                    await db.clients.clear()
+                    localStorage.clear()
+                    await clearCacheStorage()
+                    await unregisterServiceWorkers()
+                    window.location.reload()
+                } catch (err) {
+                    console.error('Reset failed:', err)
+                    toast.error('Pati një gabim gjatë reset-it total. Provoni manualisht.')
+                } finally {
+                    setResettingAll(false)
+                }
+            }}
+        />
+        </>
     )
 }
 

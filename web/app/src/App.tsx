@@ -16,6 +16,7 @@ import {
     Shield,
     Layers,
     FilePlus,
+    Plus,
     LogOut,
     Moon,
     Sun
@@ -33,6 +34,7 @@ import OfferForm from './pages/OfferForm'
 import Login from './pages/Login'
 import NetworkStatus from './components/NetworkStatus'
 import ProtectedRoute from './components/ProtectedRoute'
+import { ToastProvider } from './components/Toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { useActivityTracker } from './hooks/useActivityTracker'
@@ -516,6 +518,17 @@ const Layout = () => {
                 </div>
             </main>
 
+            {/* FAB — mobile only, on invoices/offers */}
+            {(location.pathname === '/invoices' || location.pathname === '/offers') && (
+                <Link
+                    to={location.pathname === '/offers' ? '/offers/new' : '/invoices/new'}
+                    className="fab"
+                    aria-label="Shto të re"
+                >
+                    <Plus size={26} strokeWidth={2.5} />
+                </Link>
+            )}
+
             {/* Bottom Navigation — mobile only */}
             <nav className="bottom-nav">
                 {bottomNavItems.map((item) => {
@@ -546,6 +559,7 @@ function App() {
         <Router>
             <ThemeProvider>
             <AuthProvider>
+            <ToastProvider>
                 <NetworkStatus />
                 <ScrollToTop />
                 <Routes>
@@ -570,6 +584,7 @@ function App() {
                         <Route path="settings" element={<SettingsPage />} />
                     </Route>
                 </Routes>
+            </ToastProvider>
             </AuthProvider>
             </ThemeProvider>
         </Router>

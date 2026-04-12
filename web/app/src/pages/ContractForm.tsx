@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Download, ArrowLeft } from 'lucide-react'
 import { ContractService, CompanyService, openPdf } from '../services/api'
 import { parseDecimal } from '../utils/numbers'
+import { useToast } from '../hooks/useToast'
 
 const defaultForm = {
     employee_name: '',
@@ -17,6 +18,7 @@ const ContractForm = () => {
     const navigate = useNavigate()
     const isEdit = !!id
     const [form, setForm] = useState(defaultForm)
+    const toast = useToast()
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [company, setCompany] = useState<any>(null)
@@ -123,16 +125,16 @@ const ContractForm = () => {
 
     const handleSave = async () => {
         if (!form.employee_name?.trim()) {
-            alert('Ju lutem shkruani emrin dhe mbiemrin e punonjësit.')
+            toast.error('Ju lutem shkruani emrin dhe mbiemrin e punonjësit.')
             return
         }
         if (!form.contract_date) {
-            alert('Ju lutem plotësoni datën.')
+            toast.error('Ju lutem plotësoni datën.')
             return
         }
         const salary = Number(form.gross_salary)
         if (!Number.isFinite(salary) || salary < 0) {
-            alert('Paga bruto duhet të jetë një numër pozitiv.')
+            toast.error('Paga bruto duhet të jetë një numër pozitiv.')
             return
         }
         setSaving(true)
@@ -146,16 +148,16 @@ const ContractForm = () => {
             }
             if (isEdit && id) {
                 await ContractService.update(Number(id), payload)
-                alert('Kontrata u përditësua.')
+                toast.success('Kontrata u përditësua.')
                 loadContractForPdf(Number(id))
             } else {
                 const created = await ContractService.create(payload)
-                alert('Kontrata u ruajt.')
+                toast.success('Kontrata u ruajt.')
                 setForm(prev => ({ ...prev }))
                 loadContractForPdf(created.id)
             }
         } catch (e) {
-            alert('Gabim: ' + (e as any)?.response?.data?.detail || (e as Error)?.message)
+            toast.error('Gabim: ' + ((e as any)?.response?.data?.detail || (e as Error)?.message))
         } finally {
             setSaving(false)
         }
@@ -171,13 +173,13 @@ const ContractForm = () => {
     const handleDownloadPdf = async () => {
         const targetId = savedId || (isEdit && id ? Number(id) : null)
         if (targetId == null) {
-            alert('Ruajeni kontratën fillimisht, pastaj shkarkoni PDF.')
+            toast.warning('Ruajeni kontratën fillimisht, pastaj shkarkoni PDF.')
             return
         }
         try {
             await openPdf(ContractService.getPdfPath(targetId))
         } catch (e) {
-            alert('Gabim gjatë hapjes së PDF: ' + (e as any)?.response?.data?.detail || (e as Error)?.message)
+            toast.error('Gabim gjatë hapjes së PDF: ' + ((e as any)?.response?.data?.detail || (e as Error)?.message))
         }
     }
 
@@ -217,7 +219,7 @@ const ContractForm = () => {
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="btn-primary-premium px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm flex items-center gap-1.5"
+                                className="btn-primary px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm flex items-center gap-1.5"
                             >
                                 <Save size={16} />
                                 {saving ? 'Duke ruajtur...' : 'Ruaj'}
@@ -247,7 +249,7 @@ const ContractForm = () => {
                                 value={form.employee_name}
                                 onChange={e => setForm(f => ({ ...f, employee_name: e.target.value }))}
                                 onFocus={() => { setShowSuggestions(true); setSuggestionField('name'); }}
-                                className="input-premium"
+                                className="input-base"
                                 placeholder="Emri dhe Mbiemri"
                             />
                             {showSuggestions && suggestionField === 'name' && suggestions.length > 0 && (
@@ -274,7 +276,7 @@ const ContractForm = () => {
                                 value={form.personal_number}
                                 onChange={e => setForm(f => ({ ...f, personal_number: e.target.value }))}
                                 onFocus={() => { setShowSuggestions(true); setSuggestionField('number'); }}
-                                className="input-premium"
+                                className="input-base"
                                 placeholder="Nr. Personal"
                             />
                             {showSuggestions && suggestionField === 'number' && suggestions.length > 0 && (
@@ -298,7 +300,7 @@ const ContractForm = () => {
                                 type="text"
                                 value={form.residence}
                                 onChange={e => setForm(f => ({ ...f, residence: e.target.value }))}
-                                className="input-premium"
+                                className="input-base"
                                 placeholder="Vendbanimi"
                             />
                         </div>
@@ -308,7 +310,7 @@ const ContractForm = () => {
                                 type="date"
                                 value={form.contract_date}
                                 onChange={e => setForm(f => ({ ...f, contract_date: e.target.value }))}
-                                className="input-premium text-[13px]"
+                                className="input-base text-[13px]"
                             />
                         </div>
                         <div>
@@ -321,7 +323,7 @@ const ContractForm = () => {
                                     const parsed = parseDecimal(e.target.value)
                                     setForm(f => ({ ...f, gross_salary: parsed }))
                                 }}
-                                className="input-premium"
+                                className="input-base"
                             />
                         </div>
                     </div>

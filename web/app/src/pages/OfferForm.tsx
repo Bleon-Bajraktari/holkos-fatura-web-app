@@ -4,6 +4,7 @@ import { ArrowLeft, Save, FileDown, MoveUp, MoveDown, X, Eye, Search, UserPlus, 
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfferService, ClientService, openPdf, openPdfPost } from '../services/api'
 import { parseDecimal } from '../utils/numbers'
+import { useToast } from '../hooks/useToast'
 
 type OfferRowType = 'item' | 'header' | 'text'
 
@@ -42,6 +43,7 @@ const OfferForm = () => {
     const [clients, setClients] = useState<any[]>([])
     const [searchTerm, setSearchTerm] = useState('')
     const [showSuggestions, setShowSuggestions] = useState(false)
+    const toast = useToast()
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [fontSize, setFontSize] = useState('Auto')
@@ -174,11 +176,11 @@ const OfferForm = () => {
 
     const handlePreview = async () => {
         if (!offer.client_id) {
-            alert('Ju lutem zgjidhni një klient!')
+            toast.error('Ju lutem zgjidhni një klient!')
             return
         }
         if (!rows.length) {
-            alert('Shto të paktën një rresht!')
+            toast.error('Shto të paktën një rresht!')
             return
         }
         setSaving(true)
@@ -218,7 +220,7 @@ const OfferForm = () => {
         } catch (error: any) {
             console.error('Error previewing offer:', error)
             const detail = error.message || 'Gabim gjatë preview!'
-            alert(detail)
+            toast.error(detail)
         } finally {
             setSaving(false)
         }
@@ -226,11 +228,11 @@ const OfferForm = () => {
 
     const handleSave = async (action: 'save' | 'pdf') => {
         if (!offer.client_id) {
-            alert('Ju lutem zgjidhni një klient!')
+            toast.error('Ju lutem zgjidhni një klient!')
             return
         }
         if (!rows.length) {
-            alert('Shto të paktën një rresht!')
+            toast.error('Shto të paktën një rresht!')
             return
         }
         setSaving(true)
@@ -279,7 +281,7 @@ const OfferForm = () => {
         } catch (error: any) {
             console.error('Error saving offer:', error)
             const detail = error.response?.data?.detail || error.message || 'Gabim gjatë ruajtjes!'
-            alert(detail)
+            toast.error(detail)
         } finally {
             setSaving(false)
         }
@@ -396,7 +398,7 @@ const OfferForm = () => {
                                 type="text"
                                 value={offer.offer_number}
                                 onChange={(e) => setOffer(prev => ({ ...prev, offer_number: e.target.value }))}
-                                className="input-premium font-bold"
+                                className="input-base font-bold"
                             />
                         </div>
                         <div className="min-w-0">
@@ -405,7 +407,7 @@ const OfferForm = () => {
                                 type="date"
                                 value={offer.date}
                                 onChange={(e) => setOffer(prev => ({ ...prev, date: e.target.value }))}
-                                className="input-premium font-bold"
+                                className="input-base font-bold"
                             />
                         </div>
                     </div>
@@ -532,11 +534,11 @@ const OfferForm = () => {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-3 section-card mt-8">
-                <button onClick={handlePreview} disabled={saving} className="btn-secondary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                <button onClick={handlePreview} disabled={saving} className="btn-secondary w-full sm:flex-1 py-4 text-sm font-black">
                     <Eye size={18} />
                     <span>SHIKO</span>
                 </button>
-                <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary-premium w-full sm:flex-1 py-4 text-sm font-black">
+                <button onClick={() => handleSave('save')} disabled={saving} className="btn-primary w-full sm:flex-1 py-4 text-sm font-black">
                     <Save size={18} />
                     <span>RUAJ</span>
                 </button>
