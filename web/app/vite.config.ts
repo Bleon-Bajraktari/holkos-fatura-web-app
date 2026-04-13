@@ -11,8 +11,9 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             manifest: false, // Using local file in public/manifest.webmanifest
+            // MOS aktivizo SW në dev — përndryshe cache-on JS të vjetër dhe “nuk shfaqen ndryshimet”
             devOptions: {
-                enabled: true,
+                enabled: false,
                 type: 'module',
             },
             workbox: {
@@ -66,6 +67,12 @@ export default defineConfig({
                             expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 365 }
                         }
                     },
+                    // 3b. Dashboard API — NetworkOnly (shmang përgjigje të vjetra SW pa `id` në aktivitet)
+                    {
+                        urlPattern: /\/api\/dashboard\//i,
+                        handler: 'NetworkOnly',
+                        options: { cacheName: 'dashboard-network-only' }
+                    },
                     // 4. API Data (Invoices, Dashboard) - NetworkFirst (jo /api/auth/)
                     // Try network. If fails, use Cached response.
                     {
@@ -91,7 +98,9 @@ export default defineConfig({
         https: true,
         host: true,
         allowedHosts: ['.ngrok-free.dev'],
-        port: 5173,
+        // Port fiks + strict: shmang hapjen e një porti të vjetër (5173…) me kod të vjetër
+        port: 59200,
+        strictPort: true,
         proxy: {
             '/api': {
                 target: 'http://localhost:8000',

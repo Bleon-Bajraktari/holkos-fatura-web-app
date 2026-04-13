@@ -183,6 +183,34 @@ html.dark .gradient-text {
          flex items-center justify-center gap-2;
 }
 
+/* Veprimet në listën e faturave (PDF, Ndrysho, …) — kompakt për mobile */
+.invoice-actions-row {
+  @apply p-1.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-1 sm:gap-1.5;
+}
+.invoice-actions-row .inv-act {
+  @apply inline-flex items-center justify-center gap-0.5 rounded-md font-bold
+         text-[9px] leading-tight min-h-[28px] px-1.5 py-1
+         transition-colors active:scale-[0.98];
+}
+.invoice-actions-row .inv-act svg {
+  @apply w-3 h-3 shrink-0;
+}
+.inv-act-secondary {
+  @apply bg-card border border-border text-foreground shadow-sm hover:bg-muted;
+}
+.inv-act-primary {
+  @apply bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90;
+}
+.inv-act-danger {
+  @apply bg-destructive text-destructive-foreground text-[9px] hover:bg-destructive/90;
+}
+.inv-act-status-paid {
+  @apply bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400;
+}
+.inv-act-status-unpaid {
+  @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400;
+}
+
 .btn-ghost {
   @apply text-muted-foreground hover:text-foreground hover:bg-muted
          px-3 py-2.5 rounded-xl transition-all duration-150
@@ -316,6 +344,21 @@ html.dark .gradient-text {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* =====================
+   APP HEADER (iOS safe area)
+   ===================== */
+.app-header {
+  min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  align-items: flex-end;
+  padding-bottom: 0.5rem;
+}
+@media (min-width: 640px) {
+  .app-header {
+    min-height: calc(4rem + env(safe-area-inset-top, 0px));
+  }
 }
 
 /* =====================

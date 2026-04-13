@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
+// Në dev: hiq çdo SW të mbetur nga preview/prod në të njëjtin host — përndryshe shërbejnë bundle të vjetër
+if (import.meta.env.DEV && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => { r.unregister() })
+    })
+}
+
 // SW registration handled by vite-plugin-pwa
 import { registerSW } from 'virtual:pwa-register'
 

@@ -34,7 +34,12 @@ function initials(name: string) {
 const InvoicesPage = () => {
     const navigate = useNavigate()
     const toast = useToast()
-    const [invoices, setInvoices] = useState<any[]>([])
+    const [invoices, setInvoices] = useState<any[]>(() => {
+        try {
+            const cached = localStorage.getItem('invoices_list_cache')
+            return cached ? JSON.parse(cached) : []
+        } catch { return [] }
+    })
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -60,8 +65,8 @@ const InvoicesPage = () => {
         CompanyService.get().then(setCompany).catch(() => {})
     }, [])
 
-    const loadInvoices = () => {
-        setLoading(true)
+    const loadInvoices = (silent = false) => {
+        if (!silent) setLoading(true)
         const params: any = {}
         if (debouncedSearch) params.search = debouncedSearch
         if (statusFilter !== 'Të gjithë') params.status = statusFilter === 'E Paguar' ? 'paid' : 'draft'
@@ -81,7 +86,12 @@ const InvoicesPage = () => {
             }
         }
         InvoiceService.getAll(params)
-            .then(data => setInvoices(data))
+            .then(data => {
+                setInvoices(data)
+                if (!debouncedSearch && statusFilter === 'Të gjithë' && !dateFrom && !dateTo) {
+                    try { localStorage.setItem('invoices_list_cache', JSON.stringify(data)) } catch {}
+                }
+            })
             .catch(err => {
                 console.error('Error loading invoices:', err)
                 toast.error('Gabim gjatë ngarkimit të faturave: ' + (err.response?.data?.detail || err.message))
@@ -140,7 +150,14 @@ const InvoicesPage = () => {
 
     useEffect(() => {
         if (!yearsLoaded) return
-        loadInvoices()
+        // If we have cached data and no filters, show cached and load silently
+        const hasCached = invoices.length > 0
+        const hasFilters = debouncedSearch || statusFilter !== 'Të gjithë' || dateFrom || dateTo
+        if (hasCached && !hasFilters) {
+            loadInvoices(true)  // silent refresh — don't show skeleton
+        } else {
+            loadInvoices()
+        }
     }, [yearsLoaded, debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
 
     const grouped = useMemo(() => {
@@ -305,7 +322,7 @@ const InvoicesPage = () => {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={loadInvoices} title="Rifresko" className="btn-icon shrink-0">
+                            <button onClick={() => loadInvoices()} title="Rifresko" className="btn-icon shrink-0">
                                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                             </button>
                             <button
@@ -556,34 +573,34 @@ const InvoicesPage = () => {
                                                                             transition={{ duration: 0.18 }}
                                                                             className="border-t border-border bg-muted/20 overflow-hidden"
                                                                         >
-                                                                            <div className="p-3 flex flex-wrap gap-2">
-                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
-                                                                                    <Download size={13} /> PDF
-                                                                                </button>
-                                                                                <Link to={`/invoices/edit/${inv.id}`} className="flex-1 sm:flex-none">
-                                                                                    <button className="btn-primary w-full px-3 py-2 text-xs">NDRYSHO</button>
+                                                                            <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                                                                                <Link to={`/invoices/edit/${inv.id}`} className="shrink-0">
+                                                                                    <button className="btn-primary px-3 py-1.5 text-[11px] font-bold">Ndrysho</button>
                                                                                 </Link>
-                                                                                <button onClick={() => handleClone(inv.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
-                                                                                    <Copy size={13} /> KLON
+                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon shrink-0 px-2.5 py-1.5 text-[11px] flex items-center gap-1">
+                                                                                    <Download size={12} /> PDF
+                                                                                </button>
+                                                                                <button onClick={() => handleClone(inv.id)} className="btn-icon shrink-0 px-2.5 py-1.5 text-[11px] flex items-center gap-1">
+                                                                                    <Copy size={12} /> Klon
                                                                                 </button>
                                                                                 {showStatus && (
                                                                                     <button
                                                                                         onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                        className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                                                                        className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
                                                                                             isPaid
                                                                                                 ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
                                                                                                 : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
                                                                                         }`}
                                                                                     >
-                                                                                        <CheckCircle2 size={13} />
-                                                                                        {isPaid ? 'E PAPAGUAR' : 'E PAGUAR'}
+                                                                                        <CheckCircle2 size={12} />
+                                                                                        {isPaid ? 'Pa paguar' : 'E paguar'}
                                                                                     </button>
                                                                                 )}
                                                                                 <button
                                                                                     onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                                    className="btn-danger flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center"
+                                                                                    className="btn-icon shrink-0 px-2 py-1.5 text-[11px] flex items-center gap-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 ml-auto"
                                                                                 >
-                                                                                    <Trash2 size={13} /> FSHI
+                                                                                    <Trash2 size={12} />
                                                                                 </button>
                                                                             </div>
                                                                         </motion.div>
