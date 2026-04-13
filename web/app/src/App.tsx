@@ -8,7 +8,6 @@ import {
     Settings,
     Briefcase,
     X,
-    Bell,
     Search,
     Layers,
     FilePlus,
@@ -101,10 +100,10 @@ const Layout = () => {
 
     const bottomNavItems = [
         { icon: LayoutDashboard, label: 'Raporte', href: '/' },
-        { icon: FileText, label: 'Faturat', href: '/invoices' },
         { icon: Layers, label: 'Ofertat', href: '/offers' },
-        { icon: Users, label: 'Klientë', href: '/clients' },
-        { icon: Settings, label: 'Cilësime', href: '/settings' },
+        { icon: FileText, label: 'Faturat', href: '/invoices' },
+        { icon: FileSignature, label: 'Kontratat', href: '/contracts' },
+        { icon: Users, label: 'Klientët', href: '/clients' },
     ]
 
     useEffect(() => {
@@ -112,6 +111,24 @@ const Layout = () => {
             setSidebarOpen(false)
         }
     }, [location.pathname])
+
+    useEffect(() => {
+        const handleViewport = () => {
+            if (window.visualViewport) {
+                const keyboardHeight = window.innerHeight - window.visualViewport.height
+                document.body.classList.toggle('keyboard-open', keyboardHeight > 150)
+            }
+        }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewport)
+        }
+        return () => {
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', handleViewport)
+            }
+            document.body.classList.remove('keyboard-open')
+        }
+    }, [])
 
     useEffect(() => {
         // Shiko në cache së pari për shpejtësi (PWA)
@@ -314,10 +331,9 @@ const Layout = () => {
                         >
                             {isDark ? <Sun size={19} /> : <Moon size={19} />}
                         </button>
-                        <button className="btn-icon relative">
-                            <Bell size={19} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-card"></span>
-                        </button>
+                        <Link to="/settings" className="btn-icon" title="Cilësimet">
+                            <Settings size={19} />
+                        </Link>
                         <button
                             onClick={handleLogout}
                             className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all text-sm font-medium"
