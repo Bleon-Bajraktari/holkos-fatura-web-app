@@ -14,6 +14,24 @@ const months = [
     'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'
 ]
 
+const YEARS_CACHE_KEY = 'holkos_invoice_years'
+
+function loadYearsFromCache(): { years: string[]; defaultYear: string } | null {
+    try {
+        const raw = localStorage.getItem(YEARS_CACHE_KEY)
+        if (!raw) return null
+        const parsed = JSON.parse(raw) as { years?: string[]; defaultYear?: string }
+        if (!parsed?.years?.length) return null
+        const nums = parsed.years.map(y => parseInt(y, 10)).filter(n => !Number.isNaN(n))
+        const defaultYear = parsed.defaultYear && parsed.years.includes(parsed.defaultYear)
+            ? parsed.defaultYear
+            : String(Math.max(...nums))
+        return { years: parsed.years, defaultYear }
+    } catch {
+        return null
+    }
+}
+
 const AVATAR_GRADIENTS = [
     'from-violet-500 to-purple-600',
     'from-indigo-500 to-blue-600',
@@ -34,14 +52,15 @@ function initials(name: string) {
 const InvoicesPage = () => {
     const navigate = useNavigate()
     const toast = useToast()
+    const _yearsCache = loadYearsFromCache()
     const [invoices, setInvoices] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
-    const [year, setYear] = useState('')
+    const [year, setYear] = useState(_yearsCache?.defaultYear ?? '')
     const [month, setMonth] = useState('Të gjithë')
-    const [years, setYears] = useState<string[]>([])
-    const [yearsLoaded, setYearsLoaded] = useState(false)
+    const [years, setYears] = useState<string[]>(_yearsCache?.years ?? [])
+    const [yearsLoaded, setYearsLoaded] = useState(!!_yearsCache?.years?.length)
     const [showStatus, setShowStatus] = useState(true)
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
@@ -96,10 +115,22 @@ const InvoicesPage = () => {
             setYears(yrs)
             if (yrs.length) {
                 const latest = String(Math.max(...yrs.map((y: string) => parseInt(y, 10))))
-                setYear(latest)
+                setYear(prev => (prev && yrs.includes(prev) ? prev : latest))
+                try {
+                    localStorage.setItem(YEARS_CACHE_KEY, JSON.stringify({ years: yrs, defaultYear: latest }))
+                } catch { /* ignore */ }
+            } else {
+                try {
+                    localStorage.removeItem(YEARS_CACHE_KEY)
+                } catch { /* ignore */ }
             }
             setYearsLoaded(true)
-        }).catch(() => { setYears([]); setYearsLoaded(true) })
+        }).catch(() => {
+            if (!_yearsCache?.years?.length) {
+                setYears([])
+                setYearsLoaded(true)
+            }
+        })
 
         const updateActionBarPosition = () => {
             if (window.visualViewport) {
@@ -134,7 +165,7 @@ const InvoicesPage = () => {
     }, [])
 
     useEffect(() => {
-        const timer = setTimeout(() => setDebouncedSearch(search), 400)
+        const timer = setTimeout(() => setDebouncedSearch(search), 200)
         return () => clearTimeout(timer)
     }, [search])
 
@@ -287,7 +318,7 @@ const InvoicesPage = () => {
 
     return (
         <div className="min-h-screen pb-24">
-            {/* Sticky Header */}
+            {/* Sticky Header (safe-area është te header-i kryesor i Layout) */}
             <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center justify-between gap-3">
@@ -556,34 +587,34 @@ const InvoicesPage = () => {
                                                                             transition={{ duration: 0.18 }}
                                                                             className="border-t border-border bg-muted/20 overflow-hidden"
                                                                         >
-                                                                            <div className="p-3 flex flex-wrap gap-2">
-                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
-                                                                                    <Download size={13} /> PDF
+                                                                            <div className="p-2 sm:p-2.5 flex flex-wrap gap-1.5">
+                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-secondary !px-2 !py-1.5 !text-[10px] !rounded-lg flex items-center gap-1 flex-1 sm:flex-none justify-center min-h-0 font-semibold">
+                                                                                    <Download size={12} /> PDF
                                                                                 </button>
                                                                                 <Link to={`/invoices/edit/${inv.id}`} className="flex-1 sm:flex-none">
-                                                                                    <button className="btn-primary w-full px-3 py-2 text-xs">NDRYSHO</button>
+                                                                                    <button className="btn-primary w-full !px-2 !py-1.5 !text-[10px] !rounded-lg min-h-0">NDRYSHO</button>
                                                                                 </Link>
-                                                                                <button onClick={() => handleClone(inv.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
-                                                                                    <Copy size={13} /> KLON
+                                                                                <button onClick={() => handleClone(inv.id)} className="btn-secondary !px-2 !py-1.5 !text-[10px] !rounded-lg flex items-center gap-1 flex-1 sm:flex-none justify-center min-h-0 font-semibold">
+                                                                                    <Copy size={12} /> KLON
                                                                                 </button>
                                                                                 {showStatus && (
                                                                                     <button
                                                                                         onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                        className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                                                                        className={`flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all min-h-0 ${
                                                                                             isPaid
                                                                                                 ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
                                                                                                 : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
                                                                                         }`}
                                                                                     >
-                                                                                        <CheckCircle2 size={13} />
+                                                                                        <CheckCircle2 size={12} />
                                                                                         {isPaid ? 'E PAPAGUAR' : 'E PAGUAR'}
                                                                                     </button>
                                                                                 )}
                                                                                 <button
                                                                                     onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                                    className="btn-danger flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center"
+                                                                                    className="btn-danger !px-2 !py-1.5 !text-[10px] !rounded-lg flex items-center gap-1 flex-1 sm:flex-none justify-center min-h-0 font-semibold"
                                                                                 >
-                                                                                    <Trash2 size={13} /> FSHI
+                                                                                    <Trash2 size={12} /> FSHI
                                                                                 </button>
                                                                             </div>
                                                                         </motion.div>

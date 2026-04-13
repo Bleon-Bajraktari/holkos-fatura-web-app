@@ -279,7 +279,7 @@ const Layout = () => {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0">
-                <header className="h-14 sm:h-16 bg-card/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-10 sticky top-0 z-30">
+                <header className="min-h-14 sm:min-h-16 pt-[env(safe-area-inset-top,0px)] bg-card/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-10 sticky top-0 z-30">
                     {/* Mobile: logo + brand name */}
                     <div className="flex items-center gap-2.5 lg:hidden">
                         {logoUrl ? (

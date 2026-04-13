@@ -132,7 +132,14 @@ const Dashboard = () => {
                     ) : (
                         <>
                             {/* Card 1 — Total Fatura */}
-                            <div className="card-hover p-4 sm:p-5 space-y-3">
+                            <motion.button
+                                type="button"
+                                onClick={() => navigate('/invoices')}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.985 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                className="card-hover p-4 sm:p-5 space-y-3 text-left w-full cursor-pointer"
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="w-10 h-10 rounded-2xl bg-violet-500/10 flex items-center justify-center">
                                         <FileText size={18} className="text-violet-600 dark:text-violet-400" />
@@ -150,10 +157,17 @@ const Dashboard = () => {
                                 <div className="text-[10px] text-muted-foreground font-medium">
                                     {stats?.total_clients || 0} klientë
                                 </div>
-                            </div>
+                            </motion.button>
 
                             {/* Card 2 — Ky Muaj */}
-                            <div className="card-hover p-4 sm:p-5 space-y-3">
+                            <motion.button
+                                type="button"
+                                onClick={() => navigate('/invoices')}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.985 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                className="card-hover p-4 sm:p-5 space-y-3 text-left w-full cursor-pointer"
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
                                         <Calendar size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -177,10 +191,17 @@ const Dashboard = () => {
                                 <div className="mono text-[11px] text-muted-foreground font-medium">
                                     {(stats?.current_month_revenue || 0).toLocaleString('sq-AL')} €
                                 </div>
-                            </div>
+                            </motion.button>
 
                             {/* Card 3 — Të Ardhura */}
-                            <div className="card-hover p-4 sm:p-5 space-y-3">
+                            <motion.button
+                                type="button"
+                                onClick={() => navigate('/invoices')}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.985 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                className="card-hover p-4 sm:p-5 space-y-3 text-left w-full cursor-pointer"
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
                                         <TrendingUp size={18} className="text-emerald-600 dark:text-emerald-400" />
@@ -202,10 +223,17 @@ const Dashboard = () => {
                                     </p>
                                 </div>
                                 <div className="text-[10px] text-muted-foreground font-medium">Të gjitha kohët</div>
-                            </div>
+                            </motion.button>
 
                             {/* Card 4 — TVSH */}
-                            <div className="card-hover p-4 sm:p-5 space-y-3">
+                            <motion.button
+                                type="button"
+                                onClick={() => navigate('/invoices')}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.985 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                className="card-hover p-4 sm:p-5 space-y-3 text-left w-full cursor-pointer"
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="w-10 h-10 rounded-2xl bg-green-500/10 flex items-center justify-center">
                                         <Shield size={18} className="text-green-600 dark:text-green-400" />
@@ -221,7 +249,7 @@ const Dashboard = () => {
                                     </p>
                                 </div>
                                 <div className="text-[10px] text-muted-foreground font-medium">Totali gjithsej</div>
-                            </div>
+                            </motion.button>
                         </>
                     )}
                 </motion.div>
@@ -230,7 +258,12 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
 
                     {/* Bar Chart — 3/5 */}
-                    <motion.div variants={item} className="md:col-span-3 section-card">
+                    <motion.div
+                        variants={item}
+                        whileHover={{ y: -2 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        className="md:col-span-3 section-card cursor-default"
+                    >
                         <div className="flex items-center gap-2 mb-5">
                             <BarChart2 size={16} className="text-primary shrink-0" />
                             <h3 className="text-xs font-black text-foreground uppercase tracking-widest">
@@ -271,7 +304,12 @@ const Dashboard = () => {
                     </motion.div>
 
                     {/* Donut — 2/5 */}
-                    <motion.div variants={item} className="md:col-span-2 section-card">
+                    <motion.div
+                        variants={item}
+                        whileHover={{ y: -2 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        className="md:col-span-2 section-card cursor-default"
+                    >
                         <div className="flex items-center gap-2 mb-5">
                             <PieChartIcon size={16} className="text-primary shrink-0" />
                             <h3 className="text-xs font-black text-foreground uppercase tracking-widest">
@@ -329,7 +367,12 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                     {/* Activity Feed — 2/3 */}
-                    <motion.div variants={item} className="lg:col-span-2 section-card">
+                    <motion.div
+                        variants={item}
+                        whileHover={{ y: -1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                        className="lg:col-span-2 section-card"
+                    >
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Activity size={16} className="text-primary shrink-0" />
@@ -366,10 +409,21 @@ const Dashboard = () => {
                                     const grad = avatarGradient(act.client || '')
                                     const isPaid = act.status === 'paid'
                                     const isInvoice = act.type === 'invoice'
+                                    const goToDocument = () => {
+                                        if (act.id != null) {
+                                            navigate(isInvoice ? `/invoices/edit/${act.id}` : `/offers/edit/${act.id}`)
+                                        } else {
+                                            navigate(isInvoice ? '/invoices' : '/offers')
+                                        }
+                                    }
                                     return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => navigate(isInvoice ? '/invoices' : '/offers')}
+                                        <motion.button
+                                            type="button"
+                                            key={act.id != null ? `${act.type}-${act.id}` : idx}
+                                            onClick={goToDocument}
+                                            whileHover={{ x: 3 }}
+                                            whileTap={{ scale: 0.99 }}
+                                            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-left group"
                                         >
                                             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-sm`}>
@@ -393,7 +447,7 @@ const Dashboard = () => {
                                                 {act.amount.toLocaleString('sq-AL')} €
                                             </span>
                                             <ArrowRight size={14} className="text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </button>
+                                        </motion.button>
                                     )
                                 })}
                             </div>
@@ -401,7 +455,12 @@ const Dashboard = () => {
                     </motion.div>
 
                     {/* Quick Actions — 1/3 */}
-                    <motion.div variants={item} className="section-card">
+                    <motion.div
+                        variants={item}
+                        whileHover={{ y: -1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                        className="section-card"
+                    >
                         <div className="flex items-center gap-2 mb-4">
                             <Plus size={16} className="text-primary shrink-0" />
                             <h3 className="text-xs font-black text-foreground uppercase tracking-widest">
