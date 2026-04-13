@@ -399,6 +399,10 @@ html.dark .gradient-text {
   @apply text-[9px] font-bold uppercase tracking-wide;
 }
 
+.keyboard-open .bottom-nav {
+  display: none;
+}
+
 /* =====================
    ANIMATED MESH ORBS (Login)
    ===================== */

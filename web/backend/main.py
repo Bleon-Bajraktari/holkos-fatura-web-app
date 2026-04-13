@@ -1043,6 +1043,15 @@ def get_stats(db: Session = Depends(get_db)):
         models.Invoice.status != 'paid'
     ).scalar() or 0
 
+    # Year stats
+    current_year = now.year
+    year_revenue = db.query(func.sum(models.Invoice.total)).filter(
+        extract('year', models.Invoice.date) == current_year
+    ).scalar() or 0
+    year_vat = db.query(func.sum(models.Invoice.vat_amount)).filter(
+        extract('year', models.Invoice.date) == current_year
+    ).scalar() or 0
+
     # Recent Activity (simplified)
     recent_invoices = db.query(models.Invoice).order_by(models.Invoice.created_at.desc()).limit(3).all()
     recent_offers = db.query(models.Offer).order_by(models.Offer.created_at.desc()).limit(2).all()
@@ -1085,6 +1094,8 @@ def get_stats(db: Session = Depends(get_db)):
         "growth": round(growth, 1),
         "paid_count": paid_count,
         "unpaid_count": unpaid_count,
+        "year_revenue": round(float(year_revenue), 2),
+        "year_vat": round(float(year_vat), 2),
         "recent_activity": activity[:5]
     }
 

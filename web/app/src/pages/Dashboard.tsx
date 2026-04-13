@@ -4,13 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     FileText, Layers, FileSignature, Users,
     TrendingUp, Calendar, Shield,
-    ArrowRight, BarChart2, AlertCircle, Plus,
+    ArrowRight, AlertCircle, Plus,
     RefreshCw, ChevronRight, Zap, Clock
 } from 'lucide-react'
-import {
-    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    Cell
-} from 'recharts'
 import { DashboardService } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { SkeletonStat, Skeleton } from '../components/Skeleton'
@@ -37,19 +33,6 @@ const container = {
 const item = {
     hidden: { opacity: 0, y: 14 },
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
-}
-
-const CustomBarTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null
-    return (
-        <div className="card-base px-3 py-2.5 text-xs shadow-xl pointer-events-none">
-            <p className="font-bold text-muted-foreground mb-1">{label}</p>
-            <p className="mono text-primary font-black text-sm">
-                {(payload[0].value as number).toLocaleString('sq-AL')} €
-            </p>
-            <p className="text-muted-foreground mt-0.5">{payload[0].payload.count} fatura</p>
-        </div>
-    )
 }
 
 // Clickable KPI card
@@ -90,30 +73,16 @@ const Dashboard = () => {
     const navigate = useNavigate()
     const { user } = useAuth()
     const [stats, setStats] = useState<any>(null)
-    const [monthly, setMonthly] = useState<any[]>([])
     const [statsLoading, setStatsLoading] = useState(true)
-    const [monthlyLoading, setMonthlyLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
-    const [activeBar, setActiveBar] = useState<number | null>(null)
 
     const loadData = (showRefresh = false) => {
         if (showRefresh) setRefreshing(true)
-
-        Promise.allSettled([
-            DashboardService.getStats(),
-            DashboardService.getMonthly()
-        ]).then(([statsRes, monthlyRes]) => {
-            if (statsRes.status === 'fulfilled') {
-                setStats(statsRes.value)
-                localStorage.setItem('dashboard_cache', JSON.stringify(statsRes.value))
-            }
-            if (monthlyRes.status === 'fulfilled') {
-                setMonthly(monthlyRes.value)
-                localStorage.setItem('dashboard_monthly_cache', JSON.stringify(monthlyRes.value))
-            }
+        DashboardService.getStats().then(data => {
+            setStats(data)
+            localStorage.setItem('dashboard_cache', JSON.stringify(data))
         }).finally(() => {
             setStatsLoading(false)
-            setMonthlyLoading(false)
             setRefreshing(false)
         })
     }
@@ -123,8 +92,6 @@ const Dashboard = () => {
         try {
             const cs = localStorage.getItem('dashboard_cache')
             if (cs) { setStats(JSON.parse(cs)); setStatsLoading(false) }
-            const cm = localStorage.getItem('dashboard_monthly_cache')
-            if (cm) { setMonthly(JSON.parse(cm)); setMonthlyLoading(false) }
         } catch {}
         loadData()
     }, [])
@@ -141,11 +108,7 @@ const Dashboard = () => {
     })
 
     const unpaidCount = stats ? (stats.unpaid_count || 0) : 0
-
-    // Highlight current month bar
-    const now = new Date()
-    const monthNames = ['Jan','Shk','Mar','Pri','Maj','Qer','Kor','Gus','Sht','Tet','Nën','Dhj']
-    const currentMonthName = monthNames[now.getMonth()]
+    const currentYear = new Date().getFullYear()
 
     const quickActions = [
         { label: 'Faturë e Re', href: '/invoices/new', icon: FileText, color: 'bg-violet-500 text-white', desc: 'Krijo faturë' },
@@ -214,8 +177,8 @@ const Dashboard = () => {
                                 icon={TrendingUp}
                                 iconBg="bg-emerald-500/10" iconColor="text-emerald-600 dark:text-emerald-400"
                                 label="Të Ardhura"
-                                value={`${(stats?.total_revenue || 0).toLocaleString('sq-AL')} €`}
-                                sub="Të gjitha kohët"
+                                value={`${(stats?.year_revenue || 0).toLocaleString('sq-AL')} €`}
+                                sub={`Viti ${currentYear}`}
                                 badge={unpaidCount > 0 ? `${unpaidCount} pa paguar` : undefined}
                                 badgeColor="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800"
                                 onClick={() => navigate('/invoices')}
@@ -224,8 +187,8 @@ const Dashboard = () => {
                                 icon={Shield}
                                 iconBg="bg-green-500/10" iconColor="text-green-600 dark:text-green-400"
                                 label="TVSH"
-                                value={`${(stats?.total_vat || 0).toLocaleString('sq-AL')} €`}
-                                sub="Totali TVSH"
+                                value={`${(stats?.year_vat || 0).toLocaleString('sq-AL')} €`}
+                                sub={`Viti ${currentYear}`}
                                 badgeColor=""
                             />
                         </>
@@ -259,66 +222,6 @@ const Dashboard = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {/* ── Revenue Chart ── */}
-                <motion.div variants={item} className="section-card">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <BarChart2 size={15} className="text-primary" />
-                            <h3 className="text-xs font-black text-foreground uppercase tracking-widest">Të Ardhurat — 12 Muajt</h3>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-sm bg-primary opacity-40" />
-                            <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
-                            <span className="text-[10px] text-muted-foreground font-medium ml-0.5">Muaji aktual</span>
-                        </div>
-                    </div>
-                    {monthlyLoading && !monthly.length ? (
-                        <Skeleton className="h-40 w-full rounded-xl" />
-                    ) : (
-                        <ResponsiveContainer width="100%" height={160}>
-                            <BarChart
-                                data={monthly}
-                                margin={{ top: 4, right: 0, left: -24, bottom: 0 }}
-                                onMouseLeave={() => setActiveBar(null)}
-                            >
-                                <XAxis
-                                    dataKey="month"
-                                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                                    axisLine={false} tickLine={false}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", fill: 'hsl(var(--muted-foreground))' }}
-                                    axisLine={false} tickLine={false}
-                                    tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
-                                />
-                                <Tooltip
-                                    content={<CustomBarTooltip />}
-                                    cursor={{ fill: 'hsl(var(--muted))', radius: 4 }}
-                                />
-                                <Bar
-                                    dataKey="revenue"
-                                    radius={[4, 4, 0, 0]}
-                                    maxBarSize={26}
-                                    onMouseEnter={(_, index) => setActiveBar(index)}
-                                >
-                                    {monthly.map((entry, index) => (
-                                        <Cell
-                                            key={index}
-                                            fill={
-                                                entry.month === currentMonthName
-                                                    ? 'hsl(var(--primary))'
-                                                    : activeBar === index
-                                                        ? 'hsl(var(--primary) / 0.7)'
-                                                        : 'hsl(var(--primary) / 0.35)'
-                                            }
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    )}
-                </motion.div>
 
                 {/* ── Activity Feed + Quick Actions ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -368,13 +271,14 @@ const Dashboard = () => {
                                     const isPaid = act.status === 'paid'
                                     const isInvoice = act.type === 'invoice'
                                     const target = isInvoice
-                                        ? (act.id ? `/invoices/edit/${act.id}` : '/invoices')
+                                        ? '/invoices'
                                         : (act.id ? `/offers/edit/${act.id}` : '/offers')
+                                    const navState = isInvoice && act.id ? { state: { expandId: act.id } } : {}
 
                                     return (
                                         <motion.button
                                             key={idx}
-                                            onClick={() => navigate(target)}
+                                            onClick={() => navigate(target, navState)}
                                             className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl hover:bg-muted/60 active:bg-muted transition-colors text-left group"
                                             whileTap={{ scale: 0.98 }}
                                         >
@@ -434,50 +338,6 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* Stats mini */}
-                        {!statsLoading && stats && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="section-card space-y-3"
-                            >
-                                <div className="flex items-center gap-2 mb-1">
-                                    <TrendingUp size={14} className="text-primary" />
-                                    <h3 className="text-xs font-black text-foreground uppercase tracking-widest">Statuset</h3>
-                                </div>
-                                <div className="space-y-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                            <span className="text-xs text-muted-foreground font-medium">Të Paguara</span>
-                                        </div>
-                                        <span className="mono text-xs font-black text-foreground">{stats.paid_count || 0}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-rose-500" />
-                                            <span className="text-xs text-muted-foreground font-medium">Të Papaguara</span>
-                                        </div>
-                                        <span className="mono text-xs font-black text-foreground">{stats.unpaid_count || 0}</span>
-                                    </div>
-                                    {/* Progress bar */}
-                                    {((stats.paid_count || 0) + (stats.unpaid_count || 0)) > 0 && (
-                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-emerald-500 rounded-full"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${((stats.paid_count || 0) / ((stats.paid_count || 0) + (stats.unpaid_count || 0))) * 100}%` }}
-                                                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                <Link to="/invoices" className="flex items-center justify-between pt-1 border-t border-border text-[10px] text-muted-foreground hover:text-primary transition-colors font-bold uppercase tracking-widest">
-                                    Shiko faturat <ArrowRight size={10} />
-                                </Link>
-                            </motion.div>
-                        )}
                     </motion.div>
                 </div>
 

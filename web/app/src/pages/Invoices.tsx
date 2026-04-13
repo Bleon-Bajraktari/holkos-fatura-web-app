@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, RefreshCw, X, ChevronDown, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { InvoiceService, SettingsService, CompanyService, openPdf } from '../services/api'
@@ -33,7 +33,9 @@ function initials(name: string) {
 
 const InvoicesPage = () => {
     const navigate = useNavigate()
+    const location = useLocation()
     const toast = useToast()
+    const expandHandledRef = useRef(false)
     const [invoices, setInvoices] = useState<any[]>(() => {
         try {
             const cached = localStorage.getItem('invoices_list_cache')
@@ -90,6 +92,20 @@ const InvoicesPage = () => {
                 setInvoices(data)
                 if (!debouncedSearch && statusFilter === 'Të gjithë' && !dateFrom && !dateTo) {
                     try { localStorage.setItem('invoices_list_cache', JSON.stringify(data)) } catch {}
+                }
+                // Auto-expand invoice from navigation state
+                const expandId = location.state?.expandId
+                if (expandId && !expandHandledRef.current) {
+                    expandHandledRef.current = true
+                    const target = data.find((inv: any) => inv.id === expandId)
+                    if (target) {
+                        const clientName = (String(target?.client?.name ?? '')).trim() || 'Pa Emër'
+                        setExpandedClients(prev => { const s = new Set(prev); s.add(clientName); return s })
+                        setExpandedInvoiceId(expandId)
+                        setTimeout(() => {
+                            document.getElementById(`invoice-${expandId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        }, 300)
+                    }
                 }
             })
             .catch(err => {
@@ -516,6 +532,7 @@ const InvoicesPage = () => {
                                                         return (
                                                             <div
                                                                 key={inv.id}
+                                                                id={`invoice-${inv.id}`}
                                                                 className={`rounded-xl border overflow-hidden transition-all duration-200 ${
                                                                     selectionMode && isSelected
                                                                         ? 'bg-primary/5 border-primary/40'
@@ -575,18 +592,18 @@ const InvoicesPage = () => {
                                                                         >
                                                                             <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                                                                                 <Link to={`/invoices/edit/${inv.id}`} className="shrink-0">
-                                                                                    <button className="btn-primary px-3 py-1.5 text-[11px] font-bold">Ndrysho</button>
+                                                                                    <button className="btn-primary px-3 py-1.5 text-[11px] font-bold min-w-[72px] justify-center flex items-center gap-1">Ndrysho</button>
                                                                                 </Link>
-                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon shrink-0 px-2.5 py-1.5 text-[11px] flex items-center gap-1">
+                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon shrink-0 px-3 py-1.5 text-[11px] flex items-center gap-1 min-w-[72px] justify-center">
                                                                                     <Download size={12} /> PDF
                                                                                 </button>
-                                                                                <button onClick={() => handleClone(inv.id)} className="btn-icon shrink-0 px-2.5 py-1.5 text-[11px] flex items-center gap-1">
+                                                                                <button onClick={() => handleClone(inv.id)} className="btn-icon shrink-0 px-3 py-1.5 text-[11px] flex items-center gap-1 min-w-[72px] justify-center">
                                                                                     <Copy size={12} /> Klon
                                                                                 </button>
                                                                                 {showStatus && (
                                                                                     <button
                                                                                         onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                        className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
+                                                                                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 min-w-[72px] justify-center transition-all ${
                                                                                             isPaid
                                                                                                 ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
                                                                                                 : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
