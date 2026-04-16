@@ -82,7 +82,7 @@ class InvoiceBase(BaseModel):
     vat_percentage: Decimal = 18.00
     vat_amount: Decimal = 0.00
     total: Decimal = 0.00
-    status: str = 'draft'
+    status: str = 'paid'
     save_timestamp: Optional[datetime] = None
 
 class InvoiceCreate(InvoiceBase):
