@@ -13,6 +13,7 @@ class CompanyBase(BaseModel):
     fiscal_number: Optional[str] = None
     account_nib: Optional[str] = None
     logo_path: Optional[str] = None
+    logo_dark_path: Optional[str] = None
     smtp_server: Optional[str] = 'smtp.gmail.com'
     smtp_port: Optional[int] = 587
     smtp_user: Optional[str] = None
