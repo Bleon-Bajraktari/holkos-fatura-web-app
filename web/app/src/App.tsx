@@ -168,6 +168,14 @@ const Layout = () => {
             : `/${company.logo_path.replace(/^\/+/, '')}`)
         : ''
 
+    const logoDarkUrl = company?.logo_dark_path
+        ? (API_BASE && API_BASE.startsWith('http')
+            ? `${API_BASE.replace(/\/$/, '')}/${company.logo_dark_path.replace(/^\/+/, '')}`
+            : `/${company.logo_dark_path.replace(/^\/+/, '')}`)
+        : ''
+
+    const activeLogo = isDark ? (logoDarkUrl || logoUrl) : (logoUrl || logoDarkUrl)
+
     useEffect(() => {
         const version = Date.now()
         const updateLink = (rel: string, href: string) => {
@@ -202,9 +210,9 @@ const Layout = () => {
                 <div className="flex items-center gap-3 px-2 mb-10 py-2">
                     {logoUrl ? (
                         <img
-                            src={logoUrl}
+                            src={activeLogo}
                             alt="Holkos"
-                            className="w-10 h-10 rounded-xl object-contain [mix-blend-mode:multiply] dark:[mix-blend-mode:normal] dark:invert"
+                            className="w-10 h-10 rounded-xl object-contain"
                         />
                     ) : (
                         <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/25">H</div>
@@ -262,9 +270,9 @@ const Layout = () => {
                                 <div className="flex items-center gap-3">
                                     {logoUrl ? (
                                         <img
-                                            src={logoUrl}
+                                            src={activeLogo}
                                             alt="Holkos"
-                                            className="w-10 h-10 rounded-xl object-contain [mix-blend-mode:multiply] dark:[mix-blend-mode:normal] dark:invert"
+                                            className="w-10 h-10 rounded-xl object-contain"
                                         />
                                     ) : (
                                         <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/25">H</div>
@@ -301,9 +309,9 @@ const Layout = () => {
                     <div className="flex items-center gap-2.5 lg:hidden">
                         {logoUrl ? (
                             <img
-                                src={logoUrl}
+                                src={activeLogo}
                                 alt="Holkos"
-                                className="w-8 h-8 rounded-lg object-contain [mix-blend-mode:multiply] dark:[mix-blend-mode:normal] dark:invert"
+                                className="w-8 h-8 rounded-lg object-contain"
                             />
                         ) : (
                             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/30">H</div>

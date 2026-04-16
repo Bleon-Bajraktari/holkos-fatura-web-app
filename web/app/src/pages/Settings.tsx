@@ -34,6 +34,7 @@ const SettingsPage = () => {
     const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
     const [navbarCombined, setNavbarCombined] = useState(true)
     const [logoUploading, setLogoUploading] = useState(false)
+    const [logoDarkUploading, setLogoDarkUploading] = useState(false)
     const [resettingCache, setResettingCache] = useState(false)
     const [resettingAll, setResettingAll] = useState(false)
     const [confirmCache, setConfirmCache] = useState(false)
@@ -163,6 +164,23 @@ const SettingsPage = () => {
         }
     }
 
+    const handleLogoDarkUpload = async (file: File) => {
+        if (!file) return
+        setLogoDarkUploading(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const updated = await CompanyService.uploadLogoDark(file)
+            setCompany(updated)
+            localStorage.setItem('company_cache', JSON.stringify(updated));
+            setMessage({ type: 'success', text: 'Logo dark u ngarkua me sukses!' })
+        } catch (error) {
+            console.error(error)
+            setMessage({ type: 'error', text: 'Gabim gjatë ngarkimit të logos dark!' })
+        } finally {
+            setLogoDarkUploading(false)
+        }
+    }
+
     const clearCacheStorage = async () => {
         if ('caches' in window) {
             const cacheNames = await caches.keys()
@@ -265,11 +283,41 @@ const SettingsPage = () => {
                                             ? `${API_BASE.replace(/\/$/, '')}/${company.logo_path.replace(/^\/+/, '')}`
                                             : `/${company.logo_path.replace(/^\/+/, '')}`}
                                         alt="Logo"
-                                        className="h-14 w-auto rounded-lg border border-border bg-card p-1"
+                                        className="h-14 w-auto rounded-lg border border-border bg-[#F7F7FA] p-1"
                                     />
                                 </div>
                             )}
                         </div>
+
+                        <div>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Logo Dark Theme</label>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) handleLogoDarkUpload(file)
+                                    }}
+                                    className="w-full bg-muted border border-border rounded-2xl py-2.5 px-4 text-sm font-bold text-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-primary/90"
+                                />
+                                <div className="text-xs text-muted-foreground font-medium">
+                                    {logoDarkUploading ? 'Duke ngarkuar...' : (company.logo_dark_path ? `Logo dark: ${company.logo_dark_path}` : 'Nuk ka logo dark')}
+                                </div>
+                            </div>
+                            {company.logo_dark_path && (
+                                <div className="mt-3">
+                                    <img
+                                        src={API_BASE && API_BASE.startsWith('http')
+                                            ? `${API_BASE.replace(/\/$/, '')}/${company.logo_dark_path.replace(/^\/+/, '')}`
+                                            : `/${company.logo_dark_path.replace(/^\/+/, '')}`}
+                                        alt="Logo Dark"
+                                        className="h-14 w-auto rounded-lg border border-border bg-[#111113] p-1"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
                         <div>
                             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Emri i Kompanisë</label>
                             <div className="relative">

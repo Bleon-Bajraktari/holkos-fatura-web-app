@@ -105,7 +105,10 @@ export default function Login() {
     }
   };
 
-  const logoUrl = '/login-logo.png';
+  const API = (import.meta as any).env?.VITE_API_URL || '';
+  const logoUrl = isDark
+    ? `${API}/logo-dark.png?v=${Date.now()}`
+    : `${API}/logo.png?v=${Date.now()}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden bg-background">
@@ -143,7 +146,7 @@ export default function Login() {
                 <img
                   src={logoUrl}
                   alt="Holkos Fatura"
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 dark:brightness-0 dark:invert"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300"
                   onError={() => setLogoError(true)}
                 />
               )}

@@ -22,7 +22,7 @@ email_service = WebEmailService()
 AUTH_SKIP_PATHS = {
     "/", "/health", "/auth/login", "/auth/refresh",
     "/docs", "/redoc", "/openapi.json",
-    "/logo.png", "/apple-touch-icon.png", "/manifest.webmanifest",
+    "/logo.png", "/logo-dark.png", "/apple-touch-icon.png", "/manifest.webmanifest",
 }
 
 def _is_public_path(path: str) -> bool:
@@ -1186,6 +1186,30 @@ def upload_company_logo(file: UploadFile = File(...), db: Session = Depends(get_
     db.refresh(db_company)
     return db_company
 
+@app.post("/company/logo-dark", response_model=schemas.Company)
+def upload_company_logo_dark(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Lejohen vetëm imazhe për logo.")
+
+    db_company = db.query(models.Company).first()
+    if db_company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    ext = os.path.splitext(file.filename or "")[1].lower() or ".png"
+    filename = f"company_logo_dark{ext}"
+    file_path = os.path.join(upload_dir, filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+
+    db_company.logo_dark_path = os.path.join("uploads", filename).replace("\\", "/")
+    db.commit()
+    db.refresh(db_company)
+    return db_company
+
 @app.get("/logo.png")
 def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
     """
@@ -1307,6 +1331,48 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
     except Exception as e:
         print(f"[ERROR] Error creating default logo: {e}")
         return JSONResponse({"error": "Icon not found"}, status_code=404)
+
+@app.get("/logo-dark.png")
+def get_logo_dark_icon(db: Session = Depends(get_db)):
+    """Kthen logon dark të kompanisë (publike, pa auth)."""
+    from io import BytesIO
+    from PIL import Image as PILImage
+
+    company = db.query(models.Company).first()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = None
+
+    # Provo dark logo fillimisht, pastaj light si fallback
+    for path_attr in ['logo_dark_path', 'logo_path']:
+        attr = getattr(company, path_attr, None) if company else None
+        if attr:
+            full = os.path.join(base_dir, attr.replace("\\", "/").lstrip("/"))
+            if os.path.exists(full):
+                logo_path = full
+                break
+
+    if logo_path:
+        try:
+            img = PILImage.open(logo_path)
+            if img.mode != 'RGBA':
+                img = img.convert('RGBA')
+            size = 512
+            background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
+            img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
+            x_offset = (size - img.width) // 2
+            y_offset = (size - img.height) // 2
+            background.paste(img, (x_offset, y_offset), img)
+            final_img = PILImage.new('RGB', (size, size), (17, 17, 19))  # #111113 dark bg
+            final_img.paste(background, mask=background.split()[3])
+            buffer = BytesIO()
+            final_img.save(buffer, format='PNG', optimize=True)
+            buffer.seek(0)
+            return Response(content=buffer.getvalue(), media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=3600"})
+        except Exception:
+            return FileResponse(logo_path, media_type="image/png")
+
+    return JSONResponse({"error": "Dark logo not found"}, status_code=404)
 
 @app.get("/apple-touch-icon.png")
 def get_apple_touch_icon(db: Session = Depends(get_db)):

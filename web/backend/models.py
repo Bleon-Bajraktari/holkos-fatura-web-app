@@ -14,6 +14,7 @@ class Company(Base):
     fiscal_number = Column(String(50))
     account_nib = Column(String(50))
     logo_path = Column(String(500))
+    logo_dark_path = Column(String(500))
     smtp_server = Column(String(255), default='smtp.gmail.com')
     smtp_port = Column(Integer, default=587)
     smtp_user = Column(String(255))
