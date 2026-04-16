@@ -667,6 +667,13 @@ export const CompanyService = {
             headers: { 'Content-Type': 'multipart/form-data' }
         }).then(res => res.data);
     },
+    uploadLogoLight: (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/company/logo-light', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }).then(res => res.data);
+    },
     uploadLogoDark: (file: File) => {
         const formData = new FormData();
         formData.append('file', file);

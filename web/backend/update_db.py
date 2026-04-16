@@ -114,15 +114,18 @@ def update_db():
             """))
             print("Table 'contracts' created.")
 
-        # Add logo_dark_path to company if missing
+        # Add logo_light_path and logo_dark_path to companies if missing
         try:
-            rows = conn.execute(text("SHOW COLUMNS FROM company")).fetchall()
+            rows = conn.execute(text("SHOW COLUMNS FROM companies")).fetchall()
             cols = [row[0] for row in rows] if rows else []
+            if "logo_light_path" not in cols:
+                print("Adding 'logo_light_path' to companies...")
+                conn.execute(text("ALTER TABLE companies ADD COLUMN logo_light_path VARCHAR(500)"))
             if "logo_dark_path" not in cols:
-                print("Adding 'logo_dark_path' to company...")
-                conn.execute(text("ALTER TABLE company ADD COLUMN logo_dark_path VARCHAR(500)"))
+                print("Adding 'logo_dark_path' to companies...")
+                conn.execute(text("ALTER TABLE companies ADD COLUMN logo_dark_path VARCHAR(500)"))
         except Exception as e:
-            print(f"logo_dark_path migration skipped: {e}")
+            print(f"companies logo migration skipped: {e}")
 
         # 3. Hiq indekset e vjeter qe kerkonin unike globale
         # Numrat e fatures jane unike per vit, jo globale (FATURA NR.1 2025 + FATURA NR.1 2026 OK)

@@ -168,13 +168,22 @@ const Layout = () => {
             : `/${company.logo_path.replace(/^\/+/, '')}`)
         : ''
 
+    const logoLightUrl = company?.logo_light_path
+        ? (API_BASE && API_BASE.startsWith('http')
+            ? `${API_BASE.replace(/\/$/, '')}/${company.logo_light_path.replace(/^\/+/, '')}`
+            : `/${company.logo_light_path.replace(/^\/+/, '')}`)
+        : ''
+
     const logoDarkUrl = company?.logo_dark_path
         ? (API_BASE && API_BASE.startsWith('http')
             ? `${API_BASE.replace(/\/$/, '')}/${company.logo_dark_path.replace(/^\/+/, '')}`
             : `/${company.logo_dark_path.replace(/^\/+/, '')}`)
         : ''
 
-    const activeLogo = isDark ? (logoDarkUrl || logoUrl) : (logoUrl || logoDarkUrl)
+    // logo_path = PDF (nuk e prekë), logo_light_path / logo_dark_path = UI
+    const activeLogo = isDark
+        ? (logoDarkUrl || logoLightUrl || logoUrl)
+        : (logoLightUrl || logoUrl || logoDarkUrl)
 
     useEffect(() => {
         const version = Date.now()
