@@ -93,20 +93,6 @@ const InvoicesPage = () => {
                 if (!debouncedSearch && statusFilter === 'Të gjithë' && !dateFrom && !dateTo) {
                     try { localStorage.setItem('invoices_list_cache', JSON.stringify(data)) } catch {}
                 }
-                // Auto-expand invoice from navigation state
-                const expandId = location.state?.expandId
-                if (expandId && !expandHandledRef.current) {
-                    expandHandledRef.current = true
-                    const target = data.find((inv: any) => inv.id === expandId)
-                    if (target) {
-                        const clientName = (String(target?.client?.name ?? '')).trim() || 'Pa Emër'
-                        setExpandedClients(prev => { const s = new Set(prev); s.add(clientName); return s })
-                        setExpandedInvoiceId(expandId)
-                        setTimeout(() => {
-                            document.getElementById(`invoice-${expandId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                        }, 300)
-                    }
-                }
             })
             .catch(err => {
                 console.error('Error loading invoices:', err)
@@ -175,6 +161,23 @@ const InvoicesPage = () => {
             loadInvoices()
         }
     }, [yearsLoaded, debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
+
+    // Auto-expand invoice card when navigating from Dashboard activity
+    useEffect(() => {
+        const expandId = location.state?.expandId
+        if (!expandId || expandHandledRef.current || invoices.length === 0) return
+        const target = invoices.find((inv: any) =>
+            inv.id === expandId || String(inv.id) === String(expandId)
+        )
+        if (!target) return
+        expandHandledRef.current = true
+        const clientName = (String(target?.client?.name ?? '')).trim() || 'Pa Emër'
+        setExpandedClients(prev => { const s = new Set(prev); s.add(clientName); return s })
+        setExpandedInvoiceId(target.id)
+        setTimeout(() => {
+            document.getElementById(`invoice-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 350)
+    }, [invoices, location.state?.expandId])
 
     const grouped = useMemo(() => {
         const sorted = [...invoices].sort((a, b) => {
