@@ -593,34 +593,40 @@ const InvoicesPage = () => {
                                                                             transition={{ duration: 0.18 }}
                                                                             className="border-t border-border bg-muted/20 overflow-hidden"
                                                                         >
-                                                                            <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                                                                                <Link to={`/invoices/edit/${inv.id}`} className="shrink-0">
-                                                                                    <button className="btn-primary px-3 py-1.5 text-[11px] font-bold min-w-[72px] justify-center flex items-center gap-1">Ndrysho</button>
-                                                                                </Link>
-                                                                                <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon shrink-0 px-3 py-1.5 text-[11px] flex items-center gap-1 min-w-[72px] justify-center">
-                                                                                    <Download size={12} /> PDF
-                                                                                </button>
-                                                                                <button onClick={() => handleClone(inv.id)} className="btn-icon shrink-0 px-3 py-1.5 text-[11px] flex items-center gap-1 min-w-[72px] justify-center">
-                                                                                    <Copy size={12} /> Klon
-                                                                                </button>
-                                                                                {showStatus && (
-                                                                                    <button
-                                                                                        onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 min-w-[72px] justify-center transition-all ${
-                                                                                            isPaid
-                                                                                                ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
-                                                                                                : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                                                                        }`}
-                                                                                    >
-                                                                                        <CheckCircle2 size={12} />
-                                                                                        {isPaid ? 'Pa paguar' : 'E paguar'}
+                                                                            <div className="px-3 py-2.5 flex items-center gap-2">
+                                                                                {/* Butona kryesorë — grid me gjerësi të barabartë */}
+                                                                                <div className={`flex-1 grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                                                                    <Link to={`/invoices/edit/${inv.id}`} className="contents">
+                                                                                        <button className="btn-primary w-full py-1.5 text-[11px] font-bold flex items-center justify-center gap-1">
+                                                                                            Ndrysho
+                                                                                        </button>
+                                                                                    </Link>
+                                                                                    <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[11px] flex items-center justify-center gap-1">
+                                                                                        <Download size={12} /> PDF
                                                                                     </button>
-                                                                                )}
+                                                                                    <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[11px] flex items-center justify-center gap-1">
+                                                                                        <Copy size={12} /> Klon
+                                                                                    </button>
+                                                                                    {showStatus && (
+                                                                                        <button
+                                                                                            onClick={() => handleToggleStatus(inv.id, inv.status)}
+                                                                                            className={`w-full py-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                                                                isPaid
+                                                                                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+                                                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                                                                            }`}
+                                                                                        >
+                                                                                            <CheckCircle2 size={12} />
+                                                                                            {isPaid ? 'Pa pag.' : 'Paguar'}
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                                {/* Delete — ikona e vetme, e kuqe */}
                                                                                 <button
                                                                                     onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                                    className="btn-icon shrink-0 px-2 py-1.5 text-[11px] flex items-center gap-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 ml-auto"
+                                                                                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                                                                                 >
-                                                                                    <Trash2 size={12} />
+                                                                                    <Trash2 size={14} />
                                                                                 </button>
                                                                             </div>
                                                                         </motion.div>
