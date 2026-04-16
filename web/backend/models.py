@@ -13,8 +13,9 @@ class Company(Base):
     unique_number = Column(String(50))
     fiscal_number = Column(String(50))
     account_nib = Column(String(50))
-    logo_path = Column(String(500))
-    logo_dark_path = Column(String(500))
+    logo_path = Column(String(500))       # PDF logo — background i bardhë, mos ndrysho
+    logo_light_path = Column(String(500)) # UI logo light theme
+    logo_dark_path = Column(String(500))  # UI logo dark theme
     smtp_server = Column(String(255), default='smtp.gmail.com')
     smtp_port = Column(Integer, default=587)
     smtp_user = Column(String(255))

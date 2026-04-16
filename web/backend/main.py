@@ -1186,6 +1186,25 @@ def upload_company_logo(file: UploadFile = File(...), db: Session = Depends(get_
     db.refresh(db_company)
     return db_company
 
+@app.post("/company/logo-light", response_model=schemas.Company)
+def upload_company_logo_light(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Lejohen vetëm imazhe për logo.")
+    db_company = db.query(models.Company).first()
+    if db_company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+    upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    ext = os.path.splitext(file.filename or "")[1].lower() or ".png"
+    filename = f"company_logo_light{ext}"
+    file_path = os.path.join(upload_dir, filename)
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+    db_company.logo_light_path = os.path.join("uploads", filename).replace("\\", "/")
+    db.commit()
+    db.refresh(db_company)
+    return db_company
+
 @app.post("/company/logo-dark", response_model=schemas.Company)
 def upload_company_logo_dark(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -1342,8 +1361,8 @@ def get_logo_dark_icon(db: Session = Depends(get_db)):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logo_path = None
 
-    # Provo dark logo fillimisht, pastaj light si fallback
-    for path_attr in ['logo_dark_path', 'logo_path']:
+    # Provo dark logo fillimisht, pastaj light, pastaj pdf logo si fallback
+    for path_attr in ['logo_dark_path', 'logo_light_path', 'logo_path']:
         attr = getattr(company, path_attr, None) if company else None
         if attr:
             full = os.path.join(base_dir, attr.replace("\\", "/").lstrip("/"))

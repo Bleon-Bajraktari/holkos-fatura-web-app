@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "mcp__28163af9-a69e-4414-bdb5-1dd418d434d3__list_projects",
+      "mcp__28163af9-a69e-4414-bdb5-1dd418d434d3__list_deployments",
+      "Bash(cmd /c \"npm run build\")",
+      "Bash(cmd /c \"cd /d \\\\\"C:\\\\xampp\\\\htdocs\\\\Holkos Fatura\\\\.claude\\\\worktrees\\\\keen-moore\\\\web\\\\app\\\\\" && npm run build\")",
+      "Read(//mnt/c/xampp/**)",
+      "Read(//proc/**)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" run build)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" add web/app/src/pages/Invoices.tsx)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'Invoices: fix auto-expand - useEffect i veçantë funksionon edhe me cache:*)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" log --oneline -5)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" remote -v)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" push origin claude/keen-moore)",
+      "Read(//c/xampp/htdocs/Holkos Fatura/**)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" checkout main)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" pull origin main)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" merge claude/keen-moore --no-edit)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" push origin main)",
+      "Bash(curl -s -X POST https://api.render.com/v1/services/srv-d5vnh2juibrs73cuge5g/deploys -H 'Authorization: Bearer rnd_oWF7Fzf8LFMSVDVnZMxsAqDHyUJi' -H 'Content-Type: application/json' -d '{\"clearCache\": \"do_not_clear\"}')",
+      "Bash(python -c ':*)",
+      "Bash(/c/Users/Bleon/AppData/Local/Programs/Python/Python313/python.exe -c ':*)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'Invoices: butona grid-layout me gjerësi të barabartë, pa scroll horizontal; delete me ngjyrë të kuqe:*)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" add web/app/src/pages/Invoices.tsx web/backend/models.py web/backend/schemas.py)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'Invoices: tekst butonash text-[10px]; Backend: default status paid:*)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" add web/app/src/App.tsx)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'App: logo bg-background në të gjitha temat, heq border+muted box:*)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'App: logo mix-blend-mode multiply \\(heq bg të bardhë\\) + dark:invert:*)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" add web/app/src/App.tsx web/app/src/pages/Login.tsx web/app/src/pages/Settings.tsx web/app/src/services/api.ts web/backend/main.py web/backend/models.py web/backend/schemas.py web/backend/update_db.py)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'Logo light/dark: upload i veçantë, switch automatik sipas temës:*)",
+      "Bash(\"/c/Program Files/Git/cmd/git.exe\" add -A)",
+      "Bash('/c/Program Files/Git/cmd/git.exe' commit -m 'Fix 500: tabelë '\\\\''companies'\\\\'' jo '\\\\''company'\\\\''; shto logo_light_path i veçantë; logo_path vetëm për PDF:*)"
+    ]
+  }
+}
