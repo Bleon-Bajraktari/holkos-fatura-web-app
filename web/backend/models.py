@@ -55,7 +55,7 @@ class Invoice(Base):
     vat_percentage = Column(DECIMAL(5, 2), default=18.00)
     vat_amount = Column(DECIMAL(10, 2), default=0.00)
     total = Column(DECIMAL(10, 2), default=0.00)
-    status = Column(String(20), default='draft')
+    status = Column(String(20), default='paid')
     pdf_path = Column(String(500))
     save_timestamp = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())

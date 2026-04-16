@@ -597,26 +597,26 @@ const InvoicesPage = () => {
                                                                                 {/* Butona kryesorë — grid me gjerësi të barabartë */}
                                                                                 <div className={`flex-1 grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
                                                                                     <Link to={`/invoices/edit/${inv.id}`} className="contents">
-                                                                                        <button className="btn-primary w-full py-1.5 text-[11px] font-bold flex items-center justify-center gap-1">
+                                                                                        <button className="btn-primary w-full py-1.5 text-[10px] font-bold flex items-center justify-center gap-1">
                                                                                             Ndrysho
                                                                                         </button>
                                                                                     </Link>
-                                                                                    <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[11px] flex items-center justify-center gap-1">
-                                                                                        <Download size={12} /> PDF
+                                                                                    <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
+                                                                                        <Download size={11} /> PDF
                                                                                     </button>
-                                                                                    <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[11px] flex items-center justify-center gap-1">
-                                                                                        <Copy size={12} /> Klon
+                                                                                    <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
+                                                                                        <Copy size={11} /> Klon
                                                                                     </button>
                                                                                     {showStatus && (
                                                                                         <button
                                                                                             onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                            className={`w-full py-1.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                                                            className={`w-full py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
                                                                                                 isPaid
                                                                                                     ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
                                                                                                     : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
                                                                                             }`}
                                                                                         >
-                                                                                            <CheckCircle2 size={12} />
+                                                                                            <CheckCircle2 size={11} />
                                                                                             {isPaid ? 'Pa pag.' : 'Paguar'}
                                                                                         </button>
                                                                                     )}
