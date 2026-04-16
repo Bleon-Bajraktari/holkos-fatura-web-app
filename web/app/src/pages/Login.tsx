@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Moon, Sun, ArrowRight } from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
-import api from '../services/api';
+import api, { API_BASE } from '../services/api';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -105,10 +105,13 @@ export default function Login() {
     }
   };
 
-  const API = (import.meta as any).env?.VITE_API_URL || '';
+  // Backend root pa /api suffix (p.sh. https://holkos-fatura-api.onrender.com)
+  const backendBase = API_BASE.startsWith('http')
+    ? API_BASE.replace(/\/api\/?$/, '')
+    : '';
   const logoUrl = isDark
-    ? `${API}/logo-dark.png?v=${Date.now()}`
-    : `${API}/logo.png?v=${Date.now()}`;
+    ? `${backendBase}/logo-dark.png`
+    : `${backendBase}/logo.png`;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden bg-background">
@@ -137,17 +140,19 @@ export default function Login() {
         <div className="glass rounded-3xl border border-border/60 shadow-2xl shadow-violet-500/10 px-7 pb-7 pt-5 sm:px-8 sm:pb-8">
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-2">
-            <div className="w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center overflow-hidden">
+            <div className="w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center overflow-hidden rounded-2xl bg-background">
               {logoError ? (
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
                   <span className="text-4xl font-black text-white">H</span>
                 </div>
               ) : (
                 <img
+                  key={logoUrl}
                   src={logoUrl}
                   alt="Holkos Fatura"
-                  className="max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300"
+                  className="max-w-full max-h-full w-auto h-auto object-contain"
                   onError={() => setLogoError(true)}
+                  onLoad={() => setLogoError(false)}
                 />
               )}
             </div>

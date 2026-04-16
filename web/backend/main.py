@@ -1241,16 +1241,20 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
     import tempfile
     
     print(f"[DEBUG] Fetching logo.png at {datetime.now()}, size={size}")
-    
+
     company = db.query(models.Company).first()
     logo_path = None
-    
-    if company and company.logo_path:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        full_path = os.path.join(base_dir, company.logo_path.replace("\\", "/").lstrip("/"))
-        if os.path.exists(full_path):
-            logo_path = full_path
-    
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Prefero logo_light_path për display, pastaj logo_path si fallback
+    for attr in ['logo_light_path', 'logo_path']:
+        val = getattr(company, attr, None) if company else None
+        if val:
+            full_path = os.path.join(base_dir, val.replace("\\", "/").lstrip("/"))
+            if os.path.exists(full_path):
+                logo_path = full_path
+                break
+
     # Fallback: try to serve from frontend public folder
     if not logo_path:
         frontend_public = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "public", "icon-512.png")
