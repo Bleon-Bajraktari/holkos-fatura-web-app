@@ -221,7 +221,7 @@ const Layout = () => {
                         <img
                             src={activeLogo}
                             alt="Holkos"
-                            className="w-10 h-10 rounded-xl object-contain"
+                            className="w-10 h-10 rounded-xl object-contain bg-background"
                         />
                     ) : (
                         <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/25">H</div>
@@ -281,7 +281,7 @@ const Layout = () => {
                                         <img
                                             src={activeLogo}
                                             alt="Holkos"
-                                            className="w-10 h-10 rounded-xl object-contain"
+                                            className="w-10 h-10 rounded-xl object-contain bg-background"
                                         />
                                     ) : (
                                         <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/25">H</div>
@@ -320,7 +320,7 @@ const Layout = () => {
                             <img
                                 src={activeLogo}
                                 alt="Holkos"
-                                className="w-8 h-8 rounded-lg object-contain"
+                                className="w-8 h-8 rounded-lg object-contain bg-background"
                             />
                         ) : (
                             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/30">H</div>
