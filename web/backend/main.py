@@ -1270,16 +1270,7 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
             if img.mode != 'RGBA':
                 img = img.convert('RGBA')
 
-            # Hiq background-in e bardhë/afërsisht të bardhë (pixel removal)
-            # Çdo pixel me R,G,B > 240 bëhet transparent
-            pixels = list(img.getdata())
-            new_pixels = [
-                (r, g, b, 0) if (r > 240 and g > 240 and b > 240) else (r, g, b, a)
-                for r, g, b, a in pixels
-            ]
-            img.putdata(new_pixels)
-
-            # Krijon canvas transparent
+            # Krijon canvas transparent - logo shfaqet si-është pa modifikim
             background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
 
             # Llogarit dimensionet për të mbajtur aspect ratio
@@ -1288,9 +1279,9 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
             # Vendos logo-n në qendër të background-it
             x_offset = (size - img.width) // 2
             y_offset = (size - img.height) // 2
-            background.paste(img, (x_offset, y_offset), img)
+            background.paste(img, (x_offset, y_offset), img if img.mode == 'RGBA' else None)
 
-            # Kthe PNG transparent - CSS bg-background kontrollon ngjyrën
+            # Kthe PNG transparent
             buffer = BytesIO()
             background.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
@@ -1385,18 +1376,11 @@ def get_logo_dark_icon(db: Session = Depends(get_db)):
             if img.mode != 'RGBA':
                 img = img.convert('RGBA')
             size = 512
-            # Hiq background-in e bardhë nga imazhi
-            pixels = list(img.getdata())
-            new_pixels = [
-                (r, g, b, 0) if (r > 240 and g > 240 and b > 240) else (r, g, b, a)
-                for r, g, b, a in pixels
-            ]
-            img.putdata(new_pixels)
             background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
             img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
             x_offset = (size - img.width) // 2
             y_offset = (size - img.height) // 2
-            background.paste(img, (x_offset, y_offset), img)
+            background.paste(img, (x_offset, y_offset), img if img.mode == 'RGBA' else None)
             # Transparent PNG - CSS bg-background kontrollon ngjyrën e background-it
             buffer = BytesIO()
             background.save(buffer, format='PNG', optimize=True)

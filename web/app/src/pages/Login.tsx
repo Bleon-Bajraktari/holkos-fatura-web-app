@@ -148,27 +148,28 @@ export default function Login() {
         <div className="glass rounded-3xl border border-border/60 shadow-2xl shadow-violet-500/10 px-7 pb-7 pt-5 sm:px-8 sm:pb-8">
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-2">
-            <div className="w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center overflow-hidden rounded-2xl bg-background">
+            <div className="flex items-center justify-center mb-2">
               {logoError ? (
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
                   <span className="text-4xl font-black text-white">H</span>
                 </div>
               ) : (
-                <img
-                  key={logoUrl}
-                  src={logoUrl}
-                  alt="Holkos Fatura"
-                  className="max-w-full max-h-full w-auto h-auto object-contain"
-                  onError={() => {
-                    if (isDark && !darkLogoFailed) {
-                      // Dark logo nuk ekziston → provo light logo
-                      setDarkLogoFailed(true);
-                    } else {
-                      setLogoError(true);
-                    }
-                  }}
-                  onLoad={() => setLogoError(false)}
-                />
+                <div className="w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+                  <img
+                    key={logoUrl}
+                    src={logoUrl}
+                    alt="Holkos Fatura"
+                    className="max-w-full max-h-full w-auto h-auto object-contain"
+                    onError={() => {
+                      if (isDark && !darkLogoFailed) {
+                        setDarkLogoFailed(true);
+                      } else {
+                        setLogoError(true);
+                      }
+                    }}
+                    onLoad={() => setLogoError(false)}
+                  />
+                </div>
               )}
             </div>
           </div>
