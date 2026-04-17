@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -71,7 +71,7 @@ const KpiCard = ({ icon: Icon, iconBg, iconColor, label, value, sub, badge, badg
 
 const Dashboard = () => {
     const navigate = useNavigate()
-    const { user } = useAuth()
+    useAuth()
     const [stats, setStats] = useState<any>(null)
     const [statsLoading, setStatsLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
@@ -96,12 +96,6 @@ const Dashboard = () => {
         loadData()
     }, [])
 
-    const greeting = useMemo(() => {
-        const h = new Date().getHours()
-        if (h < 12) return 'Mirëmëngjes'
-        if (h < 18) return 'Mirëdita'
-        return 'Mirëmbrëma'
-    }, [])
 
     const dateStr = new Date().toLocaleDateString('sq-AL', {
         weekday: 'long', day: 'numeric', month: 'long'
@@ -127,12 +121,6 @@ const Dashboard = () => {
                         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest capitalize">
                             {dateStr}
                         </p>
-                        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mt-0.5">
-                            {greeting},{' '}
-                            <span className="bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">
-                                {user?.username || 'User'}
-                            </span>
-                        </h1>
                     </div>
                     <button
                         onClick={() => loadData(true)}
