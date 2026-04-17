@@ -385,8 +385,7 @@ const ContractsPage = () => {
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-2xl btn-primary shadow-xl shadow-primary/30"
-                    style={{ width: 52, height: 52 }}
+                    className="w-[52px] h-[52px] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/30"
                 >
                     <Plus size={22} />
                 </motion.button>
