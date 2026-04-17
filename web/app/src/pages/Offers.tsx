@@ -280,7 +280,7 @@ const OffersPage = () => {
     }
 
     return (
-        <div className="min-h-screen pb-24">
+        <div className="min-h-screen pb-28">
             {/* Sticky Header */}
             <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -591,6 +591,24 @@ const OffersPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Mobile FAB — Ofertë e Re */}
+            {!selectionMode && (
+                <Link
+                    to="/offers/new"
+                    className="fixed right-4 z-40 lg:hidden"
+                    style={{ bottom: 'calc(var(--nav-height, 60px) + 16px)' }}
+                >
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center justify-center rounded-2xl btn-primary shadow-xl shadow-primary/30"
+                        style={{ width: 52, height: 52 }}
+                    >
+                        <Plus size={22} />
+                    </motion.button>
+                </Link>
+            )}
 
             {/* Selection Bar */}
             <AnimatePresence>
