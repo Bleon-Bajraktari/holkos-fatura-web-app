@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, RefreshCw, X, ChevronDown, FileText } from 'lucide-react'
+import { Plus, Search, Download, Trash2, CheckCircle2, XCircle, Copy, Mail, ArrowLeft, CheckSquare, RefreshCw, X, ChevronDown, FileText, Edit2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { InvoiceService, SettingsService, CompanyService, openPdf } from '../services/api'
 import { OfflineService } from '../services/offline'
@@ -591,43 +591,64 @@ const InvoicesPage = () => {
                                                                             animate={{ height: 'auto', opacity: 1 }}
                                                                             exit={{ height: 0, opacity: 0 }}
                                                                             transition={{ duration: 0.18 }}
-                                                                            className="border-t border-border bg-muted/20 overflow-hidden"
+                                                                            className="border-t border-border/60 overflow-hidden"
                                                                         >
-                                                                            <div className="px-3 py-2.5 flex items-center gap-2">
-                                                                                {/* Butona kryesorë — grid me gjerësi të barabartë */}
-                                                                                <div className={`flex-1 grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                                                                                    <Link to={`/invoices/edit/${inv.id}`} className="contents">
-                                                                                        <button className="btn-primary w-full py-1.5 text-[10px] font-bold flex items-center justify-center gap-1">
-                                                                                            Ndrysho
-                                                                                        </button>
-                                                                                    </Link>
-                                                                                    <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
-                                                                                        <Download size={11} /> PDF
-                                                                                    </button>
-                                                                                    <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
-                                                                                        <Copy size={11} /> Klon
-                                                                                    </button>
+                                                                            <div className="px-3 pt-2.5 pb-3 space-y-2">
+                                                                                {/* Edit — butoni kryesor i plotë */}
+                                                                                <Link to={`/invoices/edit/${inv.id}`} className="block">
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.97 }}
+                                                                                        className="w-full h-10 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm shadow-violet-500/25 active:opacity-90 transition-opacity"
+                                                                                    >
+                                                                                        <Edit2 size={14} />
+                                                                                        Ndrysho Faturën
+                                                                                    </motion.button>
+                                                                                </Link>
+
+                                                                                {/* Aksionet dytësore — ikonë + label */}
+                                                                                <div className={`grid gap-2 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.94 }}
+                                                                                        onClick={() => handleDownloadPdf(inv.id)}
+                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 transition-colors active:bg-indigo-500/20"
+                                                                                    >
+                                                                                        <Download size={16} />
+                                                                                        <span className="text-[10px] font-black tracking-wide">PDF</span>
+                                                                                    </motion.button>
+
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.94 }}
+                                                                                        onClick={() => handleClone(inv.id)}
+                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-muted/80 text-muted-foreground transition-colors active:bg-muted"
+                                                                                    >
+                                                                                        <Copy size={16} />
+                                                                                        <span className="text-[10px] font-black tracking-wide">Klon</span>
+                                                                                    </motion.button>
+
                                                                                     {showStatus && (
-                                                                                        <button
+                                                                                        <motion.button
+                                                                                            whileTap={{ scale: 0.94 }}
                                                                                             onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                            className={`w-full py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                                                            className={`flex flex-col items-center gap-1 py-2.5 rounded-xl transition-colors ${
                                                                                                 isPaid
-                                                                                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
-                                                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                                                                                    ? 'bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 active:bg-rose-500/20'
+                                                                                                    : 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 active:bg-emerald-500/20'
                                                                                             }`}
                                                                                         >
-                                                                                            <CheckCircle2 size={11} />
-                                                                                            {isPaid ? 'Pa pag.' : 'Paguar'}
-                                                                                        </button>
+                                                                                            <CheckCircle2 size={16} />
+                                                                                            <span className="text-[10px] font-black tracking-wide">{isPaid ? 'Pa pag.' : 'Paguar'}</span>
+                                                                                        </motion.button>
                                                                                     )}
+
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.94 }}
+                                                                                        onClick={() => setConfirmDialog({ open: true, id: inv.id })}
+                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 text-rose-500 dark:text-rose-400 transition-colors active:bg-rose-500/20"
+                                                                                    >
+                                                                                        <Trash2 size={16} />
+                                                                                        <span className="text-[10px] font-black tracking-wide">Fshi</span>
+                                                                                    </motion.button>
                                                                                 </div>
-                                                                                {/* Delete — ikona e vetme, e kuqe */}
-                                                                                <button
-                                                                                    onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                                                                                >
-                                                                                    <Trash2 size={14} />
-                                                                                </button>
                                                                             </div>
                                                                         </motion.div>
                                                                     )}
