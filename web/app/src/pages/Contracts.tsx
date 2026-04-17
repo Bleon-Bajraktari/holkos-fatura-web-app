@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Download, Trash2, ArrowLeft, RefreshCw, X, ChevronDown, FileText } from 'lucide-react'
+import { Plus, Search, Download, Trash2, ArrowLeft, RefreshCw, X, ChevronDown, FileText, Edit2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ContractService, openPdf } from '../services/api'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -159,7 +159,7 @@ const ContractsPage = () => {
     }
 
     return (
-        <div className="min-h-screen pb-24">
+        <div className="min-h-screen pb-28">
             {/* Sticky Header */}
             <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -329,21 +329,35 @@ const ContractsPage = () => {
                                                                             animate={{ height: 'auto', opacity: 1 }}
                                                                             exit={{ height: 0, opacity: 0 }}
                                                                             transition={{ duration: 0.18 }}
-                                                                            className="border-t border-border bg-muted/20 overflow-hidden"
+                                                                            className="border-t border-border/60 overflow-hidden"
                                                                         >
-                                                                            <div className="p-3 flex flex-wrap gap-2">
-                                                                                <button onClick={() => handleDownloadPdf(c.id)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center">
-                                                                                    <Download size={13} /> PDF
-                                                                                </button>
-                                                                                <button onClick={() => navigate(`/contracts/edit/${c.id}`)} className="btn-primary px-3 py-2 text-xs flex-1 sm:flex-none justify-center flex items-center">
-                                                                                    NDRYSHO
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => setConfirmDelete({ open: true, id: c.id })}
-                                                                                    className="btn-danger flex items-center gap-1.5 px-3 py-2 text-xs flex-1 sm:flex-none justify-center"
+                                                                            <div className="px-3 pt-2.5 pb-3 space-y-2">
+                                                                                <motion.button
+                                                                                    whileTap={{ scale: 0.97 }}
+                                                                                    onClick={() => navigate(`/contracts/edit/${c.id}`)}
+                                                                                    className="w-full h-8 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-violet-500/25"
                                                                                 >
-                                                                                    <Trash2 size={13} /> FSHI
-                                                                                </button>
+                                                                                    <Edit2 size={12} />
+                                                                                    Ndrysho Kontratën
+                                                                                </motion.button>
+                                                                                <div className="grid grid-cols-2 gap-1.5">
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.94 }}
+                                                                                        onClick={() => handleDownloadPdf(c.id)}
+                                                                                        className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 transition-colors active:bg-indigo-500/20"
+                                                                                    >
+                                                                                        <Download size={13} />
+                                                                                        <span className="text-[10px] font-black tracking-wide">PDF</span>
+                                                                                    </motion.button>
+                                                                                    <motion.button
+                                                                                        whileTap={{ scale: 0.94 }}
+                                                                                        onClick={() => setConfirmDelete({ open: true, id: c.id })}
+                                                                                        className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg bg-rose-500/10 dark:bg-rose-500/15 text-rose-500 dark:text-rose-400 transition-colors active:bg-rose-500/20"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span className="text-[10px] font-black tracking-wide">Fshi</span>
+                                                                                    </motion.button>
+                                                                                </div>
                                                                             </div>
                                                                         </motion.div>
                                                                     )}
@@ -361,6 +375,22 @@ const ContractsPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Mobile FAB — Kontratë e Re */}
+            <Link
+                to="/contracts/new"
+                className="fixed right-4 z-40 lg:hidden"
+                style={{ bottom: 'calc(var(--nav-height, 60px) + 16px)' }}
+            >
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center justify-center rounded-2xl btn-primary shadow-xl shadow-primary/30"
+                    style={{ width: 52, height: 52 }}
+                >
+                    <Plus size={22} />
+                </motion.button>
+            </Link>
 
             <ConfirmDialog
                 isOpen={confirmDelete.open}
