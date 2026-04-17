@@ -23,21 +23,8 @@ const AVATAR_GRADIENTS = [
     'from-cyan-500 to-sky-600',
 ]
 
-const GRADIENT_COLORS = [
-    { bg: 'rgba(139,92,246,0.07)', border: 'rgba(139,92,246,0.22)', glow: '0 4px 24px rgba(139,92,246,0.10)' },
-    { bg: 'rgba(99,102,241,0.07)', border: 'rgba(99,102,241,0.22)', glow: '0 4px 24px rgba(99,102,241,0.10)' },
-    { bg: 'rgba(16,185,129,0.07)', border: 'rgba(16,185,129,0.22)', glow: '0 4px 24px rgba(16,185,129,0.10)' },
-    { bg: 'rgba(244,63,94,0.07)', border: 'rgba(244,63,94,0.22)', glow: '0 4px 24px rgba(244,63,94,0.10)' },
-    { bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.22)', glow: '0 4px 24px rgba(245,158,11,0.10)' },
-    { bg: 'rgba(6,182,212,0.07)', border: 'rgba(6,182,212,0.22)', glow: '0 4px 24px rgba(6,182,212,0.10)' },
-]
-
 function avatarGradient(name: string) {
     return AVATAR_GRADIENTS[(name?.charCodeAt(0) || 0) % AVATAR_GRADIENTS.length]
-}
-
-function gradientColors(name: string) {
-    return GRADIENT_COLORS[(name?.charCodeAt(0) || 0) % GRADIENT_COLORS.length]
 }
 
 function initials(name: string) {
@@ -66,6 +53,7 @@ const InvoicesPage = () => {
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [selectionMode, setSelectionMode] = useState(false)
     const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
+    const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | number | null>(null)
     const [emailModalOpen, setEmailModalOpen] = useState(false)
     const [company, setCompany] = useState<any>(null)
     const [statusFilter, setStatusFilter] = useState('Të gjithë')
@@ -174,7 +162,7 @@ const InvoicesPage = () => {
         }
     }, [yearsLoaded, debouncedSearch, year, month, statusFilter, dateFrom, dateTo])
 
-    // Auto-expand client group when navigating from Dashboard activity
+    // Auto-expand invoice card when navigating from Dashboard activity
     useEffect(() => {
         const expandId = location.state?.expandId
         if (!expandId || expandHandledRef.current || invoices.length === 0) return
@@ -185,6 +173,7 @@ const InvoicesPage = () => {
         expandHandledRef.current = true
         const clientName = (String(target?.client?.name ?? '')).trim() || 'Pa Emër'
         setExpandedClients(prev => { const s = new Set(prev); s.add(clientName); return s })
+        setExpandedInvoiceId(target.id)
         setTimeout(() => {
             document.getElementById(`invoice-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 350)
@@ -198,13 +187,12 @@ const InvoicesPage = () => {
             if (!isTempA && isTempB) return 1
             return (Number(b.id) || 0) - (Number(a.id) || 0)
         })
-        const map: Record<string, { invoices: any[], total: number, paidTotal: number }> = {}
+        const map: Record<string, { invoices: any[], total: number }> = {}
         for (const inv of sorted) {
             const name = (String(inv?.client?.name ?? '')).trim() || 'Pa Emër'
-            if (!map[name]) map[name] = { invoices: [], total: 0, paidTotal: 0 }
+            if (!map[name]) map[name] = { invoices: [], total: 0 }
             map[name].invoices.push(inv)
             map[name].total += Number(inv.total || 0)
-            if (inv.status === 'paid') map[name].paidTotal += Number(inv.total || 0)
         }
         return map
     }, [invoices])
@@ -227,6 +215,10 @@ const InvoicesPage = () => {
         setStatusFilter('Të gjithë')
         setDateFrom('')
         setDateTo('')
+    }
+
+    const toggleInvoiceActions = (id: string | number) => {
+        setExpandedInvoiceId(prev => (prev === id ? null : id))
     }
 
     const toggleSelect = (id: string | number) => {
@@ -330,7 +322,7 @@ const InvoicesPage = () => {
     const statusChips = ['Të gjithë', 'E Paguar', 'E Papaguar']
 
     return (
-        <div className="min-h-screen pb-28">
+        <div className="min-h-screen pb-24">
             {/* Sticky Header */}
             <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -499,161 +491,148 @@ const InvoicesPage = () => {
                         {Object.entries(grouped).map(([clientName, group]) => {
                             const isExpanded = expandedClients.has(clientName)
                             const grad = avatarGradient(clientName)
-                            const colors = gradientColors(clientName)
-                            const paidCount = group.invoices.filter((inv: any) => inv.status === 'paid').length
-                            const paidRatio = group.total > 0 ? group.paidTotal / group.total : 0
-
                             return (
-                                <div
-                                    key={clientName}
-                                    className="rounded-2xl overflow-hidden transition-all duration-300"
-                                    style={{
-                                        background: isExpanded ? colors.bg : 'transparent',
-                                        border: `1px solid ${isExpanded ? colors.border : 'hsl(var(--border))'}`,
-                                        boxShadow: isExpanded ? colors.glow : 'none',
-                                    }}
-                                >
-                                    {/* Client Header */}
+                                <div key={clientName} className="card-base overflow-hidden">
+                                    {/* Client Group Header */}
                                     <button
                                         onClick={() => toggleClient(clientName)}
-                                        className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/20"
+                                        className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-all ${isExpanded ? 'bg-muted/40 border-b border-border' : 'hover:bg-muted/30'}`}
                                     >
-                                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-md`}>
-                                            <span className="text-xs font-black text-white">{initials(clientName)}</span>
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1.5">
-                                                <span className="text-sm font-black text-foreground uppercase tracking-wide truncate">{clientName}</span>
-                                                <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted/80 text-muted-foreground border border-border/50">
-                                                    {group.invoices.length}
-                                                </span>
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            {/* Avatar */}
+                                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-sm`}>
+                                                <span className="text-[11px] font-black text-white">{initials(clientName)}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-emerald-500 rounded-full transition-all duration-700"
-                                                        style={{ width: `${paidRatio * 100}%` }}
-                                                    />
+                                            <div className="min-w-0">
+                                                <span className="text-sm font-black text-foreground uppercase tracking-wide block truncate">{clientName}</span>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{group.invoices.length} fatura</span>
+                                                    <span className="text-[10px] text-muted-foreground/50">·</span>
+                                                    <span className="text-[11px] font-black text-primary mono">{group.total.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-muted-foreground shrink-0">
-                                                    {paidCount}/{group.invoices.length} pag.
-                                                </span>
                                             </div>
                                         </div>
-
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className="text-sm font-black text-foreground mono">
-                                                {group.total.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
-                                            </span>
-                                            <ChevronDown
-                                                size={15}
-                                                className={`text-muted-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                                            />
-                                        </div>
+                                        <ChevronDown size={16} className={`text-muted-foreground transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
                                     </button>
 
-                                    {/* Invoice Mini-Cards */}
+                                    {/* Invoices List */}
                                     <AnimatePresence initial={false}>
                                         {isExpanded && (
                                             <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
+                                                initial={{ height: 0 }}
+                                                animate={{ height: 'auto' }}
+                                                exit={{ height: 0 }}
                                                 transition={{ duration: 0.25, ease: 'easeInOut' }}
                                                 className="overflow-hidden"
                                             >
-                                                <div className="px-3 pb-3 space-y-2">
-                                                    {group.invoices.map((inv: any, idx: number) => {
+                                                <div className="p-2 space-y-1.5">
+                                                    {group.invoices.map((inv: any) => {
                                                         const isSelected = selectedIds.has(inv.id)
+                                                        const isRowExpanded = expandedInvoiceId === inv.id
                                                         const isPending = inv.status === 'pending-sync' || inv._isOfflinePending
                                                         const isPaid = inv.status === 'paid'
 
                                                         return (
-                                                            <motion.div
+                                                            <div
                                                                 key={inv.id}
                                                                 id={`invoice-${inv.id}`}
-                                                                initial={{ opacity: 0, y: 6 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                transition={{ delay: idx * 0.04, duration: 0.2 }}
-                                                                onClick={() => selectionMode && toggleSelect(inv.id)}
-                                                                className={`rounded-xl border p-3 transition-all ${
+                                                                className={`rounded-xl border overflow-hidden transition-all duration-200 ${
                                                                     selectionMode && isSelected
-                                                                        ? 'bg-primary/5 border-primary/40 cursor-pointer'
-                                                                        : selectionMode
-                                                                            ? 'bg-card/80 border-border/60 cursor-pointer'
-                                                                            : 'bg-card/80 border-border/60 backdrop-blur-sm'
+                                                                        ? 'bg-primary/5 border-primary/40'
+                                                                        : 'bg-background border-border hover:border-border/80 hover:bg-muted/30'
                                                                 }`}
                                                             >
-                                                                {/* Invoice info row */}
-                                                                <div className="flex items-start justify-between gap-2 mb-2.5">
-                                                                    <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                                                        {selectionMode && (
-                                                                            <div className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
-                                                                                {isSelected && <CheckSquare size={9} className="text-white" />}
-                                                                            </div>
-                                                                        )}
-                                                                        <span className="text-sm font-black text-foreground mono">{inv.invoice_number}</span>
-                                                                        {showStatus && !isPending && (
-                                                                            <span className={isPaid ? 'badge-base badge-paid' : 'badge-base badge-unpaid'}>
-                                                                                {isPaid ? 'E PAGUAR' : 'E PAPAGUAR'}
-                                                                            </span>
-                                                                        )}
-                                                                        {isPending && (
-                                                                            <span className="badge-base badge-pending">
-                                                                                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                                                                                PRITJE
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-right shrink-0">
-                                                                        <div className="text-base font-black text-foreground mono leading-none">
-                                                                            {parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
+                                                                {/* Invoice Summary Row */}
+                                                                <div
+                                                                    onClick={() => selectionMode ? toggleSelect(inv.id) : toggleInvoiceActions(inv.id)}
+                                                                    className="flex items-center gap-3 px-3 py-3 cursor-pointer"
+                                                                >
+                                                                    {selectionMode && (
+                                                                        <div className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-primary border-primary' : 'border-border'}`}>
+                                                                            {isSelected && <CheckSquare size={11} className="text-white" />}
                                                                         </div>
-                                                                        <div className="text-[10px] text-muted-foreground font-medium mt-0.5 mono">
+                                                                    )}
+
+                                                                    {/* Left: number + date */}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="text-sm font-black text-foreground mono">{inv.invoice_number}</span>
+                                                                            {showStatus && !isPending && (
+                                                                                <span className={isPaid ? 'badge-base badge-paid' : 'badge-base badge-unpaid'}>
+                                                                                    {isPaid ? 'E PAGUAR' : 'E PAPAGUAR'}
+                                                                                </span>
+                                                                            )}
+                                                                            {isPending && (
+                                                                                <span className="badge-base badge-pending">
+                                                                                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                                                                    PRITJE
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="text-[11px] text-muted-foreground font-medium mt-0.5 mono">
                                                                             {new Date(inv.date).toLocaleDateString('sq-AL')} · TVSh {parseFloat(inv.vat_percentage ?? 0).toFixed(0)}%
                                                                         </div>
                                                                     </div>
+
+                                                                    {/* Right: total + expand */}
+                                                                    <div className="flex items-center gap-2 shrink-0">
+                                                                        <span className="text-sm font-black text-foreground mono">
+                                                                            {parseFloat(inv.total).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
+                                                                        </span>
+                                                                        <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${isRowExpanded ? 'rotate-180' : ''}`} />
+                                                                    </div>
                                                                 </div>
 
-                                                                {/* Action buttons — always visible */}
-                                                                {!selectionMode && (
-                                                                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/40">
-                                                                        <div className={`flex-1 grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                                                                            <Link to={`/invoices/edit/${inv.id}`} className="contents">
-                                                                                <button className="btn-primary w-full py-1.5 text-[10px] font-bold flex items-center justify-center gap-1">
-                                                                                    Ndrysho
-                                                                                </button>
-                                                                            </Link>
-                                                                            <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
-                                                                                <Download size={11} /> PDF
-                                                                            </button>
-                                                                            <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
-                                                                                <Copy size={11} /> Klon
-                                                                            </button>
-                                                                            {showStatus && (
-                                                                                <button
-                                                                                    onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                    className={`w-full py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                                                                                        isPaid
-                                                                                            ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
-                                                                                            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                                                                    }`}
-                                                                                >
-                                                                                    <CheckCircle2 size={11} />
-                                                                                    {isPaid ? 'Pa pag.' : 'Paguar'}
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                        <button
-                                                                            onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                                                {/* Expanded Actions */}
+                                                                <AnimatePresence>
+                                                                    {isRowExpanded && !selectionMode && (
+                                                                        <motion.div
+                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                            transition={{ duration: 0.18 }}
+                                                                            className="border-t border-border bg-muted/20 overflow-hidden"
                                                                         >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </motion.div>
+                                                                            <div className="px-3 py-2.5 flex items-center gap-2">
+                                                                                {/* Butona kryesorë — grid me gjerësi të barabartë */}
+                                                                                <div className={`flex-1 grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                                                                    <Link to={`/invoices/edit/${inv.id}`} className="contents">
+                                                                                        <button className="btn-primary w-full py-1.5 text-[10px] font-bold flex items-center justify-center gap-1">
+                                                                                            Ndrysho
+                                                                                        </button>
+                                                                                    </Link>
+                                                                                    <button onClick={() => handleDownloadPdf(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
+                                                                                        <Download size={11} /> PDF
+                                                                                    </button>
+                                                                                    <button onClick={() => handleClone(inv.id)} className="btn-icon w-full py-1.5 text-[10px] flex items-center justify-center gap-1">
+                                                                                        <Copy size={11} /> Klon
+                                                                                    </button>
+                                                                                    {showStatus && (
+                                                                                        <button
+                                                                                            onClick={() => handleToggleStatus(inv.id, inv.status)}
+                                                                                            className={`w-full py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                                                                isPaid
+                                                                                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+                                                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                                                                            }`}
+                                                                                        >
+                                                                                            <CheckCircle2 size={11} />
+                                                                                            {isPaid ? 'Pa pag.' : 'Paguar'}
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                                {/* Delete — ikona e vetme, e kuqe */}
+                                                                                <button
+                                                                                    onClick={() => setConfirmDialog({ open: true, id: inv.id })}
+                                                                                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                                                                >
+                                                                                    <Trash2 size={14} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
                                                         )
                                                     })}
                                                 </div>
@@ -666,24 +645,6 @@ const InvoicesPage = () => {
                     </div>
                 )}
             </div>
-
-            {/* Mobile FAB — New Invoice */}
-            {!selectionMode && (
-                <Link
-                    to="/invoices/new"
-                    className="fixed right-4 z-40 lg:hidden"
-                    style={{ bottom: 'calc(var(--nav-height, 60px) + 16px)' }}
-                >
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-13 h-13 rounded-2xl btn-primary flex items-center justify-center shadow-xl shadow-primary/30"
-                        style={{ width: 52, height: 52 }}
-                    >
-                        <Plus size={22} />
-                    </motion.button>
-                </Link>
-            )}
 
             {/* Selection Bar */}
             <AnimatePresence>
