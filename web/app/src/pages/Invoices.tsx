@@ -598,30 +598,30 @@ const InvoicesPage = () => {
                                                                                 <Link to={`/invoices/edit/${inv.id}`} className="block">
                                                                                     <motion.button
                                                                                         whileTap={{ scale: 0.97 }}
-                                                                                        className="w-full h-10 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm shadow-violet-500/25 active:opacity-90 transition-opacity"
+                                                                                        className="w-full h-8 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-violet-500/25 active:opacity-90 transition-opacity"
                                                                                     >
-                                                                                        <Edit2 size={14} />
+                                                                                        <Edit2 size={12} />
                                                                                         Ndrysho Faturën
                                                                                     </motion.button>
                                                                                 </Link>
 
                                                                                 {/* Aksionet dytësore — ikonë + label */}
-                                                                                <div className={`grid gap-2 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                                                                <div className={`grid gap-1.5 ${showStatus ? 'grid-cols-4' : 'grid-cols-3'}`}>
                                                                                     <motion.button
                                                                                         whileTap={{ scale: 0.94 }}
                                                                                         onClick={() => handleDownloadPdf(inv.id)}
-                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 transition-colors active:bg-indigo-500/20"
+                                                                                        className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 transition-colors active:bg-indigo-500/20"
                                                                                     >
-                                                                                        <Download size={16} />
+                                                                                        <Download size={13} />
                                                                                         <span className="text-[10px] font-black tracking-wide">PDF</span>
                                                                                     </motion.button>
 
                                                                                     <motion.button
                                                                                         whileTap={{ scale: 0.94 }}
                                                                                         onClick={() => handleClone(inv.id)}
-                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-muted/80 text-muted-foreground transition-colors active:bg-muted"
+                                                                                        className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg bg-muted/80 text-muted-foreground transition-colors active:bg-muted"
                                                                                     >
-                                                                                        <Copy size={16} />
+                                                                                        <Copy size={13} />
                                                                                         <span className="text-[10px] font-black tracking-wide">Klon</span>
                                                                                     </motion.button>
 
@@ -629,13 +629,13 @@ const InvoicesPage = () => {
                                                                                         <motion.button
                                                                                             whileTap={{ scale: 0.94 }}
                                                                                             onClick={() => handleToggleStatus(inv.id, inv.status)}
-                                                                                            className={`flex flex-col items-center gap-1 py-2.5 rounded-xl transition-colors ${
+                                                                                            className={`flex flex-col items-center gap-0.5 py-1.5 rounded-lg transition-colors ${
                                                                                                 isPaid
                                                                                                     ? 'bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 active:bg-rose-500/20'
                                                                                                     : 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 active:bg-emerald-500/20'
                                                                                             }`}
                                                                                         >
-                                                                                            <CheckCircle2 size={16} />
+                                                                                            <CheckCircle2 size={13} />
                                                                                             <span className="text-[10px] font-black tracking-wide">{isPaid ? 'Pa pag.' : 'Paguar'}</span>
                                                                                         </motion.button>
                                                                                     )}
@@ -643,9 +643,9 @@ const InvoicesPage = () => {
                                                                                     <motion.button
                                                                                         whileTap={{ scale: 0.94 }}
                                                                                         onClick={() => setConfirmDialog({ open: true, id: inv.id })}
-                                                                                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 text-rose-500 dark:text-rose-400 transition-colors active:bg-rose-500/20"
+                                                                                        className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg bg-rose-500/10 dark:bg-rose-500/15 text-rose-500 dark:text-rose-400 transition-colors active:bg-rose-500/20"
                                                                                     >
-                                                                                        <Trash2 size={16} />
+                                                                                        <Trash2 size={13} />
                                                                                         <span className="text-[10px] font-black tracking-wide">Fshi</span>
                                                                                     </motion.button>
                                                                                 </div>
