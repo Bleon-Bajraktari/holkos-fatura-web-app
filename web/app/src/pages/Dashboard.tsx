@@ -112,19 +112,22 @@ const Dashboard = () => {
     ]
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <div className="p-3 sm:p-5 md:p-8 max-w-7xl mx-auto w-full">
             <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
 
                 {/* ── Header ── */}
-                <motion.div variants={item} className="flex items-start justify-between">
-                    <div>
-                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest capitalize">
+                <motion.div variants={item} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                        <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-none">
+                            Pasqyra
+                        </h1>
+                        <p className="text-[11px] font-medium text-muted-foreground mt-1 capitalize">
                             {dateStr}
                         </p>
                     </div>
                     <button
                         onClick={() => loadData(true)}
-                        className="btn-icon mt-1 shrink-0"
+                        className="btn-icon shrink-0"
                         title="Rifresko"
                     >
                         <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
