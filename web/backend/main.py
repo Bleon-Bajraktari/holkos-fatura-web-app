@@ -18,6 +18,43 @@ from auth import decode_token
 pdf_generator = WebPDFGenerator()
 email_service = WebEmailService()
 
+# Cache në memorie për logot e processuara (path -> {mtime, data})
+_logo_png_cache: dict = {}
+
+def _process_logo_transparent(logo_path: str, size: int = 512) -> bytes:
+    """Hap logo-n, heq background të bardhë me numpy (shpejt), kthen PNG bytes."""
+    from io import BytesIO
+    from PIL import Image as PILImage
+    import numpy as np
+
+    img = PILImage.open(logo_path).convert('RGBA')
+    arr = np.array(img, dtype=np.uint8)
+    # Pixel me R,G,B > 240 → transparent (alpha = 0)
+    white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
+    arr[white, 3] = 0
+    img = PILImage.fromarray(arr, 'RGBA')
+
+    canvas = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
+    img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
+    x = (size - img.width) // 2
+    y = (size - img.height) // 2
+    canvas.paste(img, (x, y), img)
+
+    buf = BytesIO()
+    canvas.save(buf, format='PNG', optimize=True)
+    return buf.getvalue()
+
+def _get_logo_bytes(logo_path: str, size: int = 512) -> bytes:
+    """Kthen logo bytes me cache - ri-processon vetëm nëse ndryshon file-i."""
+    mtime = os.path.getmtime(logo_path)
+    key = f"{logo_path}:{size}"
+    cached = _logo_png_cache.get(key)
+    if cached and cached['mtime'] == mtime:
+        return cached['data']
+    data = _process_logo_transparent(logo_path, size)
+    _logo_png_cache[key] = {'mtime': mtime, 'data': data}
+    return data
+
 # Public paths (no auth required)
 AUTH_SKIP_PATHS = {
     "/", "/health", "/auth/login", "/auth/refresh",
@@ -1263,43 +1300,14 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
     
     if logo_path:
         try:
-            # Hap logo-n me PIL
-            img = PILImage.open(logo_path)
-
-            # Konverto në RGBA nëse nuk është
-            if img.mode != 'RGBA':
-                img = img.convert('RGBA')
-
-            # Krijon canvas transparent - logo shfaqet si-është pa modifikim
-            background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
-
-            # Llogarit dimensionet për të mbajtur aspect ratio
-            img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
-
-            # Vendos logo-n në qendër të background-it
-            x_offset = (size - img.width) // 2
-            y_offset = (size - img.height) // 2
-            background.paste(img, (x_offset, y_offset), img if img.mode == 'RGBA' else None)
-
-            # Kthe PNG transparent
-            buffer = BytesIO()
-            background.save(buffer, format='PNG', optimize=True)
-            buffer.seek(0)
-
-            return Response(
-                content=buffer.getvalue(),
-                media_type="image/png",
-                headers={
-                    "Cache-Control": "public, max-age=3600"
-                }
-            )
+            data = _get_logo_bytes(logo_path, size)
+            return Response(content=data, media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=3600"})
         except Exception as e:
             print(f"[ERROR] Error processing logo: {e}")
-            # Nëse ka gabim, kthe logo-n origjinale
             if os.path.exists(logo_path):
-                return FileResponse(logo_path, media_type="image/png", headers={
-                    "Cache-Control": "public, max-age=3600"
-                })
+                return FileResponse(logo_path, media_type="image/png",
+                                    headers={"Cache-Control": "public, max-age=3600"})
     
     # Final fallback: Krijon një logo default me emrin e kompanisë
     try:
@@ -1372,20 +1380,8 @@ def get_logo_dark_icon(db: Session = Depends(get_db)):
 
     if logo_path:
         try:
-            img = PILImage.open(logo_path)
-            if img.mode != 'RGBA':
-                img = img.convert('RGBA')
-            size = 512
-            background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
-            img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
-            x_offset = (size - img.width) // 2
-            y_offset = (size - img.height) // 2
-            background.paste(img, (x_offset, y_offset), img if img.mode == 'RGBA' else None)
-            # Transparent PNG - CSS bg-background kontrollon ngjyrën e background-it
-            buffer = BytesIO()
-            background.save(buffer, format='PNG', optimize=True)
-            buffer.seek(0)
-            return Response(content=buffer.getvalue(), media_type="image/png",
+            data = _get_logo_bytes(logo_path, 512)
+            return Response(content=data, media_type="image/png",
                             headers={"Cache-Control": "public, max-age=3600"})
         except Exception:
             return FileResponse(logo_path, media_type="image/png")
