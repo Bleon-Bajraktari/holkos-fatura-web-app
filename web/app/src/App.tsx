@@ -113,20 +113,51 @@ const Layout = () => {
     }, [location.pathname])
 
     useEffect(() => {
+        const setKeyboard = (open: boolean) => {
+            document.body.classList.toggle('keyboard-open', open)
+        }
+
         const handleViewport = () => {
-            if (window.visualViewport) {
-                const keyboardHeight = window.innerHeight - window.visualViewport.height
-                document.body.classList.toggle('keyboard-open', keyboardHeight > 150)
+            const vv = window.visualViewport
+            if (!vv) return
+            // iOS: keyboard height = layout height - visual viewport height - offset
+            const keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0)
+            setKeyboard(keyboardHeight > 80)
+        }
+
+        // Backup: input focus/blur për iOS kur visualViewport nuk reagon shpejt
+        const handleFocusIn = (e: FocusEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                // Shto vonesë të vogël — iOS hap tastierën pas fokusit
+                setTimeout(handleViewport, 100)
             }
         }
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', handleViewport)
+        const handleFocusOut = () => {
+            setTimeout(() => {
+                if (!document.activeElement ||
+                    !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+                    setKeyboard(false)
+                }
+            }, 150)
         }
+
+        const vv = window.visualViewport
+        if (vv) {
+            vv.addEventListener('resize', handleViewport)
+            vv.addEventListener('scroll', handleViewport)
+        }
+        document.addEventListener('focusin', handleFocusIn)
+        document.addEventListener('focusout', handleFocusOut)
+
         return () => {
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', handleViewport)
+            if (vv) {
+                vv.removeEventListener('resize', handleViewport)
+                vv.removeEventListener('scroll', handleViewport)
             }
-            document.body.classList.remove('keyboard-open')
+            document.removeEventListener('focusin', handleFocusIn)
+            document.removeEventListener('focusout', handleFocusOut)
+            setKeyboard(false)
         }
     }, [])
 
