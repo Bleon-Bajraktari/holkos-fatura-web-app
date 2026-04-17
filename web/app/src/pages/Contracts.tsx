@@ -377,19 +377,10 @@ const ContractsPage = () => {
             </div>
 
             {/* Mobile FAB — Kontratë e Re */}
-            <Link
-                to="/contracts/new"
-                className="fixed right-4 z-40 lg:hidden"
-                style={{ bottom: 'calc(var(--nav-height, 60px) + 16px)' }}
-            >
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-2xl btn-primary shadow-xl shadow-primary/30"
-                    style={{ width: 52, height: 52 }}
-                >
+            <Link to="/contracts/new" className="fixed bottom-[calc(var(--nav-height,60px)+16px)] right-4 z-40 lg:hidden">
+                <button className="w-12 h-12 rounded-2xl btn-primary flex items-center justify-center shadow-lg shadow-primary/30">
                     <Plus size={22} />
-                </motion.button>
+                </button>
             </Link>
 
             <ConfirmDialog
