@@ -63,7 +63,6 @@ const Layout = () => {
     const [company, setCompany] = useState<any>(null)
     const [navbarCombined, setNavbarCombined] = useState(true)
     const prevPathRef = useRef(location.pathname)
-    const bottomNavRef = useRef<HTMLElement>(null)
     const { logout, refreshToken } = useAuth()
     const { isDark, toggleTheme } = useTheme()
 
@@ -113,45 +112,6 @@ const Layout = () => {
         }
     }, [location.pathname])
 
-    useEffect(() => {
-        const nav = bottomNavRef.current
-        const vv = window.visualViewport
-        if (!nav || !vv) return
-
-        // Ruaj lartësinë bazë kur nuk ka tastierë
-        let baseHeight = vv.height
-
-        const show = () => { nav.style.display = '' }
-        const hide = () => { nav.style.display = 'none' }
-
-        const update = () => {
-            const diff = baseHeight - vv.height
-            if (diff > 80) {
-                // Tastiera u hap — fshih nav
-                hide()
-            } else {
-                // Tastiera u mbyll ose nuk ka — shfaq nav dhe rifresko baseHeight
-                show()
-                baseHeight = vv.height
-            }
-        }
-
-        // Rifresko baseHeight kur rrotet ekrani
-        const handleOrientation = () => {
-            setTimeout(() => { baseHeight = vv.height; show() }, 400)
-        }
-
-        vv.addEventListener('resize', update)
-        vv.addEventListener('scroll', update)
-        window.addEventListener('orientationchange', handleOrientation)
-
-        return () => {
-            vv.removeEventListener('resize', update)
-            vv.removeEventListener('scroll', update)
-            window.removeEventListener('orientationchange', handleOrientation)
-            show()
-        }
-    }, [])
 
     useEffect(() => {
         // Shiko në cache së pari për shpejtësi (PWA)
@@ -236,7 +196,7 @@ const Layout = () => {
     }, [logoUrl])
 
     return (
-        <div className="min-h-screen bg-background text-foreground flex selection:bg-blue-100 dark:selection:bg-blue-900 selection:text-blue-700 dark:selection:text-blue-200">
+        <div className="h-dvh bg-background text-foreground flex flex-col lg:flex-row overflow-hidden selection:bg-blue-100 dark:selection:bg-blue-900 selection:text-blue-700 dark:selection:text-blue-200">
             {/* Sidebar - Desktop */}
             <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border p-5 sticky top-0 h-screen">
                 <div className="flex items-center gap-3 px-2 mb-10 py-2">
@@ -335,7 +295,7 @@ const Layout = () => {
             </AnimatePresence>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0">
+            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <header className="app-header bg-card/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-10 sticky top-0 z-30">
                     {/* Mobile: logo + brand name */}
                     <div className="flex items-center gap-2.5 lg:hidden">
@@ -410,7 +370,7 @@ const Layout = () => {
             )}
 
             {/* Bottom Navigation — mobile only */}
-            <nav ref={bottomNavRef} className="bottom-nav">
+            <nav className="bottom-nav">
                 {bottomNavItems.map((item) => {
                     const active = isNavItemActive(item.href)
                     return (
