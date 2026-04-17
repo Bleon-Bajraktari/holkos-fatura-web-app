@@ -1265,31 +1265,36 @@ def get_logo_icon(db: Session = Depends(get_db), size: int = 512):
         try:
             # Hap logo-n me PIL
             img = PILImage.open(logo_path)
-            
+
             # Konverto në RGBA nëse nuk është
             if img.mode != 'RGBA':
                 img = img.convert('RGBA')
-            
-            # Krijon një background transparent
-            background = PILImage.new('RGBA', (size, size), (255, 255, 255, 0))
-            
+
+            # Hiq background-in e bardhë/afërsisht të bardhë (pixel removal)
+            # Çdo pixel me R,G,B > 240 bëhet transparent
+            pixels = list(img.getdata())
+            new_pixels = [
+                (r, g, b, 0) if (r > 240 and g > 240 and b > 240) else (r, g, b, a)
+                for r, g, b, a in pixels
+            ]
+            img.putdata(new_pixels)
+
+            # Krijon canvas transparent
+            background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
+
             # Llogarit dimensionet për të mbajtur aspect ratio
             img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
-            
+
             # Vendos logo-n në qendër të background-it
             x_offset = (size - img.width) // 2
             y_offset = (size - img.height) // 2
             background.paste(img, (x_offset, y_offset), img)
-            
-            # Konverto në RGB me background të bardhë për kompatibilitet më të mirë
-            final_img = PILImage.new('RGB', (size, size), (255, 255, 255))
-            final_img.paste(background, mask=background.split()[3] if background.mode == 'RGBA' else None)
-            
-            # Ruaj në buffer
+
+            # Kthe PNG transparent - CSS bg-background kontrollon ngjyrën
             buffer = BytesIO()
-            final_img.save(buffer, format='PNG', optimize=True)
+            background.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
-            
+
             return Response(
                 content=buffer.getvalue(),
                 media_type="image/png",
@@ -1380,15 +1385,21 @@ def get_logo_dark_icon(db: Session = Depends(get_db)):
             if img.mode != 'RGBA':
                 img = img.convert('RGBA')
             size = 512
+            # Hiq background-in e bardhë nga imazhi
+            pixels = list(img.getdata())
+            new_pixels = [
+                (r, g, b, 0) if (r > 240 and g > 240 and b > 240) else (r, g, b, a)
+                for r, g, b, a in pixels
+            ]
+            img.putdata(new_pixels)
             background = PILImage.new('RGBA', (size, size), (0, 0, 0, 0))
             img.thumbnail((size, size), PILImage.Resampling.LANCZOS)
             x_offset = (size - img.width) // 2
             y_offset = (size - img.height) // 2
             background.paste(img, (x_offset, y_offset), img)
-            final_img = PILImage.new('RGB', (size, size), (17, 17, 19))  # #111113 dark bg
-            final_img.paste(background, mask=background.split()[3])
+            # Transparent PNG - CSS bg-background kontrollon ngjyrën e background-it
             buffer = BytesIO()
-            final_img.save(buffer, format='PNG', optimize=True)
+            background.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
             return Response(content=buffer.getvalue(), media_type="image/png",
                             headers={"Cache-Control": "public, max-age=3600"})
