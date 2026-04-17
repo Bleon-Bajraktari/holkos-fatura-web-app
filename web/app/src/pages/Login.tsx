@@ -11,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [darkLogoFailed, setDarkLogoFailed] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -25,6 +26,12 @@ export default function Login() {
   useEffect(() => {
     api.get('/health').catch(() => {});
   }, []);
+
+  // Reset darkLogoFailed kur ndryshon tema
+  useEffect(() => {
+    setDarkLogoFailed(false);
+    setLogoError(false);
+  }, [isDark]);
 
   useEffect(() => {
     if (autofillHandled.current || loading) return;
@@ -109,7 +116,8 @@ export default function Login() {
   const backendBase = API_BASE.startsWith('http')
     ? API_BASE.replace(/\/api\/?$/, '')
     : '';
-  const logoUrl = isDark
+  // Dark theme: provo logo-dark.png; nëse 404 → logo.png si fallback
+  const logoUrl = isDark && !darkLogoFailed
     ? `${backendBase}/logo-dark.png`
     : `${backendBase}/logo.png`;
 
@@ -151,7 +159,14 @@ export default function Login() {
                   src={logoUrl}
                   alt="Holkos Fatura"
                   className="max-w-full max-h-full w-auto h-auto object-contain"
-                  onError={() => setLogoError(true)}
+                  onError={() => {
+                    if (isDark && !darkLogoFailed) {
+                      // Dark logo nuk ekziston → provo light logo
+                      setDarkLogoFailed(true);
+                    } else {
+                      setLogoError(true);
+                    }
+                  }}
                   onLoad={() => setLogoError(false)}
                 />
               )}

@@ -1365,8 +1365,8 @@ def get_logo_dark_icon(db: Session = Depends(get_db)):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logo_path = None
 
-    # Provo dark logo fillimisht, pastaj light, pastaj pdf logo si fallback
-    for path_attr in ['logo_dark_path', 'logo_light_path', 'logo_path']:
+    # Provo vetëm dark logo; fallback tek logo_path (PDF) - jo logo_light_path
+    for path_attr in ['logo_dark_path', 'logo_path']:
         attr = getattr(company, path_attr, None) if company else None
         if attr:
             full = os.path.join(base_dir, attr.replace("\\", "/").lstrip("/"))
