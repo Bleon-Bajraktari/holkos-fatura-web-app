@@ -667,6 +667,15 @@ const InvoicesPage = () => {
                 )}
             </div>
 
+            {/* Mobile FAB — Faturë e Re */}
+            {!selectionMode && (
+                <Link to="/invoices/new" className="fixed bottom-[calc(var(--nav-height,60px)+16px)] right-4 z-40 lg:hidden">
+                    <button className="w-12 h-12 rounded-2xl btn-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                        <Plus size={22} />
+                    </button>
+                </Link>
+            )}
+
             {/* Selection Bar */}
             <AnimatePresence>
                 {selectionMode && (
