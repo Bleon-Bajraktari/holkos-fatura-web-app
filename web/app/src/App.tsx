@@ -63,6 +63,7 @@ const Layout = () => {
     const [company, setCompany] = useState<any>(null)
     const [navbarCombined, setNavbarCombined] = useState(true)
     const prevPathRef = useRef(location.pathname)
+    const bottomNavRef = useRef<HTMLElement>(null)
     const { logout, refreshToken } = useAuth()
     const { isDark, toggleTheme } = useTheme()
 
@@ -113,51 +114,42 @@ const Layout = () => {
     }, [location.pathname])
 
     useEffect(() => {
-        const setKeyboard = (open: boolean) => {
-            document.body.classList.toggle('keyboard-open', open)
-        }
+        const nav = bottomNavRef.current
+        const vv = window.visualViewport
+        if (!nav || !vv) return
 
-        const handleViewport = () => {
-            const vv = window.visualViewport
-            if (!vv) return
-            // iOS: keyboard height = layout height - visual viewport height - offset
-            const keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0)
-            setKeyboard(keyboardHeight > 80)
-        }
+        // Ruaj lartësinë bazë kur nuk ka tastierë
+        let baseHeight = vv.height
 
-        // Backup: input focus/blur për iOS kur visualViewport nuk reagon shpejt
-        const handleFocusIn = (e: FocusEvent) => {
-            const tag = (e.target as HTMLElement)?.tagName
-            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-                // Shto vonesë të vogël — iOS hap tastierën pas fokusit
-                setTimeout(handleViewport, 100)
+        const show = () => { nav.style.display = '' }
+        const hide = () => { nav.style.display = 'none' }
+
+        const update = () => {
+            const diff = baseHeight - vv.height
+            if (diff > 80) {
+                // Tastiera u hap — fshih nav
+                hide()
+            } else {
+                // Tastiera u mbyll ose nuk ka — shfaq nav dhe rifresko baseHeight
+                show()
+                baseHeight = vv.height
             }
         }
-        const handleFocusOut = () => {
-            setTimeout(() => {
-                if (!document.activeElement ||
-                    !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
-                    setKeyboard(false)
-                }
-            }, 150)
+
+        // Rifresko baseHeight kur rrotet ekrani
+        const handleOrientation = () => {
+            setTimeout(() => { baseHeight = vv.height; show() }, 400)
         }
 
-        const vv = window.visualViewport
-        if (vv) {
-            vv.addEventListener('resize', handleViewport)
-            vv.addEventListener('scroll', handleViewport)
-        }
-        document.addEventListener('focusin', handleFocusIn)
-        document.addEventListener('focusout', handleFocusOut)
+        vv.addEventListener('resize', update)
+        vv.addEventListener('scroll', update)
+        window.addEventListener('orientationchange', handleOrientation)
 
         return () => {
-            if (vv) {
-                vv.removeEventListener('resize', handleViewport)
-                vv.removeEventListener('scroll', handleViewport)
-            }
-            document.removeEventListener('focusin', handleFocusIn)
-            document.removeEventListener('focusout', handleFocusOut)
-            setKeyboard(false)
+            vv.removeEventListener('resize', update)
+            vv.removeEventListener('scroll', update)
+            window.removeEventListener('orientationchange', handleOrientation)
+            show()
         }
     }, [])
 
@@ -418,7 +410,7 @@ const Layout = () => {
             )}
 
             {/* Bottom Navigation — mobile only */}
-            <nav className="bottom-nav">
+            <nav ref={bottomNavRef} className="bottom-nav">
                 {bottomNavItems.map((item) => {
                     const active = isNavItemActive(item.href)
                     return (
