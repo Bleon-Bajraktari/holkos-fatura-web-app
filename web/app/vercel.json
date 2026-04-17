@@ -12,6 +12,14 @@
       "destination": "https://holkos-fatura-api.onrender.com/uploads/:path*"
     },
     {
+      "source": "/logo.png",
+      "destination": "https://holkos-fatura-api.onrender.com/logo.png"
+    },
+    {
+      "source": "/logo-dark.png",
+      "destination": "https://holkos-fatura-api.onrender.com/logo-dark.png"
+    },
+    {
       "source": "/((?!api|uploads|assets|_next|favicon|icon|apple-touch|manifest\\.webmanifest).*)",
       "destination": "/index.html"
     }
