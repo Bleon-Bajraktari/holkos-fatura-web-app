@@ -12,6 +12,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [darkLogoFailed, setDarkLogoFailed] = useState(false);
+  const [logoKey, setLogoKey] = useState(0);
+  const retryCount = useRef(0);
   const { login, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -154,20 +156,24 @@ export default function Login() {
                   <span className="text-4xl font-black text-white">H</span>
                 </div>
               ) : (
-                <div className="w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+                <div className="w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center overflow-hidden rounded-2xl bg-background">
                   <img
-                    key={logoUrl}
+                    key={`${logoUrl}-${logoKey}`}
                     src={logoUrl}
                     alt="Holkos Fatura"
                     className="max-w-full max-h-full w-auto h-auto object-contain"
                     onError={() => {
                       if (isDark && !darkLogoFailed) {
                         setDarkLogoFailed(true);
+                        retryCount.current = 0;
+                      } else if (retryCount.current < 3) {
+                        retryCount.current += 1;
+                        setTimeout(() => setLogoKey(k => k + 1), 2500);
                       } else {
                         setLogoError(true);
                       }
                     }}
-                    onLoad={() => setLogoError(false)}
+                    onLoad={() => { setLogoError(false); retryCount.current = 0; }}
                   />
                 </div>
               )}
