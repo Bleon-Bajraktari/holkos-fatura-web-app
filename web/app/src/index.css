@@ -488,7 +488,7 @@ input, select, textarea {
 }
 
 /* Heq stilimin nativ të iOS për të gjitha inputet */
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 input[type="text"],
 input[type="email"],
 input[type="number"],
