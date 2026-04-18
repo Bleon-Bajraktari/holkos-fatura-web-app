@@ -102,7 +102,7 @@ const InvoicesPage = () => {
             .finally(() => setLoading(false))
     }
 
-    const { pullDistance, refreshing, isReady } = usePullToRefresh(useCallback(() => loadInvoices(true), [debouncedSearch, statusFilter, dateFrom, dateTo, year, month]))
+    const { pullDistance, refreshing } = usePullToRefresh(useCallback(() => loadInvoices(true), [debouncedSearch, statusFilter, dateFrom, dateTo, year, month]))
 
     useEffect(() => {
         SettingsService.getPaymentStatus().then(data => setShowStatus(data.enabled)).catch(() => setShowStatus(true))
