@@ -479,7 +479,7 @@ const InvoiceForm = () => {
                                                 <input
                                                     id={`num-input-quantity-${index}`}
                                                     type="text"
-                                                    inputMode="decimal"
+                                                    inputMode={useNumericPad ? 'decimal' : 'text'}
                                                     value={quantityDrafts[index] ?? (item.quantity === 0 ? '' : String(item.quantity))}
                                                     onChange={(e) => {
                                                         const value = e.target.value
@@ -509,7 +509,7 @@ const InvoiceForm = () => {
                                                 <input
                                                     id={`num-input-price-${index}`}
                                                     type="text"
-                                                    inputMode="decimal"
+                                                    inputMode={useNumericPad ? 'decimal' : 'text'}
                                                     value={priceDrafts[index] ?? (item.unit_price === 0 ? '' : String(item.unit_price))}
                                                     onChange={(e) => {
                                                         const value = e.target.value
@@ -536,13 +536,7 @@ const InvoiceForm = () => {
                                                 <span className="text-[11px] text-muted-foreground font-bold shrink-0 select-none">€</span>
                                             </div>
                                         </div>
-                                        <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-4">
-                                            <div>
-                                                <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Totali</label>
-                                                <span className="text-sm font-black text-foreground">
-                                                    {(item.quantity * item.unit_price).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
-                                                </span>
-                                            </div>
+                                        <div className="md:col-span-2 flex items-center justify-end">
                                             <button
                                                 onClick={() => removeItemRow(index)}
                                                 className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100"
