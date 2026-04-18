@@ -358,10 +358,10 @@ const Layout = () => {
                 </div>
             </main>
 
-            {/* FAB — mobile only, on invoices/offers */}
-            {(location.pathname === '/invoices' || location.pathname === '/offers') && (
+            {/* FAB — mobile only, on invoices/offers/contracts */}
+            {(location.pathname === '/invoices' || location.pathname === '/offers' || location.pathname === '/contracts') && (
                 <Link
-                    to={location.pathname === '/offers' ? '/offers/new' : '/invoices/new'}
+                    to={location.pathname === '/offers' ? '/offers/new' : location.pathname === '/contracts' ? '/contracts/new' : '/invoices/new'}
                     className="fab"
                     aria-label="Shto të re"
                 >
