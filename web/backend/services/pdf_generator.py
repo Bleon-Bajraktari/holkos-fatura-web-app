@@ -329,11 +329,11 @@ class WebPDFGenerator:
             y_label = 28*mm
             y_line  = 20*mm
             canvas.setFont("Helvetica-Bold", 11)
-            canvas.drawString(30*mm, y_label, "Faturoi")
-            canvas.drawRightString(page_w - 30*mm, y_label, "Pranoi")
+            canvas.drawString(25*mm, y_label, "Faturoi")
+            canvas.drawRightString(page_w - 25*mm, y_label, "Pranoi")
             canvas.setFont("Helvetica", 11)
-            canvas.drawString(30*mm, y_line, "____________________")
-            canvas.drawRightString(page_w - 30*mm, y_line, "____________________")
+            canvas.drawString(25*mm, y_line, "____________________")
+            canvas.drawRightString(page_w - 25*mm, y_line, "____________________")
             canvas.restoreState()
 
         doc.build(story, onFirstPage=draw_signatures, onLaterPages=draw_signatures)
@@ -599,7 +599,7 @@ class WebPDFGenerator:
                         data = [["", Paragraph(f"<font color='#666666'>=</font> {formula_html}", r_calc)]]
                     
                     if data:
-                        t = Table(data, colWidths=[130*mm, 60*mm])
+                        t = Table(data, colWidths=[125*mm, 60*mm])
                         style_cmds = [
                             ('ALIGN', (0,0), (0,0), 'LEFT'),
                             ('ALIGN', (1,0), (1,0), 'RIGHT'),
