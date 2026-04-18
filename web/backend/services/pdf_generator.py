@@ -329,11 +329,11 @@ class WebPDFGenerator:
             y_label = 28*mm
             y_line  = 20*mm
             canvas.setFont("Helvetica-Bold", 11)
-            canvas.drawString(15*mm, y_label, "Faturoi")
-            canvas.drawRightString(page_w - 15*mm, y_label, "Pranoi")
+            canvas.drawString(30*mm, y_label, "Faturoi")
+            canvas.drawRightString(page_w - 30*mm, y_label, "Pranoi")
             canvas.setFont("Helvetica", 11)
-            canvas.drawString(15*mm, y_line, "____________________")
-            canvas.drawRightString(page_w - 15*mm, y_line, "____________________")
+            canvas.drawString(30*mm, y_line, "____________________")
+            canvas.drawRightString(page_w - 30*mm, y_line, "____________________")
             canvas.restoreState()
 
         doc.build(story, onFirstPage=draw_signatures, onLaterPages=draw_signatures)
