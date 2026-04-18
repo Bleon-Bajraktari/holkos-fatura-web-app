@@ -446,10 +446,10 @@ const InvoiceForm = () => {
 
                     <div className="space-y-3">
                         {/* Table Header (desktop only) */}
-                        <div className="hidden sm:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 py-2 rounded-lg">
-                            <div className="col-span-6">Përshkrimi</div>
+                        <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 py-2 rounded-lg">
+                            <div className="col-span-5">Përshkrimi</div>
                             <div className="col-span-2 text-center">Sasia</div>
-                            <div className="col-span-2 text-center">Çmimi</div>
+                            <div className="col-span-3 text-center">Çmimi</div>
                             <div className="col-span-2 text-right">Totali</div>
                         </div>
 
@@ -462,9 +462,9 @@ const InvoiceForm = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="group card-base p-3 overflow-hidden"
                                 >
-                                    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center min-w-0">
-                                        <div className="sm:col-span-6 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Përshkrimi</label>
+                                    <div className="flex flex-col gap-2 md:grid md:grid-cols-12 md:gap-3 md:items-center min-w-0">
+                                        <div className="md:col-span-5 min-w-0">
+                                            <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Përshkrimi</label>
                                             <input
                                                 type="text"
                                                 placeholder="Përshkrimi i artikullit..."
@@ -473,8 +473,8 @@ const InvoiceForm = () => {
                                                 className="input-base py-2 font-semibold"
                                             />
                                         </div>
-                                        <div className="sm:col-span-2 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Sasia</label>
+                                        <div className="md:col-span-2 min-w-0">
+                                            <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Sasia</label>
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-quantity-${index}`}
@@ -500,11 +500,11 @@ const InvoiceForm = () => {
                                                     }}
                                                     className="input-base py-2 pr-11 text-right font-bold"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none">m²</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none select-none">m²</span>
                                             </div>
                                         </div>
-                                        <div className="sm:col-span-2 min-w-0">
-                                            <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Çmimi</label>
+                                        <div className="md:col-span-3 min-w-0">
+                                            <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Çmimi</label>
                                             <div className="relative">
                                                 <input
                                                     id={`num-input-price-${index}`}
@@ -523,29 +523,29 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="input-base py-2 pr-7 text-right font-bold"
+                                                    className="input-base py-2 pr-24 text-right font-bold"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none">€</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => dividePriceByVat(index)}
+                                                    className="absolute right-9 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 hover:bg-blue-100 dark:bg-blue-950 dark:border-blue-900 dark:text-blue-400"
+                                                    title="Përjashto TVSH (÷1.18)"
+                                                >
+                                                    ÷1.18
+                                                </button>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none select-none">€</span>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => dividePriceByVat(index)}
-                                                className="mt-1 text-[9px] font-bold text-blue-500 hover:text-blue-700 block ml-auto leading-none"
-                                                title="Përjashto TVSH (÷1.18)"
-                                            >
-                                                ÷1.18
-                                            </button>
                                         </div>
-                                        <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-4">
+                                        <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-4">
                                             <div>
-                                                <label className="sm:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Totali</label>
+                                                <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Totali</label>
                                                 <span className="text-sm font-black text-foreground">
                                                     {(item.quantity * item.unit_price).toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €
                                                 </span>
                                             </div>
                                             <button
                                                 onClick={() => removeItemRow(index)}
-                                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all sm:opacity-0 sm:group-hover:opacity-100"
+                                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
