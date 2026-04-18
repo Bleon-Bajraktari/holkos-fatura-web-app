@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Download, Trash2, ArrowLeft, RefreshCw, X, ChevronDown, FileText, Edit2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -6,7 +6,6 @@ import { ContractService, openPdf } from '../services/api'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { SkeletonList } from '../components/Skeleton'
 import { useToast } from '../hooks/useToast'
-import { usePullToRefresh } from '../hooks/usePullToRefresh'
 
 const months = [
     'Të gjithë', 'Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor',
@@ -73,7 +72,6 @@ const ContractsPage = () => {
             .finally(() => setLoading(false))
     }
 
-    const { pullDistance, refreshing } = usePullToRefresh(useCallback(() => loadContracts(), [debouncedSearch, dateFrom, dateTo, year, month]))
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(search), 400)
@@ -163,14 +161,6 @@ const ContractsPage = () => {
 
     return (
         <div className="min-h-screen pb-28">
-            {/* Pull-to-refresh indicator */}
-            <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none overflow-hidden"
-                style={{ height: Math.max(pullDistance, refreshing ? 52 : 0), transition: pullDistance === 0 ? 'height 0.3s ease' : 'none' }}>
-                <div className="flex items-center justify-center w-10 h-10 mt-1 rounded-full bg-card border border-border shadow-md self-end mb-1">
-                    <RefreshCw size={18} className={`text-primary transition-transform ${refreshing ? 'animate-spin' : ''}`}
-                        style={{ transform: !refreshing ? `rotate(${(pullDistance / 72) * 360}deg)` : undefined }} />
-                </div>
-            </div>
             {/* Sticky Header */}
             <div className="bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
