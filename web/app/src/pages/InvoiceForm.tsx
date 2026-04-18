@@ -498,9 +498,9 @@ const InvoiceForm = () => {
                                                             })
                                                         }
                                                     }}
-                                                    className="input-base py-2 pr-7 text-right font-bold"
+                                                    className="input-base py-2 pr-11 text-right font-bold"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">m2</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none">m²</span>
                                             </div>
                                         </div>
                                         <div className="sm:col-span-2 min-w-0">
@@ -523,18 +523,18 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="input-base py-2 pr-24 text-right font-bold"
+                                                    className="input-base py-2 pr-7 text-right font-bold"
                                                 />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => dividePriceByVat(index)}
-                                                    className="absolute right-9 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 hover:bg-blue-100"
-                                                    title="Përjashto TVSH (÷1.18)"
-                                                >
-                                                    ÷1.18
-                                                </button>
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">€</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none">€</span>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => dividePriceByVat(index)}
+                                                className="mt-1 text-[9px] font-bold text-blue-500 hover:text-blue-700 block ml-auto leading-none"
+                                                title="Përjashto TVSH (÷1.18)"
+                                            >
+                                                ÷1.18
+                                            </button>
                                         </div>
                                         <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-4">
                                             <div>
