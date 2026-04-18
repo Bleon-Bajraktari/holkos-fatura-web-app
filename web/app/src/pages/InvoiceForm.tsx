@@ -475,7 +475,7 @@ const InvoiceForm = () => {
                                         </div>
                                         <div className="md:col-span-2 min-w-0">
                                             <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Sasia</label>
-                                            <div className="relative">
+                                            <div className="flex items-center w-full bg-muted/50 border border-border rounded-xl px-3 gap-1.5 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 focus-within:bg-card" style={{ minHeight: 44 }}>
                                                 <input
                                                     id={`num-input-quantity-${index}`}
                                                     type="text"
@@ -498,14 +498,14 @@ const InvoiceForm = () => {
                                                             })
                                                         }
                                                     }}
-                                                    className="input-base py-2 pr-11 text-right font-bold"
+                                                    className="flex-1 min-w-0 bg-transparent outline-none text-right font-bold text-foreground py-2"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none select-none">m²</span>
+                                                <span className="text-[11px] text-muted-foreground font-bold shrink-0 select-none">m²</span>
                                             </div>
                                         </div>
                                         <div className="md:col-span-3 min-w-0">
                                             <label className="md:hidden text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Çmimi</label>
-                                            <div className="relative">
+                                            <div className="flex items-center w-full bg-muted/50 border border-border rounded-xl px-3 gap-1.5 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 focus-within:bg-card" style={{ minHeight: 44 }}>
                                                 <input
                                                     id={`num-input-price-${index}`}
                                                     type="text"
@@ -523,17 +523,17 @@ const InvoiceForm = () => {
                                                             updateItem(index, 'unit_price', parsed)
                                                         }
                                                     }}
-                                                    className="input-base py-2 pr-24 text-right font-bold"
+                                                    className="flex-1 min-w-0 bg-transparent outline-none text-right font-bold text-foreground py-2"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => dividePriceByVat(index)}
-                                                    className="absolute right-9 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 hover:bg-blue-100 dark:bg-blue-950 dark:border-blue-900 dark:text-blue-400"
+                                                    className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-1.5 py-0.5 shrink-0 hover:bg-blue-100 dark:bg-blue-950 dark:border-blue-900 dark:text-blue-400"
                                                     title="Përjashto TVSH (÷1.18)"
                                                 >
                                                     ÷1.18
                                                 </button>
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold pointer-events-none select-none">€</span>
+                                                <span className="text-[11px] text-muted-foreground font-bold shrink-0 select-none">€</span>
                                             </div>
                                         </div>
                                         <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-4">
