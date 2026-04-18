@@ -376,22 +376,6 @@ const ContractsPage = () => {
                 </div>
             </div>
 
-            {/* Mobile FAB — Kontratë e Re */}
-            <Link
-                to="/contracts/new"
-                className="fixed right-4 z-40 lg:hidden"
-                style={{ bottom: 'calc(var(--nav-height, 60px) + 16px)' }}
-            >
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-2xl btn-primary shadow-xl shadow-primary/30"
-                    style={{ width: 52, height: 52 }}
-                >
-                    <Plus size={22} />
-                </motion.button>
-            </Link>
-
             <ConfirmDialog
                 isOpen={confirmDelete.open}
                 title="Fshi kontratën"
