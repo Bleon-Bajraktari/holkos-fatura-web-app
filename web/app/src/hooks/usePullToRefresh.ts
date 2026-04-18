@@ -9,6 +9,7 @@ export function usePullToRefresh(onRefresh: () => void) {
     const startY = useRef(0)
     const pulling = useRef(false)
     const pullRef = useRef(0)
+    const startedAtTop = useRef(false)
 
     const refresh = useCallback(async () => {
         setRefreshing(true)
@@ -23,14 +24,13 @@ export function usePullToRefresh(onRefresh: () => void) {
 
     useEffect(() => {
         const onTouchStart = (e: TouchEvent) => {
-            if (window.scrollY === 0) {
-                startY.current = e.touches[0].clientY
-                pulling.current = false
-            }
+            startY.current = e.touches[0].clientY
+            startedAtTop.current = window.scrollY === 0
+            pulling.current = false
         }
 
         const onTouchMove = (e: TouchEvent) => {
-            if (window.scrollY !== 0) return
+            if (!startedAtTop.current || window.scrollY !== 0) return
             const delta = e.touches[0].clientY - startY.current
             if (delta > 0) {
                 pulling.current = true
