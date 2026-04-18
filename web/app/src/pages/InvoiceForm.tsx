@@ -597,10 +597,6 @@ const InvoiceForm = () => {
                                 <span className="text-[11px] font-semibold text-muted-foreground">{vatAmount.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
                             </div>
                         </div>
-                        <div className="border border-foreground bg-foreground text-background rounded-lg px-3 py-2 flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Për Pagesë</span>
-                            <span className="text-xs font-black">{total.toLocaleString('sq-AL', { minimumFractionDigits: 2 })} €</span>
-                        </div>
                     </div>
 
                 </div>
