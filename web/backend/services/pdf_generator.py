@@ -255,13 +255,16 @@ class WebPDFGenerator:
             story.append(Spacer(1, 10*mm))
         
         # Items Table (vetem rreshtat e artikujve)
+        desc_style = ParagraphStyle("desc", fontSize=11, leading=14, wordWrap='CJK')
+        num_right_style = ParagraphStyle("num_right", fontSize=11, leading=14, alignment=TA_RIGHT)
+
         items_data = [["PERSHKRIMI", "M²", "CMIMI", "NENTOTALI"]]
         for item in invoice.items:
             items_data.append([
-                item.description,
-                self.format_number(item.quantity),
-                self.format_number(item.unit_price, True),
-                self.format_number(item.quantity * item.unit_price, True)
+                Paragraph(item.description or "", desc_style),
+                Paragraph(self.format_number(item.quantity), num_right_style),
+                Paragraph(self.format_number(item.unit_price, True), num_right_style),
+                Paragraph(self.format_number(item.quantity * item.unit_price, True), num_right_style),
             ])
         while len(items_data) < 6:
             items_data.append(["", "", "", ""])
@@ -271,9 +274,13 @@ class WebPDFGenerator:
             ('GRID', (0,0), (-1,-1), 1, colors.black),
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('ALIGN', (1,1), (-1,-1), 'RIGHT'),
+            ('ALIGN', (1,0), (-1,0), 'CENTER'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('PADDING', (0,0), (-1,-1), 6),
+            ('VALIGN', (0,1), (-1,-1), 'TOP'),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
         ]))
 
         legal_p = ""
