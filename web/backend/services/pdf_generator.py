@@ -174,10 +174,10 @@ class WebPDFGenerator:
         year = invoice.date.year if hasattr(invoice.date, 'year') else datetime.now().year
         filename = f"Fatura_{invoice.invoice_number.replace(' ', '_')}_{year}.pdf"
         filepath = self._get_storage_path("faturat", invoice.date, filename)
-        
+
         doc = SimpleDocTemplate(
             filepath, pagesize=A4,
-            leftMargin=15*mm, rightMargin=15*mm, topMargin=12*mm, bottomMargin=12*mm
+            leftMargin=15*mm, rightMargin=15*mm, topMargin=12*mm, bottomMargin=42*mm
         )
 
         story = []
@@ -322,20 +322,21 @@ class WebPDFGenerator:
             ("RIGHTPADDING", (0, 0), (-1, -1), 0),
         ]))
         story.append(combined)
-        story.append(Spacer(1, 35*mm))
-        
-        # Signatures
-        sig_data = [["Faturoi", "Pranoi"], ["____________________", "____________________"]]
-        sig_table = Table(sig_data, colWidths=[90*mm, 90*mm])
-        sig_table.setStyle(TableStyle([
-            ("ALIGN", (0, 0), (0, -1), "LEFT"), ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("TOPPADDING", (0, 0), (-1, -1), 15),
-            ("LEFTPADDING", (0, 0), (0, -1), 30), ("RIGHTPADDING", (1, 0), (1, -1), 30),
-        ]))
-        story.append(sig_table)
 
-        doc.build(story)
+        def draw_signatures(canvas, doc):
+            canvas.saveState()
+            page_w, _ = A4
+            y_label = 28*mm
+            y_line  = 20*mm
+            canvas.setFont("Helvetica-Bold", 11)
+            canvas.drawString(15*mm + 20*mm, y_label, "Faturoi")
+            canvas.drawRightString(page_w - 15*mm - 20*mm, y_label, "Pranoi")
+            canvas.setFont("Helvetica", 11)
+            canvas.drawString(15*mm + 20*mm, y_line, "____________________")
+            canvas.drawRightString(page_w - 15*mm - 20*mm, y_line, "____________________")
+            canvas.restoreState()
+
+        doc.build(story, onFirstPage=draw_signatures, onLaterPages=draw_signatures)
         return self._handle_post_generation(filepath, "faturat", invoice.date, filename)
 
     def generate_offer_pdf(self, offer, company, client, manual_font_size=None):
