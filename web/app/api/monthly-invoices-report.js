@@ -208,11 +208,22 @@ export default async function handler(req, res) {
             greetingTimeout: 10000
         })
 
-        // Listë e thjeshtë e faturave (si email-i bulk): "NUMRI - DATA".
+        // Listë e thjeshtë e faturave (për konfirmim): "NUMRI - DATA".
         const linesText = list.length
             ? list.map(inv => `${inv.invoice_number || 'Faturë ' + inv.id} - ${fmtDate(inv.date)}`).join('\n')
             : '(Nuk ka fatura për këtë muaj.)'
         const totalSum = list.reduce((acc, inv) => acc + Number(inv.total || 0), 0)
+
+        // Listë e detajuar (për kontabilistin) — me detaje, por PA çmime.
+        const detailText = list.map((inv, i) => {
+            const parts = [`${i + 1}. Faturë ${inv.invoice_number || inv.id}`]
+            parts.push(`   Data: ${fmtDate(inv.date)}`)
+            if (inv.payment_due_date) parts.push(`   Afati i pagesës: ${fmtDate(inv.payment_due_date)}`)
+            if (inv.client && inv.client.name) parts.push(`   Klienti: ${inv.client.name}`)
+            if (inv.client && inv.client.unique_number) parts.push(`   NUI: ${inv.client.unique_number}`)
+            if (inv.client && inv.client.address) parts.push(`   Adresa: ${inv.client.address}`)
+            return parts.join('\n')
+        }).join('\n\n')
 
         // --- Shkarko PDF-të ---
         const attachments = []
@@ -242,8 +253,8 @@ export default async function handler(req, res) {
                 await transporter.sendMail({
                     from: `"${companyName}" <${smtp.user}>`,
                     to: invoicesTo,
-                    subject: `Faturat - ${companyName}`,
-                    text: linesText,
+                    subject: `Faturat e muajit ${period.label} - ${companyName}`,
+                    text: `Faturat e muajit ${period.label} (${list.length}):\n\n${detailText}`,
                     attachments
                 })
                 invoicesSent = true
