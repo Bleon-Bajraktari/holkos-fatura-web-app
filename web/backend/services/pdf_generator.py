@@ -12,47 +12,8 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-from reportlab.graphics.barcode import qr
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics import renderPDF
 from PIL import Image as PILImage, ImageOps
 import json
-
-
-def _build_payment_qr_payload(company, amount, reference):
-    """Ndërton payload-in EPC/GiroCode (SEPA scan-to-pay) për QR-në e pagesës.
-
-    Përdor IBAN-in (jo numrin e xhirollogarisë që shfaqet në PDF). Kur klienti
-    e skanon me aplikacionin e bankës, urdhërpagesa plotësohet automatikisht
-    (përfituesi, IBAN, shuma, numri i faturës si përshkrim).
-
-    Kthen None nëse mungon IBAN-i ose emri.
-    """
-    iban = (str(getattr(company, "iban", "") or "")).replace(" ", "").strip().upper()
-    name = (str(company.name or "")).strip()[:70]
-    if not iban or not name:
-        return None
-    try:
-        amt = f"EUR{float(amount):.2f}"
-    except (TypeError, ValueError):
-        amt = ""
-    remittance = (str(reference or "")).strip()[:140]
-    # Fushat e EPC QR (version 002), të ndara me LF; BIC mund të jetë bosh.
-    lines = ["BCD", "002", "1", "SCT", "", name, iban, amt, "", "", remittance, ""]
-    return "\n".join(lines)
-
-
-def _payment_qr_drawing(data, size_mm):
-    """Krijon një Drawing katror me QR-në, të shkallëzuar në size_mm."""
-    widget = qr.QrCodeWidget(data)
-    widget.barLevel = "M"
-    b = widget.getBounds()
-    w = b[2] - b[0]
-    h = b[3] - b[1]
-    size = size_mm * mm
-    d = Drawing(size, size, transform=[size / w, 0, 0, size / h, 0, 0])
-    d.add(widget)
-    return d
 try:
     import vercel
 except ImportError:
@@ -362,8 +323,6 @@ class WebPDFGenerator:
         ]))
         story.append(combined)
 
-        qr_payload = _build_payment_qr_payload(company, invoice.total, invoice.invoice_number)
-
         def draw_signatures(canvas, doc):
             canvas.saveState()
             page_w, _ = A4
@@ -375,14 +334,6 @@ class WebPDFGenerator:
             canvas.setFont("Helvetica", 11)
             canvas.drawString(25*mm, y_line, "____________________")
             canvas.drawRightString(page_w - 25*mm, y_line, "____________________")
-            # QR i vogël i pagesës, i qendërzuar në fund (nuk zë shumë hapësirë).
-            if qr_payload:
-                qr_size = 18*mm
-                qr_x = (page_w - qr_size) / 2
-                qr_y = 14*mm
-                renderPDF.draw(_payment_qr_drawing(qr_payload, 18), canvas, qr_x, qr_y)
-                canvas.setFont("Helvetica", 6.5)
-                canvas.drawCentredString(page_w / 2, 11*mm, "Skano për pagesë")
             canvas.restoreState()
 
         doc.build(story, onFirstPage=draw_signatures, onLaterPages=draw_signatures)

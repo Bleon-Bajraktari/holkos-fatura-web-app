@@ -13,7 +13,6 @@ class Company(Base):
     unique_number = Column(String(50))
     fiscal_number = Column(String(50))
     account_nib = Column(String(50))
-    iban = Column(String(50))             # IBAN — vetëm për QR-në e pagesës (nuk shfaqet në PDF)
     logo_path = Column(String(500))       # PDF logo — background i bardhë, mos ndrysho
     logo_light_path = Column(String(500)) # UI logo light theme
     logo_dark_path = Column(String(500))  # UI logo dark theme

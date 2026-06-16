@@ -21,7 +21,6 @@ const SettingsPage = () => {
         unique_number: '',
         fiscal_number: '',
         account_nib: '',
-        iban: '',
         smtp_server: 'smtp.gmail.com',
         smtp_port: 587,
         smtp_user: '',
@@ -63,7 +62,6 @@ const SettingsPage = () => {
         unique_number: '',
         fiscal_number: '',
         account_nib: '',
-        iban: '',
         smtp_server: 'smtp.gmail.com',
         smtp_port: 587,
         smtp_user: '',
@@ -519,22 +517,6 @@ const SettingsPage = () => {
                                     className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Kjo shfaqet në faturë.</p>
-                        </div>
-
-                        <div>
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">IBAN (vetëm për QR pagese)</label>
-                            <div className="relative">
-                                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                                <input
-                                    type="text"
-                                    value={company.iban || ''}
-                                    onChange={e => setCompany({ ...company, iban: e.target.value })}
-                                    placeholder="XK05..."
-                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
-                                />
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Nuk shfaqet në faturë; përdoret vetëm te QR-ja "Skano për pagesë".</p>
                         </div>
                     </div>
                 </div>
