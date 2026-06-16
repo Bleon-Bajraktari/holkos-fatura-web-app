@@ -214,17 +214,6 @@ export default async function handler(req, res) {
             : '(Nuk ka fatura për këtë muaj.)'
         const totalSum = list.reduce((acc, inv) => acc + Number(inv.total || 0), 0)
 
-        // Listë e detajuar (për kontabilistin) — me detaje, por PA çmime.
-        const detailText = list.map((inv, i) => {
-            const parts = [`${i + 1}. Faturë ${inv.invoice_number || inv.id}`]
-            parts.push(`   Data: ${fmtDate(inv.date)}`)
-            if (inv.payment_due_date) parts.push(`   Afati i pagesës: ${fmtDate(inv.payment_due_date)}`)
-            if (inv.client && inv.client.name) parts.push(`   Klienti: ${inv.client.name}`)
-            if (inv.client && inv.client.unique_number) parts.push(`   NUI: ${inv.client.unique_number}`)
-            if (inv.client && inv.client.address) parts.push(`   Adresa: ${inv.client.address}`)
-            return parts.join('\n')
-        }).join('\n\n')
-
         // --- Shkarko PDF-të ---
         const attachments = []
         const failedPdf = []
@@ -254,7 +243,7 @@ export default async function handler(req, res) {
                     from: `"${companyName}" <${smtp.user}>`,
                     to: invoicesTo,
                     subject: `Faturat e muajit ${period.label} - ${companyName}`,
-                    text: `Faturat e muajit ${period.label} (${list.length}):\n\n${detailText}`,
+                    text: `Faturat e muajit ${period.label} (${list.length}):\n\n${linesText}`,
                     attachments
                 })
                 invoicesSent = true
