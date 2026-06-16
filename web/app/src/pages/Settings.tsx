@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2, Lock, User } from 'lucide-react'
+import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2, Lock, User, CalendarClock, Send } from 'lucide-react'
 import PasswordInput from '../components/PasswordInput'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { CompanyService, SettingsService, AuthService, API_BASE } from '../services/api'
+import { CompanyService, SettingsService, MonthlyReportService, AuthService, API_BASE } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { db } from '../services/db'
@@ -33,6 +33,10 @@ const SettingsPage = () => {
     const [loadError, setLoadError] = useState<string | null>(null)
     const [paymentStatusEnabled, setPaymentStatusEnabled] = useState(true)
     const [navbarCombined, setNavbarCombined] = useState(true)
+    const [monthlyEnabled, setMonthlyEnabled] = useState(false)
+    const [monthlyInvoicesEmail, setMonthlyInvoicesEmail] = useState('')
+    const [monthlyStatusEmail, setMonthlyStatusEmail] = useState('')
+    const [sendingMonthly, setSendingMonthly] = useState(false)
     const [logoUploading, setLogoUploading] = useState(false)
     const [logoLightUploading, setLogoLightUploading] = useState(false)
     const [logoDarkUploading, setLogoDarkUploading] = useState(false)
@@ -84,10 +88,11 @@ const SettingsPage = () => {
                 }
             }
             try {
-                const [companyData, paymentData, navbarData] = await Promise.allSettled([
+                const [companyData, paymentData, navbarData, monthlyData] = await Promise.allSettled([
                     fetchCompany(),
                     SettingsService.getPaymentStatus(),
-                    SettingsService.getNavbarCombined()
+                    SettingsService.getNavbarCombined(),
+                    SettingsService.getMonthlyReport()
                 ])
                 if (companyData.status === 'fulfilled' && companyData.value) {
                     setCompany(mergeCompany(companyData.value))
@@ -116,6 +121,11 @@ const SettingsPage = () => {
                 if (navbarData.status === 'fulfilled' && navbarData.value?.combined !== undefined) {
                     setNavbarCombined(navbarData.value.combined)
                 }
+                if (monthlyData.status === 'fulfilled' && monthlyData.value) {
+                    setMonthlyEnabled(!!monthlyData.value.enabled)
+                    setMonthlyInvoicesEmail(monthlyData.value.invoices_email || '')
+                    setMonthlyStatusEmail(monthlyData.value.status_email || '')
+                }
             } catch (err) {
                 console.error('Settings load error:', err)
                 setLoadError('Gabim gjatë ngarkimit. Provoni të rifreskoni faqen.')
@@ -138,6 +148,11 @@ const SettingsPage = () => {
             await CompanyService.update(company)
             await SettingsService.updatePaymentStatus(paymentStatusEnabled)
             await SettingsService.updateNavbarCombined(navbarCombined)
+            await SettingsService.updateMonthlyReport({
+                enabled: monthlyEnabled,
+                invoices_email: monthlyInvoicesEmail.trim(),
+                status_email: monthlyStatusEmail.trim(),
+            })
             localStorage.setItem('company_cache', JSON.stringify(company))
             setMessage({ type: 'success', text: 'Të dhënat u ruajtën me sukses!' })
         } catch (error) {
@@ -145,6 +160,33 @@ const SettingsPage = () => {
             setMessage({ type: 'error', text: 'Gabim gjatë ruajtjes!' })
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handleSendMonthlyNow = async () => {
+        if (!monthlyInvoicesEmail.trim() || !monthlyStatusEmail.trim()) {
+            toast.error('Plotësoni të dyja adresat e email-it para se të testoni.')
+            return
+        }
+        if (!company.smtp_user || !company.smtp_password) {
+            toast.error('Plotësoni kredencialet SMTP te seksioni i Email-it.')
+            return
+        }
+        setSendingMonthly(true)
+        try {
+            const r = await MonthlyReportService.sendNow(company, monthlyInvoicesEmail.trim(), monthlyStatusEmail.trim())
+            if (r?.invoices_count === 0) {
+                toast.success(`Nuk ka fatura për ${r?.month || 'këtë muaj'}. U dërgua njoftimi te email-i i konfirmimit.`)
+            } else if (r?.invoices_email_sent) {
+                toast.success(`U dërguan ${r.invoices_count} fatura (${r.month}) te ${r.invoices_email}.`)
+            } else {
+                toast.error(`Dërgimi dështoi: ${r?.invoices_email_error || 'gabim i panjohur'}`)
+            }
+        } catch (error: any) {
+            console.error(error)
+            toast.error(error?.response?.data?.detail || 'Gabim gjatë dërgimit të raportit mujor.')
+        } finally {
+            setSendingMonthly(false)
         }
     }
 
@@ -529,6 +571,78 @@ const SettingsPage = () => {
                         </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">Këto të dhëna do të përdoren për të dërguar faturat dhe ofertat direkt me email.</p>
+                </div>
+
+                {/* Raporti Mujor Automatik */}
+                <div className="bg-card p-8 rounded-3xl border border-border shadow-sm space-y-6 lg:col-span-2">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h3 className="font-bold text-foreground flex items-center gap-2 mb-1">
+                                <CalendarClock size={20} className="text-primary" />
+                                Raporti Mujor i Faturave (Automatik)
+                            </h3>
+                            <p className="text-xs text-muted-foreground max-w-xl">
+                                Në fillim të çdo muaji dërgohen automatikisht të gjitha faturat e muajit paraardhës
+                                si PDF te adresa e parë, dhe një email konfirmimi (sukses/dështim + lista e faturave)
+                                te adresa e dytë.
+                            </p>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm font-semibold text-foreground shrink-0">
+                            <input
+                                type="checkbox"
+                                checked={monthlyEnabled}
+                                onChange={(e) => setMonthlyEnabled(e.target.checked)}
+                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
+                            />
+                            Aktiv
+                        </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Email-i për faturat</label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10" size={18} />
+                                <input
+                                    type="email"
+                                    value={monthlyInvoicesEmail}
+                                    onChange={e => setMonthlyInvoicesEmail(e.target.value)}
+                                    placeholder="kontabilisti@shembull.com"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Merr të gjitha faturat e muajit si PDF.</p>
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Email-i për konfirmim</label>
+                            <div className="relative">
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10" size={18} />
+                                <input
+                                    type="email"
+                                    value={monthlyStatusEmail}
+                                    onChange={e => setMonthlyStatusEmail(e.target.value)}
+                                    placeholder="ti@shembull.com"
+                                    className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Merr statusin (sukses/dështim) + listën + PDF-të.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap pt-2 border-t border-border">
+                        <button
+                            type="button"
+                            onClick={handleSendMonthlyNow}
+                            disabled={sendingMonthly}
+                            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-sm py-2.5 px-5 rounded-2xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                            <Send size={16} />
+                            {sendingMonthly ? 'Duke dërguar...' : 'Dërgo tani (test — muaji aktual)'}
+                        </button>
+                        <p className="text-[10px] text-muted-foreground italic">
+                            Testimi dërgon faturat e <span className="font-bold">muajit aktual</span> menjëherë te të dyja adresat. Ruani ndryshimet që cron-i automatik t'i përdorë.
+                        </p>
+                    </div>
                 </div>
 
                 {/* App Settings */}

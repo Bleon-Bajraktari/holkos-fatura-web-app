@@ -1601,6 +1601,47 @@ def update_navbar_combined(payload: dict, db: Session = Depends(get_db)):
     return {"combined": combined}
 
 
+# --- RAPORTI MUJOR I FATURAVE (automatizim end-of-month) ---
+def _get_setting(db: Session, key: str, default: str = "") -> str:
+    s = db.query(models.Setting).filter(models.Setting.setting_key == key).first()
+    return s.setting_value if s and s.setting_value is not None else default
+
+
+def _set_setting(db: Session, key: str, value: str):
+    s = db.query(models.Setting).filter(models.Setting.setting_key == key).first()
+    if not s:
+        s = models.Setting(setting_key=key, setting_value=value)
+        db.add(s)
+    else:
+        s.setting_value = value
+
+
+@app.get("/settings/monthly-report")
+def get_monthly_report(db: Session = Depends(get_db)):
+    """Cilësimet e raportit mujor: a është aktiv + dy adresat e email-it."""
+    return {
+        "enabled": _get_setting(db, "monthly_report_enabled", "false") == "true",
+        "invoices_email": _get_setting(db, "monthly_report_invoices_email", ""),
+        "status_email": _get_setting(db, "monthly_report_status_email", ""),
+    }
+
+
+@app.put("/settings/monthly-report")
+def update_monthly_report(payload: dict, db: Session = Depends(get_db)):
+    if "enabled" in payload:
+        _set_setting(db, "monthly_report_enabled", "true" if payload.get("enabled") else "false")
+    if "invoices_email" in payload:
+        _set_setting(db, "monthly_report_invoices_email", (payload.get("invoices_email") or "").strip())
+    if "status_email" in payload:
+        _set_setting(db, "monthly_report_status_email", (payload.get("status_email") or "").strip())
+    db.commit()
+    return {
+        "enabled": _get_setting(db, "monthly_report_enabled", "false") == "true",
+        "invoices_email": _get_setting(db, "monthly_report_invoices_email", ""),
+        "status_email": _get_setting(db, "monthly_report_status_email", ""),
+    }
+
+
 # --- TEMPLATES ---
 @app.get("/templates", response_model=List[schemas.Template])
 def get_templates(db: Session = Depends(get_db)):

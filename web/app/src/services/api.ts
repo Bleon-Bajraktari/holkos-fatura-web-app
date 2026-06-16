@@ -693,6 +693,31 @@ export const SettingsService = {
     updatePaymentStatus: (enabled: boolean) => api.put('/settings/feature-payment-status', { enabled }).then(res => res.data),
     getNavbarCombined: () => api.get('/settings/navbar-combined').then(res => res.data),
     updateNavbarCombined: (combined: boolean) => api.put('/settings/navbar-combined', { combined }).then(res => res.data),
+    getMonthlyReport: () => api.get('/settings/monthly-report').then(res => res.data),
+    updateMonthlyReport: (payload: { enabled?: boolean; invoices_email?: string; status_email?: string }) =>
+        api.put('/settings/monthly-report', payload).then(res => res.data),
+};
+
+export const MonthlyReportService = {
+    // Dërgim manual (test) i raportit mujor nga butoni në Cilësime.
+    // month: 'YYYY-MM' opsional (default = muaji aktual).
+    sendNow: (
+        company: { smtp_server?: string; smtp_port?: number; smtp_user?: string; smtp_password?: string; name?: string },
+        invoices_email: string,
+        status_email: string,
+        month?: string
+    ) =>
+        smtpApi.post('/monthly-invoices-report', {
+            manual: true,
+            month,
+            invoices_email,
+            status_email,
+            smtp_server: company.smtp_server,
+            smtp_port: company.smtp_port,
+            smtp_user: company.smtp_user,
+            smtp_password: company.smtp_password,
+            company_name: company.name,
+        }).then(res => res.data),
 };
 
 export const AuthService = {

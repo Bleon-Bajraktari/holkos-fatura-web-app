@@ -2,9 +2,15 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "crons": [
+    {
+      "path": "/api/monthly-invoices-report",
+      "schedule": "0 6 1 * *"
+    }
+  ],
   "rewrites": [
     {
-      "source": "/api/:path((?!send-email-smtp)(?!send-bulk-email-smtp).*)",
+      "source": "/api/:path((?!send-email-smtp)(?!send-bulk-email-smtp)(?!monthly-invoices-report).*)",
       "destination": "https://holkos-fatura-api.onrender.com/:path"
     },
     {
