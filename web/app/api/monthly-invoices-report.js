@@ -243,7 +243,13 @@ export default async function handler(req, res) {
                     from: `"${companyName}" <${smtp.user}>`,
                     to: invoicesTo,
                     subject: `Faturat e muajit ${period.label} - ${companyName}`,
-                    text: `Faturat e muajit ${period.label} (${list.length}):\n\n${linesText}`,
+                    text:
+                        `Përshëndetje,\n\n` +
+                        `Bashkëngjitur me këtë email do të gjeni të gjitha faturat e lëshuara gjatë muajit ${period.label}. ` +
+                        `Ky email dërgohet automatikisht në fillim të çdo muaji për qëllime kontabiliteti dhe arkivimi.\n\n` +
+                        `Faturat e muajit ${period.label} (${list.length} gjithsej):\n\n` +
+                        `${linesText}\n\n` +
+                        `Me respekt,\n${companyName}`,
                     attachments
                 })
                 invoicesSent = true
