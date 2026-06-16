@@ -20,30 +20,25 @@ import json
 
 
 def _build_payment_qr_payload(company, amount, reference):
-    """Ndërton tekstin e QR-së së pagesës për transfere brenda Kosovës.
+    """Ndërton payload-in EPC/GiroCode (SEPA scan-to-pay) për QR-në e pagesës.
 
-    QR-ja përmban detajet e pagesës si tekst i lexueshëm: kur skanohet
-    me kamerën/telefonin, shfaqen përfituesi, llogaria, shuma dhe numri i
-    faturës, që klienti t'i përdorë për urdhërpagesën.
+    Përdor IBAN-in (jo numrin e xhirollogarisë që shfaqet në PDF). Kur klienti
+    e skanon me aplikacionin e bankës, urdhërpagesa plotësohet automatikisht
+    (përfituesi, IBAN, shuma, numri i faturës si përshkrim).
 
-    Kthen None nëse mungojnë të dhënat thelbësore (llogaria ose emri).
+    Kthen None nëse mungon IBAN-i ose emri.
     """
-    account = (str(company.account_nib or "")).strip()
-    name = (str(company.name or "")).strip()
-    if not account or not name:
+    iban = (str(getattr(company, "iban", "") or "")).replace(" ", "").strip().upper()
+    name = (str(company.name or "")).strip()[:70]
+    if not iban or not name:
         return None
-    lines = [
-        "PAGESA E FATURËS",
-        f"Përfitues: {name}",
-        f"Llogaria (NLB): {account}",
-    ]
     try:
-        lines.append(f"Shuma: {float(amount):.2f} EUR")
+        amt = f"EUR{float(amount):.2f}"
     except (TypeError, ValueError):
-        pass
-    ref = (str(reference or "")).strip()
-    if ref:
-        lines.append(f"Fatura: {ref}")
+        amt = ""
+    remittance = (str(reference or "")).strip()[:140]
+    # Fushat e EPC QR (version 002), të ndara me LF; BIC mund të jetë bosh.
+    lines = ["BCD", "002", "1", "SCT", "", name, iban, amt, "", "", remittance, ""]
     return "\n".join(lines)
 
 

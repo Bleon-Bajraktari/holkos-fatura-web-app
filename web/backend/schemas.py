@@ -12,6 +12,7 @@ class CompanyBase(BaseModel):
     unique_number: Optional[str] = None
     fiscal_number: Optional[str] = None
     account_nib: Optional[str] = None
+    iban: Optional[str] = None
     logo_path: Optional[str] = None
     logo_light_path: Optional[str] = None
     logo_dark_path: Optional[str] = None

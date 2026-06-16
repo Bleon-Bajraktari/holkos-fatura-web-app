@@ -124,6 +124,9 @@ def update_db():
             if "logo_dark_path" not in cols:
                 print("Adding 'logo_dark_path' to companies...")
                 conn.execute(text("ALTER TABLE companies ADD COLUMN logo_dark_path VARCHAR(500)"))
+            if "iban" not in cols:
+                print("Adding 'iban' to companies...")
+                conn.execute(text("ALTER TABLE companies ADD COLUMN iban VARCHAR(50)"))
         except Exception as e:
             print(f"companies logo migration skipped: {e}")
 
