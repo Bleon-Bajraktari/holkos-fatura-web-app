@@ -191,6 +191,12 @@ export default async function handler(req, res) {
         const list = Array.isArray(invoices) ? invoices : []
 
         const companyName = (smtp.company_name || 'Holkos').replace(/"/g, '')
+
+        // Lejo disa adresa (ndara me presje ose pikëpresje) — sidomos për konfirmimin.
+        const splitEmails = (s) => String(s || '').split(/[;,]/).map(x => x.trim()).filter(Boolean)
+        const invoicesTo = splitEmails(invoicesEmail)
+        const statusTo = splitEmails(statusEmail)
+
         const port = parseInt(smtp.port || '587', 10)
         const transporter = nodemailer.createTransport({
             host: smtp.server || 'smtp.gmail.com',
@@ -202,12 +208,9 @@ export default async function handler(req, res) {
             greetingTimeout: 10000
         })
 
-        // Listë tekstuale e faturave të muajit.
+        // Listë e thjeshtë e faturave (si email-i bulk): "NUMRI - DATA".
         const linesText = list.length
-            ? list.map((inv, i) => {
-                const client = inv.client && inv.client.name ? ` — ${inv.client.name}` : ''
-                return `${i + 1}. ${inv.invoice_number || 'Faturë ' + inv.id} | ${fmtDate(inv.date)}${client} | ${fmtMoney(inv.total)}`
-            }).join('\n')
+            ? list.map(inv => `${inv.invoice_number || 'Faturë ' + inv.id} - ${fmtDate(inv.date)}`).join('\n')
             : '(Nuk ka fatura për këtë muaj.)'
         const totalSum = list.reduce((acc, inv) => acc + Number(inv.total || 0), 0)
 
@@ -238,13 +241,9 @@ export default async function handler(req, res) {
             try {
                 await transporter.sendMail({
                     from: `"${companyName}" <${smtp.user}>`,
-                    to: invoicesEmail,
-                    subject: `Faturat e muajit ${period.label} — ${companyName}`,
-                    text:
-                        `Të bashkëngjitura janë faturat e muajit ${period.label}.\n\n` +
-                        `Numri i faturave: ${list.length}\n` +
-                        `Totali: ${fmtMoney(totalSum)}\n\n` +
-                        `Lista:\n${linesText}\n`,
+                    to: invoicesTo,
+                    subject: `Faturat - ${companyName}`,
+                    text: linesText,
                     attachments
                 })
                 invoicesSent = true
@@ -260,33 +259,44 @@ export default async function handler(req, res) {
         let statusEmailSent = false
         let statusError = ''
         try {
-            const headerLines = [
-                `Raporti mujor i faturave — ${period.label}`,
-                `Status i dërgimit te ${invoicesEmail}: ${statusLabel}`,
-                ''
-            ]
+            const lines = []
+            lines.push('Përshëndetje,')
+            lines.push('')
+            lines.push(`Ky është konfirmimi automatik për faturat e muajit ${period.label}.`)
+            lines.push('')
+
             if (list.length === 0) {
-                headerLines.push('Nuk u gjet asnjë faturë për këtë muaj. Nuk u dërgua asgjë te marrësi i faturave.')
+                lines.push('Statusi: PA FATURA')
+                lines.push('Nuk u gjet asnjë faturë për këtë muaj, ndaj nuk u dërgua asgjë te marrësi i faturave.')
             } else if (invoicesSent) {
-                headerLines.push(`U dërguan me sukses ${list.length} fatura (totali ${fmtMoney(totalSum)}).`)
+                lines.push('Statusi: ✓ DËRGIMI SUKSES')
+                lines.push(`U dërguan me sukses ${list.length} fatura te ${invoicesTo.join(', ')}.`)
+                lines.push(`Totali i faturave: ${fmtMoney(totalSum)}.`)
             } else {
-                headerLines.push(`DËRGIMI DËSHTOI te ${invoicesEmail}.`)
-                headerLines.push(`Arsyeja: ${invoicesError}`)
-                headerLines.push('Faturat e mëposhtme NUK u dërguan te marrësi:')
+                lines.push('Statusi: ✗ DËRGIMI DËSHTOI')
+                lines.push(`Dërgimi i ${list.length} faturave te ${invoicesTo.join(', ')} dështoi.`)
+                lines.push(`Arsyeja: ${invoicesError}`)
+                lines.push('Faturat e listuara më poshtë NUK u dërguan te marrësi.')
             }
+
             if (failedPdf.length) {
-                headerLines.push('')
-                headerLines.push(`Kujdes: nuk u gjenerua PDF për: ${failedPdf.join(', ')}`)
+                lines.push('')
+                lines.push(`Kujdes: nuk u gjenerua PDF për: ${failedPdf.join(', ')}`)
             }
-            headerLines.push('')
-            headerLines.push(`Lista e faturave të muajit (${list.length}):`)
-            headerLines.push(linesText)
+
+            lines.push('')
+            lines.push(`Faturat e muajit (${list.length}):`)
+            lines.push(linesText)
+            lines.push('')
+            lines.push('PDF-të e faturave janë bashkëngjitur këtu për dokumentim.')
+            lines.push('')
+            lines.push(`— ${companyName} (mesazh automatik)`)
 
             await transporter.sendMail({
                 from: `"${companyName}" <${smtp.user}>`,
-                to: statusEmail,
-                subject: `[${statusLabel}] Konfirmim — Faturat e muajit ${period.label} — ${companyName}`,
-                text: headerLines.join('\n'),
+                to: statusTo,
+                subject: `[${statusLabel}] Konfirmim — Faturat e muajit ${period.label}`,
+                text: lines.join('\n'),
                 attachments
             })
             statusEmailSent = true

@@ -618,14 +618,14 @@ const SettingsPage = () => {
                             <div className="relative">
                                 <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10" size={18} />
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={monthlyStatusEmail}
                                     onChange={e => setMonthlyStatusEmail(e.target.value)}
-                                    placeholder="ti@shembull.com"
+                                    placeholder="ti@shembull.com, tjetri@shembull.com"
                                     className="w-full bg-muted border border-border rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 focus:bg-card transition-all"
                                 />
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Merr statusin (sukses/dështim) + listën + PDF-të.</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Merr statusin (sukses/dështim) + listën + PDF-të. Mund të vendosësh disa adresa, ndara me presje.</p>
                         </div>
                     </div>
 
