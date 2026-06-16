@@ -105,6 +105,34 @@ export default async function handler(req, res) {
             }
         }
 
+        // --- Token për backend-in (kërkon JWT për çdo path jo-publik) ---
+        // Manual: përcjell token-in e userit nga app-i.
+        // Cron: bëj login me kredencialet nga env (BACKEND_USERNAME/BACKEND_PASSWORD).
+        let backendAuth = ''
+        if (manual) {
+            backendAuth = req.headers.authorization || req.headers.Authorization || ''
+            if (!backendAuth) {
+                return res.status(401).json({ detail: 'Mungon token-i. Hyni sërish në aplikacion dhe provoni.' })
+            }
+        } else {
+            const u = process.env.BACKEND_USERNAME
+            const p = process.env.BACKEND_PASSWORD
+            if (!u || !p) {
+                return res.status(500).json({ detail: 'Mungojnë BACKEND_USERNAME/BACKEND_PASSWORD në Vercel për login automatik.' })
+            }
+            const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            })
+            if (!loginRes.ok) {
+                return res.status(502).json({ detail: `Login në backend dështoi (${loginRes.status}).` })
+            }
+            const tok = await loginRes.json()
+            backendAuth = `Bearer ${tok.access_token}`
+        }
+        const beHeaders = (accept) => ({ Accept: accept, Authorization: backendAuth })
+
         // --- Cilësimet (dy emailat) + SMTP ---
         let invoicesEmail = body.invoices_email
         let statusEmail = body.status_email
@@ -119,8 +147,8 @@ export default async function handler(req, res) {
 
         if (!manual) {
             const [settingsRes, companyRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/settings/monthly-report`, { headers: { Accept: 'application/json' } }),
-                fetch(`${BACKEND_URL}/company`, { headers: { Accept: 'application/json' } })
+                fetch(`${BACKEND_URL}/settings/monthly-report`, { headers: beHeaders('application/json') }),
+                fetch(`${BACKEND_URL}/company`, { headers: beHeaders('application/json') })
             ])
             if (settingsRes.ok) {
                 const s = await settingsRes.json()
@@ -154,7 +182,7 @@ export default async function handler(req, res) {
         const period = resolveMonth(monthParam, manual)
         const invRes = await fetch(
             `${BACKEND_URL}/invoices?date_from=${period.from}&date_to=${period.to}`,
-            { headers: { Accept: 'application/json' } }
+            { headers: beHeaders('application/json') }
         )
         if (!invRes.ok) {
             return res.status(502).json({ detail: `Backend nuk i ktheu faturat (${invRes.status}).` })
@@ -188,7 +216,7 @@ export default async function handler(req, res) {
         const failedPdf = []
         await Promise.all(list.map(async (inv) => {
             try {
-                const r = await fetch(`${BACKEND_URL}/invoices/${inv.id}/pdf`, { headers: { Accept: 'application/pdf' } })
+                const r = await fetch(`${BACKEND_URL}/invoices/${inv.id}/pdf`, { headers: beHeaders('application/pdf') })
                 if (r.ok) {
                     const ab = await r.arrayBuffer()
                     attachments.push({
