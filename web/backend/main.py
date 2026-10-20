@@ -1844,6 +1844,14 @@ def email_offer(offer_id: int, payload: Optional[schemas.EmailRequest] = Body(No
         
     return {"message": message}
 
+# Durable monthly report ledger (all routes use the existing AuthMiddleware).
+from monthly_reports import ReportBase, build_router
+app.include_router(build_router(get_db, models))
+
+@app.on_event("startup")
+def create_monthly_report_tables():
+    ReportBase.metadata.create_all(bind=database.engine)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
