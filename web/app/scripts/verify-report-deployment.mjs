@@ -39,7 +39,7 @@ if (process.env.VERCEL_ENV === 'production') {
         await mailer.verify()
         console.log('Report readiness: independent SMTP authentication OK')
         // Explicit one-time deployment test only. Never attaches invoices or mails clients.
-        if (env.REPORT_DEPLOY_SMOKE_TEST === '1') {
+        if ((env.REPORT_DEPLOY_SMOKE_TEST || '').trim() === '1') {
             const to = env.REPORT_ALERT_TO.split(/[;,]/).map(value => value.trim()).filter(Boolean)
             const result = await mailer.sendMail({ from: env.REPORT_ALERT_SMTP_USER, to,
                 subject: '[TEST] Verifikimi i njoftimeve Holkos Fatura',
