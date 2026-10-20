@@ -54,3 +54,7 @@ web/app/node_modules/
 .DS_Store
 Thumbs.db
 
+
+# Include the monthly report server module (Python lib folders remain ignored)
+!web/app/lib/
+!web/app/lib/monthly-report.js

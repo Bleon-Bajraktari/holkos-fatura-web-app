@@ -1,3 +1,4 @@
+import MonthlyReportHistory from '../components/MonthlyReportHistory'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, Building2, Mail, Phone, MapPin, Hash, CreditCard, Server, Shield, ArrowLeft, Trash2, Lock, User, CalendarClock, Send } from 'lucide-react'
@@ -175,7 +176,9 @@ const SettingsPage = () => {
         setSendingMonthly(true)
         try {
             const r = await MonthlyReportService.sendNow(company, monthlyInvoicesEmail.trim(), monthlyStatusEmail.trim())
-            if (r?.invoices_count === 0) {
+            if (r?.skipped) {
+                toast.success(r.reason || 'Raporti është dërguar tashmë.')
+            } else if (r?.invoices_count === 0) {
                 toast.success(`Nuk ka fatura për ${r?.month || 'këtë muaj'}. U dërgua njoftimi te email-i i konfirmimit.`)
             } else if (r?.invoices_email_sent) {
                 toast.success(`U dërguan ${r.invoices_count} fatura (${r.month}) te ${r.invoices_email}.`)
@@ -584,7 +587,7 @@ const SettingsPage = () => {
                             <p className="text-xs text-muted-foreground max-w-xl">
                                 Në fillim të çdo muaji dërgohen automatikisht të gjitha faturat e muajit paraardhës
                                 si PDF te adresa e parë, dhe një email konfirmimi (sukses/dështim + lista e faturave)
-                                te adresa e dytë.
+                                te adresa e dytë. Kontrolli ditor riprovon raportet e papërfunduara.
                             </p>
                         </div>
                         <label className="flex items-center gap-2 text-sm font-semibold text-foreground shrink-0">
@@ -640,10 +643,12 @@ const SettingsPage = () => {
                             {sendingMonthly ? 'Duke dërguar...' : 'Dërgo tani (test — muaji aktual)'}
                         </button>
                         <p className="text-[10px] text-muted-foreground italic">
-                            Testimi dërgon faturat e <span className="font-bold">muajit aktual</span> menjëherë te të dyja adresat. Ruani ndryshimet që cron-i automatik t'i përdorë.
+                            Testimi dërgon një raport të veçantë për muajin aktual, vetëm një herë. Ruani ndryshimet për dërgimin automatik. Rifreskoni historikun pas testimit.
                         </p>
                     </div>
                 </div>
+
+                <div className="section-card lg:col-span-2"><MonthlyReportHistory /></div>
 
                 {/* App Settings */}
                 <div className="section-card space-y-4 lg:col-span-2">

@@ -699,6 +699,10 @@ export const SettingsService = {
 };
 
 export const MonthlyReportService = {
+    history: () => api.get('/monthly-reports/history').then(res => res.data),
+    events: (key: string) => api.get(`/monthly-reports/${encodeURIComponent(key)}/events`).then(res => res.data),
+    resolve: (key: string, channel: string, delivered: boolean, note: string) =>
+        api.post(`/monthly-reports/${encodeURIComponent(key)}/resolve`, { channel, delivered, note }).then(res => res.data),
     // Dërgim manual (test) i raportit mujor nga butoni në Cilësime.
     // month: 'YYYY-MM' opsional (default = muaji aktual).
     sendNow: (
